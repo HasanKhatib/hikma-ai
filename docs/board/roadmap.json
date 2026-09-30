@@ -1,0 +1,254 @@
+{
+  "$schema": "./roadmap.schema.json",
+  "version": 1,
+  "project": "Hikma AI",
+  "updated": "2026-09-30",
+  "releases": [
+    {
+      "id": "v0.1",
+      "title": "Public MVP",
+      "emoji": "v0.1",
+      "status": "active",
+      "goal": "Hikma AI can be published as a neutral open-source CLI with user-configured registries.",
+      "exit": "A clean public repo builds locally, has neutral docs, contains no bundled skill registry, and can scaffold or install skills from a configured registry."
+    }
+  ],
+  "phases": [
+    {
+      "id": "P1",
+      "title": "Foundation and Rebrand",
+      "emoji": "P1",
+      "status": "active",
+      "release": "v0.1",
+      "goal": "Create a Claude-only planning repo and define the safe migration path into Hikma AI.",
+      "exit": "The repo has agentkan planning, Claude instructions, and a reviewed migration checklist with no organization references.",
+      "epics": [
+        {
+          "id": "E1.1",
+          "title": "Claude-only project foundation",
+          "emoji": "C",
+          "status": "active",
+          "assignee": "ai",
+          "labels": ["docs", "planning"],
+          "planned": null,
+          "order": 1,
+          "goal": "Set up the repo so Claude can operate from one board and one instruction file.",
+          "exit": "CLAUDE.md, docs/board, and the local agentkan Claude skill exist and validate.",
+          "body": "epics/E1.1.md",
+          "tasks": [
+            { "id": "E1.1-T1", "title": "Add Claude-only project instructions", "status": "done", "assignee": "ai", "labels": ["docs"], "planned": null },
+            { "id": "E1.1-T2", "title": "Install the agentkan skill for Claude", "status": "done", "assignee": "ai", "labels": ["docs"], "planned": null },
+            { "id": "E1.1-T3", "title": "Validate the board schema", "status": "done", "assignee": "ai", "labels": ["chore"], "planned": null }
+          ]
+        },
+        {
+          "id": "E1.2",
+          "title": "Public identity and naming",
+          "emoji": "N",
+          "status": "next",
+          "assignee": "me",
+          "labels": ["brand", "docs"],
+          "planned": null,
+          "order": 2,
+          "goal": "Lock the public identity around Hikma AI and the hikma CLI.",
+          "exit": "README, command examples, package names, and release text consistently use Hikma AI and hikma.",
+          "body": "epics/E1.2.md",
+          "tasks": [
+            { "id": "E1.2-T1", "title": "Confirm project name, CLI name, and repository slug", "status": "todo", "assignee": "me", "labels": ["brand"], "planned": null },
+            { "id": "E1.2-T2", "title": "Write neutral positioning and tagline", "status": "done", "assignee": "ai+verify", "labels": ["docs"], "planned": null },
+            { "id": "E1.2-T3", "title": "Choose license and contribution posture", "status": "done", "assignee": "me", "labels": ["legal"], "planned": null }
+          ]
+        },
+        {
+          "id": "E1.3",
+          "title": "Source import audit",
+          "emoji": "A",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["migration", "audit"],
+          "planned": null,
+          "order": 3,
+          "goal": "Identify exactly what can be copied, renamed, generalized, rewritten, or omitted for the public CLI-only tool.",
+          "exit": "A migration checklist exists for code, templates, docs, workflows, package metadata, and the removal of bundled registry behavior.",
+          "body": "epics/E1.3.md",
+          "tasks": [
+            { "id": "E1.3-T1", "title": "Inventory commands, packages, templates, tests, and release files", "status": "done", "assignee": "ai", "labels": ["audit"], "planned": null },
+            { "id": "E1.3-T2", "title": "List private defaults and organization-specific references to remove", "status": "done", "assignee": "ai+verify", "labels": ["audit"], "planned": null },
+            { "id": "E1.3-T3", "title": "Identify bundled registry files and behaviors to omit", "status": "done", "assignee": "ai+verify", "labels": ["audit", "registry"], "planned": null },
+            { "id": "E1.3-T4", "title": "Decide import strategy: history copy, clean copy, or rewrite", "status": "todo", "assignee": "me", "labels": ["migration"], "planned": null }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P2",
+      "title": "CLI With External Registries",
+      "emoji": "P2",
+      "status": "planned",
+      "release": "v0.1",
+      "goal": "Make the CLI usable by any internet user with their own separate registry repository.",
+      "exit": "A user can initialize Hikma AI, point it at a separate registry such as hasankhatib/ai, and install or update skills without private assumptions or bundled registry content.",
+      "epics": [
+        {
+          "id": "E2.1",
+          "title": "User-owned registry configuration",
+          "emoji": "R",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["feature", "registry"],
+          "planned": null,
+          "order": 1,
+          "goal": "Replace fixed registry assumptions with explicit user-owned registry configuration.",
+          "exit": "The CLI can read, set, validate, and use a registry URL from project or user config, including github.com/hasankhatib/ai.",
+          "body": "epics/E2.1.md",
+          "tasks": [
+            { "id": "E2.1-T1", "title": "Design config precedence for project, user, env, and flag values", "status": "done", "assignee": "ai+verify", "labels": ["design"], "planned": null },
+            { "id": "E2.1-T2", "title": "Add commands to view and set the active registry", "status": "done", "assignee": "ai", "labels": ["feature"], "planned": null },
+            { "id": "E2.1-T3", "title": "Support GitHub registry shorthand such as hasankhatib/ai", "status": "done", "assignee": "ai", "labels": ["registry"], "planned": null },
+            { "id": "E2.1-T4", "title": "Validate registry shape before install or update operations", "status": "todo", "assignee": "ai", "labels": ["registry"], "planned": null }
+          ]
+        },
+        {
+          "id": "E2.2",
+          "title": "Neutral scaffold templates",
+          "emoji": "T",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["templates", "docs"],
+          "planned": null,
+          "order": 2,
+          "goal": "Ship templates that work for general open-source and private projects.",
+          "exit": "Generated files mention only the user's project, selected agent, and configured registry.",
+          "body": "epics/E2.2.md",
+          "tasks": [
+            { "id": "E2.2-T1", "title": "Rewrite generated agent instructions for neutral usage", "status": "todo", "assignee": "ai", "labels": ["templates"], "planned": null },
+            { "id": "E2.2-T2", "title": "Support Claude-first scaffolding without opencode files", "status": "todo", "assignee": "ai", "labels": ["templates"], "planned": null },
+            { "id": "E2.2-T3", "title": "Add examples for public, private, and local registries", "status": "todo", "assignee": "ai+verify", "labels": ["docs"], "planned": null },
+            { "id": "E2.2-T4", "title": "Ensure generated files do not assume this repo contains a registry", "status": "done", "assignee": "ai+verify", "labels": ["templates", "registry"], "planned": null }
+          ]
+        },
+        {
+          "id": "E2.3",
+          "title": "Skill lifecycle for public users",
+          "emoji": "S",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["feature", "skills"],
+          "planned": null,
+          "order": 3,
+          "goal": "Make skill list, install, create, update, and publish flows work with external registries.",
+          "exit": "Skill lifecycle commands are documented, tested, and independent of any fixed registry owner or in-repo skills folder.",
+          "body": "epics/E2.3.md",
+          "tasks": [
+            { "id": "E2.3-T1", "title": "Generalize skill discovery and install paths", "status": "todo", "assignee": "ai", "labels": ["skills"], "planned": null },
+            { "id": "E2.3-T2", "title": "Define registry contribution and publishing flow for external repos", "status": "todo", "assignee": "ai+verify", "labels": ["registry"], "planned": null },
+            { "id": "E2.3-T3", "title": "Document expected external registry directory structure", "status": "todo", "assignee": "ai", "labels": ["docs"], "planned": null },
+            { "id": "E2.3-T4", "title": "Verify commands never read skills from the Hikma AI repo itself", "status": "todo", "assignee": "ai+verify", "labels": ["test", "registry"], "planned": null }
+          ]
+        },
+        {
+          "id": "E2.4",
+          "title": "CLI-only repository boundary",
+          "emoji": "B",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["architecture", "registry"],
+          "planned": null,
+          "order": 4,
+          "goal": "Keep Hikma AI as only the CLI source repo, not a default or bundled skill registry.",
+          "exit": "The repo has no top-level skills registry and tests prove the registry must come from config, flags, or user selection.",
+          "body": "epics/E2.4.md",
+          "tasks": [
+            { "id": "E2.4-T1", "title": "Remove or omit top-level registry content from the public repo", "status": "done", "assignee": "ai", "labels": ["migration"], "planned": null },
+            { "id": "E2.4-T2", "title": "Define safe sample registry references without making them defaults", "status": "done", "assignee": "ai+verify", "labels": ["docs", "registry"], "planned": null },
+            { "id": "E2.4-T3", "title": "Add tests that fail when a hidden bundled registry is used", "status": "done", "assignee": "ai", "labels": ["test"], "planned": null }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P3",
+      "title": "Open Source Release",
+      "emoji": "P3",
+      "status": "planned",
+      "release": "v0.1",
+      "goal": "Prepare the public repository for outside users and repeatable releases.",
+      "exit": "A tagged release is available with binaries, installation docs, and clear contribution guidance.",
+      "epics": [
+        {
+          "id": "E3.1",
+          "title": "Build, test, and quality gates",
+          "emoji": "Q",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["test", "ci"],
+          "planned": null,
+          "order": 1,
+          "goal": "Establish confidence that the public CLI builds and behaves correctly.",
+          "exit": "CI runs formatting, tests, and a build for every pull request.",
+          "body": "epics/E3.1.md",
+          "tasks": [
+            { "id": "E3.1-T1", "title": "Port or write command tests for public behavior", "status": "todo", "assignee": "ai", "labels": ["test"], "planned": null },
+            { "id": "E3.1-T2", "title": "Add CI for test and build checks", "status": "done", "assignee": "ai", "labels": ["ci"], "planned": null },
+            { "id": "E3.1-T3", "title": "Verify no private names, URLs, or credentials are present", "status": "done", "assignee": "ai+verify", "labels": ["audit"], "planned": null }
+          ]
+        },
+        {
+          "id": "E3.2",
+          "title": "Public documentation",
+          "emoji": "D",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["docs"],
+          "planned": null,
+          "order": 2,
+          "goal": "Explain Hikma AI clearly to first-time users and registry owners.",
+          "exit": "README and docs cover install, init, registry setup with an external repo, skill install, skill creation, and troubleshooting.",
+          "body": "epics/E3.2.md",
+          "tasks": [
+            { "id": "E3.2-T1", "title": "Write README with quickstart and project model", "status": "done", "assignee": "ai", "labels": ["docs"], "planned": null },
+            { "id": "E3.2-T2", "title": "Add command reference for the MVP", "status": "done", "assignee": "ai", "labels": ["docs"], "planned": null },
+            { "id": "E3.2-T3", "title": "Add registry owner guide", "status": "done", "assignee": "ai+verify", "labels": ["docs"], "planned": null },
+            { "id": "E3.2-T4", "title": "Document using hasankhatib/ai as a personal registry example", "status": "done", "assignee": "ai+verify", "labels": ["docs", "registry"], "planned": null }
+          ]
+        },
+        {
+          "id": "E3.3",
+          "title": "Release packaging",
+          "emoji": "R",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["release"],
+          "planned": null,
+          "order": 3,
+          "goal": "Publish Hikma AI through normal open-source release channels.",
+          "exit": "Users can install a released hikma binary from GitHub releases and documented package channels.",
+          "body": "epics/E3.3.md",
+          "tasks": [
+            { "id": "E3.3-T1", "title": "Set up release workflow and binary naming", "status": "done", "assignee": "ai", "labels": ["release"], "planned": null },
+            { "id": "E3.3-T2", "title": "Decide package channels for macOS, Linux, and Windows", "status": "done", "assignee": "me", "labels": ["release"], "planned": null },
+            { "id": "E3.3-T3", "title": "Run first dry release from a test tag", "status": "todo", "assignee": "ai+verify", "labels": ["release", "test"], "planned": null }
+          ]
+        },
+        {
+          "id": "E3.4",
+          "title": "Documentation site and pages",
+          "emoji": "W",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": ["docs", "website"],
+          "planned": null,
+          "order": 4,
+          "goal": "Keep a public docs site option while allowing a Cloudflare Pages presence under alkhatib.tech.",
+          "exit": "The repo can publish GitHub Pages docs and the docs content can also be deployed or linked from alkhatib.tech.",
+          "body": "epics/E3.4.md",
+          "tasks": [
+            { "id": "E3.4-T1", "title": "Decide whether GitHub Pages hosts docs, redirects, or mirrors content", "status": "todo", "assignee": "me", "labels": ["website"], "planned": null },
+            { "id": "E3.4-T2", "title": "Add docs site structure without blocking CLI release", "status": "done", "assignee": "ai", "labels": ["docs", "website"], "planned": null },
+            { "id": "E3.4-T3", "title": "Document how Cloudflare Pages on alkhatib.tech relates to repo docs", "status": "done", "assignee": "ai+verify", "labels": ["docs", "website"], "planned": null }
+          ]
+        }
+      ]
+    }
+  ]
+}
