@@ -44,6 +44,7 @@
     "skills": "SKILL",
     "test": "TEST",
     "ci": "CI",
-    "release": "REL"
+    "release": "REL",
+    "homebrew": "BREW"
   }
 }
