@@ -227,7 +227,8 @@
           "tasks": [
             { "id": "E3.3-T1", "title": "Set up release workflow and binary naming", "status": "done", "assignee": "ai", "labels": ["release"], "planned": null },
             { "id": "E3.3-T2", "title": "Decide package channels for macOS, Linux, and Windows", "status": "done", "assignee": "me", "labels": ["release"], "planned": null },
-            { "id": "E3.3-T3", "title": "Run first dry release from a test tag", "status": "todo", "assignee": "ai+verify", "labels": ["release", "test"], "planned": null }
+            { "id": "E3.3-T3", "title": "Run first dry release from a test tag", "status": "todo", "assignee": "ai+verify", "labels": ["release", "test"], "planned": null },
+            { "id": "E3.3-T4", "title": "Add global Homebrew install path for hikma", "status": "todo", "assignee": "ai+verify", "labels": ["release", "homebrew"], "planned": null }
           ]
         },
         {
