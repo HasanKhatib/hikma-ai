@@ -20,7 +20,11 @@ Values are resolved in this order: command flag, HIKMA_* environment variable,
 project config (.hikma/config.json, commit it to share with your team), then
 user config (os.UserConfigDir()/hikma/config.json).
 
-Keys: agent, registry`,
+Keys:
+  agent     your default agent: copilot, codex, opencode, or claude
+  agents    agents a project sets up, comma-separated (project config)
+  registry  where bare skill names install from and where push publishes
+  naming    skill name rule for create and push: loose (default) or kebab-case`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {

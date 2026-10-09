@@ -295,7 +295,7 @@ a branch, tag, or commit. Skill names are not restricted on install.`,
 
 	cmd.Flags().BoolVar(&force, "force", false, "reinstall even if already installed")
 	cmd.Flags().StringVar(&ref, "ref", "", "branch, tag, or commit to install from")
-	cmd.Flags().StringVar(&flagAgent, "agent", "", "AI agent (copilot, codex, opencode, claude)")
+	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
 	})
@@ -500,7 +500,7 @@ Local edits are detected by file hash and block the update unless --force is use
 
 	cmd.Flags().BoolVar(&all, "all", false, "update every skill recorded in .hikma/lock.json")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite local changes")
-	cmd.Flags().StringVar(&flagAgent, "agent", "", "AI agent (copilot, codex, opencode, claude)")
+	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
 	})
