@@ -868,7 +868,7 @@
             },
             {
               "id": "E3.3-T4",
-              "title": "Homebrew cask configured in GoReleaser; create the tap token, push a v0.1.0-rc.1 tag, and verify brew install on a clean Mac",
+              "title": "Homebrew cask and tap deploy key are set up; push the rc tag to prove the whole pipeline and verify brew install on a clean Mac",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [

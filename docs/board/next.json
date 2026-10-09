@@ -1,7 +1,7 @@
 {
   "updated": "2026-09-30",
   "next": "E3.3-T4",
-  "note": "Install script and OSS hygiene done. Remaining for v0.1: tap repo (not found under HasanKhatib) and its access, history scan, rc tag, brew check, positioning text, docs hosting decision, public flip, v0.1.0.",
+  "note": "Tap repo HasanKhatib/homebrew-tap and its deploy key are in place; history scan was clean (keep history). Next: make hikma-ai public (needs your OK), positioning text, rc tag (temporarily uploading to the tap), brew check, then v0.1.0.",
   "criticalPath": [
     {
       "title": "Review and accept the MIT license choice before public promotion",
@@ -16,13 +16,7 @@
       "unblocks": "E2.1"
     },
     {
-      "title": "Create the HOMEBREW_TAP_GITHUB_TOKEN secret on hikma-ai and confirm HasanKhatib/homebrew-tap exists (gh could not see it)",
-      "assignee": "me",
-      "status": "todo",
-      "unblocks": "E3.3-T4"
-    },
-    {
-      "title": "Confirm clean import: repo history exists, so scan it for private names before making the repo public",
+      "title": "Confirm keeping the existing git history (scan found no private names or secrets), then approve making hikma-ai public",
       "assignee": "me",
       "status": "todo",
       "unblocks": "E1.3"
