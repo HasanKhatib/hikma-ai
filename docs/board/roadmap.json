@@ -262,7 +262,7 @@
             {
               "id": "E2.1-T4",
               "title": "Validate registry shape before install or update operations",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "registry"
@@ -336,7 +336,7 @@
             {
               "id": "E2.1-T11",
               "title": "Fold hikma config agent and config registry into config set (keep as hidden aliases) and add --json to list-style commands",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "cli"
@@ -476,7 +476,7 @@
             {
               "id": "E2.3-T2",
               "title": "Define registry contribution and publishing flow for external repos",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "registry"
@@ -496,7 +496,7 @@
             {
               "id": "E2.3-T4",
               "title": "Verify commands never read skills from the Hikma AI repo itself",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "test",
@@ -528,7 +528,7 @@
             {
               "id": "E2.3-T7",
               "title": "Add hikma registry validate (frontmatter, naming convention, layout) and finish the source-repo spec; discovery without an index is done",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "registry",
@@ -603,7 +603,7 @@
             {
               "id": "E2.3-T14",
               "title": "Push via fork and PR when there is no write access and stop force-updating an existing skill branch (default branch lookup and opt-in CODEOWNERS are done)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "registry",
@@ -692,7 +692,7 @@
             {
               "id": "E3.1-T1",
               "title": "Port or write command tests for public behavior",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "test"
