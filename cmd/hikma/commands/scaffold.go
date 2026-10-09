@@ -54,7 +54,7 @@ Agents that share a folder are written once. Without a terminal, init runs
 non-interactively using the flags and defaults.
 
 Examples:
-  hikma init --agent claude --registry hasankhatib/ai --skill agentkan
+  hikma init --agent claude --registry owner/registry --skill my-skill
   hikma init --agent claude,codex --project-name demo`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()

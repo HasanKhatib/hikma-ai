@@ -54,8 +54,8 @@ publishes. Accepted formats: owner/repo, a git URL, or a local path (push needs
 a GitHub owner/repo).
 
 Examples:
-  hikma config registry hasankhatib/ai
-  hikma config registry https://github.com/hasankhatib/ai.git`,
+  hikma config registry owner/registry
+  hikma config registry https://github.com/example/registry.git`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
 				return runConfigRegistrySet(cmd, args[0])
@@ -66,7 +66,7 @@ Examples:
 			}
 			if c.Registry == "" {
 				fmt.Fprintln(cmd.OutOrStdout(), "No registry configured.")
-				fmt.Fprintln(cmd.OutOrStdout(), "Set one with: hikma config registry hasankhatib/ai")
+				fmt.Fprintln(cmd.OutOrStdout(), "Set one with: hikma config registry owner/registry")
 				return nil
 			}
 			src, err := source.Parse(c.Registry)
@@ -260,7 +260,7 @@ func newConfigSetCmd() *cobra.Command {
 		Use:   "set <key> <value>",
 		Short: "Set a config value (user config, or project config with --project)",
 		Args:  cobra.ExactArgs(2),
-		Example: `  hikma config set registry hasankhatib/ai
+		Example: `  hikma config set registry owner/registry
   hikma config set agent claude --project`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			scope := scopeFromFlag(project)

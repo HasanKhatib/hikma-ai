@@ -13,8 +13,8 @@ func newUpdateCmd() *cobra.Command {
 		Args:  cobra.NoArgs,
 		Long: `Show update instructions for Hikma AI.
 
-The first public release channel is GitHub Releases. Package-manager-specific
-upgrade commands can be added after the release flow is proven.`,
+Hikma does not update itself. Use Homebrew where you installed it that way, or
+re-run the install script.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return runUpdate()
 		},
@@ -22,9 +22,12 @@ upgrade commands can be added after the release flow is proven.`,
 }
 
 func runUpdate() error {
-	fmt.Println("Download the latest release from:")
-	fmt.Println("  https://github.com/hasankhatib/hikma-ai/releases/latest")
+	fmt.Println("Homebrew (macOS, Linux):")
+	fmt.Println("  brew upgrade HasanKhatib/tap/hikma")
 	fmt.Println()
-	fmt.Println("Then replace the hikma binary in your PATH.")
+	fmt.Println("Install script (any platform):")
+	fmt.Println("  curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash")
+	fmt.Println()
+	fmt.Println("Releases: https://github.com/HasanKhatib/hikma-ai/releases/latest")
 	return nil
 }
