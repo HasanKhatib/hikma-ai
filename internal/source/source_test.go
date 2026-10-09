@@ -20,7 +20,6 @@ func TestParse(t *testing.T) {
 		{"git@github.com:hasankhatib/ai.git", source.KindGitHub, "hasankhatib/ai", false},
 		{"https://gitlab.com/team/skills.git", source.KindGit, "https://gitlab.com/team/skills.git", false},
 		{"git@example.com:team/skills.git", source.KindGit, "git@example.com:team/skills.git", false},
-		{"/abs/path", source.KindLocal, "/abs/path", false},
 		{"", "", "", true},
 		{"justaname", "", "", true},
 		{"a/b/c", "", "", true},
@@ -35,6 +34,16 @@ func TestParse(t *testing.T) {
 				t.Fatalf("got %+v", s)
 			}
 		})
+	}
+}
+
+func TestParseLocalPaths(t *testing.T) {
+	dir := t.TempDir()
+	for _, in := range []string{dir, "/abs/path", "./rel", "../rel", "~/skills"} {
+		s, err := source.Parse(in)
+		if err != nil || s.Kind != source.KindLocal || s.Path == "" {
+			t.Errorf("Parse(%q) = %+v, %v", in, s, err)
+		}
 	}
 }
 
