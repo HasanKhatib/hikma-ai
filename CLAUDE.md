@@ -4,8 +4,8 @@ Hikma AI is a public, neutral CLI for scaffolding, sharing, and installing reusa
 
 ## Agent Scope
 
-- Claude is the only supported agent for this repository at this stage.
-- Do not add opencode configuration unless explicitly requested.
+- Claude is the only agent used to develop this repository. Do not add opencode or other agent configuration for working on this repo.
+- The `hikma` CLI itself is agent-neutral: it must install skills and scaffold files into the right folder for each supported agent (for example `.claude/skills` for Claude, `.agents/skills` for others). Agent choice is part of `hikma init`.
 - Keep public files free of organization-specific references, private registry URLs, credentials, and internal project names.
 - Prefer the CLI command name `hikma` in examples unless the naming decision changes on the board.
 - Keep this repository CLI-only. Do not add a top-level bundled skill registry folder to this repo.
@@ -47,6 +47,14 @@ The public MVP lets users:
 - Initialize AI-agent instructions in a repository.
 - Configure an external skill registry, such as `hasankhatib/ai`.
 - List, install, create, update, and publish skills against that registry.
-- Use Claude-first scaffolding without generating files for other agents unless requested.
+- Choose an agent during `hikma init` and get skills and instructions in that agent's folder layout.
 
 This repo now contains the CLI source. Keep future changes aligned with `docs/migration-plan.md` and never add a top-level registry `skills/` directory here.
+
+## Non-Goals
+
+- No hosted registry or marketplace; registries are plain repos.
+- No support for pushing to non-GitHub hosts.
+- No package managers beyond Homebrew; other platforms use the install script.
+- No telemetry, auto-update, or TUI until there is clear demand.
+
