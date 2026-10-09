@@ -39,10 +39,32 @@ checksum:
 
 release:
   github:
-    owner: hasankhatib
+    owner: HasanKhatib
     name: hikma-ai
   draft: false
   prerelease: auto
+
+homebrew_casks:
+  - name: hikma
+    repository:
+      owner: HasanKhatib
+      name: homebrew-tap
+      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+    directory: Casks
+    homepage: https://github.com/HasanKhatib/hikma-ai
+    description: Install, create, and publish reusable AI-agent skills from any repo
+    license: MIT
+    binaries:
+      - hikma
+    # The binary is not notarized yet; clear the download quarantine flag after install.
+    hooks:
+      post:
+        install: |
+          if OS.mac?
+            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/hikma"], must_succeed: false
+          end
+    # Pre-releases (for example v0.1.0-rc.1) must not update the tap.
+    skip_upload: auto
 
 changelog:
   use: github
