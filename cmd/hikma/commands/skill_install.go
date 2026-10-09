@@ -153,12 +153,18 @@ func printSkillTable(w io.Writer, skills []source.Skill) {
 }
 
 func newSkillListCmd(flagRegistry *string) *cobra.Command {
-	var asJSON bool
+	var asJSON, installed bool
 	cmd := &cobra.Command{
 		Use:   "list [<owner/repo>]",
-		Short: "List skills in the configured registry or in any repo",
+		Short: "List skills in the configured registry or in any repo, or what is installed",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if installed {
+				if len(args) > 0 {
+					return fmt.Errorf("--installed lists this repository's skills and takes no source")
+				}
+				return listInstalled(cmd, asJSON)
+			}
 			status := cmd.OutOrStdout()
 			if asJSON {
 				status = cmd.ErrOrStderr()
@@ -184,6 +190,7 @@ func newSkillListCmd(flagRegistry *string) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output as JSON")
+	cmd.Flags().BoolVar(&installed, "installed", false, "list the skills installed in this repository instead")
 	return cmd
 }
 

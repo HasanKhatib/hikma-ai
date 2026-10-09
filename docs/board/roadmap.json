@@ -1031,7 +1031,7 @@
             {
               "id": "E4.1-T1",
               "title": "hikma skill remove <name>: delete the installed folders and lock entries for the selected agents",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature"
@@ -1041,7 +1041,7 @@
             {
               "id": "E4.1-T2",
               "title": "hikma skill list --installed: show installed skills, source, commit, and whether files were edited",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature"
