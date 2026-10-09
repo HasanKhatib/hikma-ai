@@ -30,12 +30,13 @@ var ValidAgents = []Agent{AgentCopilot, AgentCodex, AgentOpenCode, AgentClaude}
 
 // Skill and instruction locations follow each tool's own documentation:
 // Claude Code reads .claude/skills; Codex, GitHub Copilot, and OpenCode all read
-// the shared .agents/skills location (and AGENTS.md).
+// the shared .agents/skills location. All four read AGENTS.md (Claude Code
+// v2.1.277+ when the repo has no CLAUDE.md).
 var layouts = map[Agent]Layout{
 	AgentCopilot:  {"GitHub Copilot using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}},
 	AgentCodex:    {"Codex CLI using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}},
 	AgentOpenCode: {"OpenCode using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}},
-	AgentClaude:   {"Claude Code using CLAUDE.md and .claude/skills", ".claude/skills", []string{"AGENTS.md", "CLAUDE.md"}},
+	AgentClaude:   {"Claude Code using AGENTS.md and .claude/skills", ".claude/skills", []string{"AGENTS.md"}},
 }
 
 // LayoutFor returns the layout for a, which must be a valid agent.

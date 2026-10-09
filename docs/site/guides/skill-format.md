@@ -36,7 +36,10 @@ metadata:
 |---|---|---|
 | `name` | yes | Must match the folder name |
 | `description` | yes | What the skill does and when to use it. Agents use this to decide when to load it. |
-| `metadata.owner`, `metadata.team` | no | Shown by `skill list`; used for `--codeowners` |
+| `metadata.owner`, `metadata.team` | no | Shown by `skill list`; used for `--codeowners`. `metadata` values must be strings, so quote numbers and dates |
+| `license`, `compatibility`, `allowed-tools` | no | Defined by the spec. Most skills do not need `compatibility` |
+
+Keep `SKILL.md` under 500 lines and move long material into `references/`. Agents load only `name` and `description` up front, then the full file when a skill matches, so a sharp description matters more than anything else. Fields outside the spec work in some agents but are rejected by claude.ai uploads and the Skills API; `registry validate` warns about them.
 
 [`hikma skill create`](/commands/skill-create) generates a template with these fields.
 

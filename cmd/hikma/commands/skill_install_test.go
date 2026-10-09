@@ -288,7 +288,7 @@ func TestInitSetsUpSelectedAgentsAndInstallsSkills(t *testing.T) {
 		t.Fatalf("init: %v\n%s", err, out)
 	}
 	for _, rel := range []string{
-		"AGENTS.md", "CLAUDE.md",
+		"AGENTS.md",
 		".claude/skills/alpha/SKILL.md", ".agents/skills/alpha/SKILL.md",
 		".hikma/config.json", ".hikma/lock.json",
 	} {
@@ -320,7 +320,7 @@ func TestInitDryRunChangesNothing(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out)
 	}
-	if !strings.Contains(out, "would write AGENTS.md") || !strings.Contains(out, "would write CLAUDE.md") {
+	if !strings.Contains(out, "would write AGENTS.md") {
 		t.Fatalf("output:\n%s", out)
 	}
 	if _, err := os.Stat(filepath.Join(proj, "AGENTS.md")); err == nil {
