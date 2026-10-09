@@ -121,3 +121,27 @@ func TestCopyDirSkipsGitAndSymlinks(t *testing.T) {
 		t.Fatal("symlink was copied")
 	}
 }
+
+func TestHashDirIgnoresLineEndingsInTextFilesOnly(t *testing.T) {
+	lf, crlf := t.TempDir(), t.TempDir()
+	for dir, text := range map[string]string{lf: "a\nb\n", crlf: "a\r\nb\r\n"} {
+		if err := os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte(text), 0o644); err != nil {
+			t.Fatal(err)
+		}
+		if err := os.WriteFile(filepath.Join(dir, "bin.dat"), []byte("x\r\n\x00y"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	// Differ the binary file in the CRLF dir: it must still count as different.
+	if err := os.WriteFile(filepath.Join(crlf, "bin.dat"), []byte("x\n\x00y"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	a, _ := source.HashDir(lf)
+	b, _ := source.HashDir(crlf)
+	if a["SKILL.md"] != b["SKILL.md"] {
+		t.Fatal("text files that differ only in line endings should hash the same")
+	}
+	if a["bin.dat"] == b["bin.dat"] {
+		t.Fatal("binary files must be hashed byte for byte")
+	}
+}
