@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `hikma sync` restores every skill in `.hikma/lock.json` at its recorded commit, verifies the files against the recorded hashes, protects local edits, and rejects lockfile entries outside the agent skill folders.
+
 ## [0.1.0] - 2026-10-09
 
 First public release.

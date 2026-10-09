@@ -27,6 +27,14 @@ CLAUDE.md                 imports AGENTS.md (Claude)
 
 After cloning, `hikma skill install other-skill` installs into every agent listed in `.hikma/config.json`, from the project's registry, with no flags. Their personal `agent` default does not override a project's `agents` list.
 
+## On a fresh clone
+
+If the skills folders are not committed (for example they are git-ignored), restore them from the lockfile:
+
+```bash
+hikma sync
+```
+
 ## Updating
 
 ```bash

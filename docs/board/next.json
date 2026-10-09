@@ -1,7 +1,7 @@
 {
   "updated": "2026-09-30",
-  "next": "E4.1-T4",
-  "note": "v0.1.0 is released. v0.2 is now the registry workflow: sync, remove and list --installed, gh skill interop with adopt, custom agent layouts, and a registry validation Action. Parked: global installs, more built-in agents, skill diff, checksum manifest.",
+  "next": "E4.1-T1",
+  "note": "v0.1.0 is released; hikma sync is done. Next in v0.2: remove and list --installed, then gh skill interop (adopt), custom agent layouts, and the registry validation Action.",
   "criticalPath": [
     {
       "title": "Create or prepare hasankhatib/ai as the separate registry repository",
