@@ -15,8 +15,7 @@ git commit -m "Set up agent instructions and skills"
 This creates:
 
 ```text
-AGENTS.md                 project rules for all agents
-CLAUDE.md                 imports AGENTS.md (Claude)
+AGENTS.md                 project rules, read by every agent
 .hikma/config.json        agents and registry
 .hikma/lock.json          what was installed, from where
 .claude/skills/...        skills for Claude

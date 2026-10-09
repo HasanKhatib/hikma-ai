@@ -48,7 +48,7 @@ Where each agent reads from:
   copilot    AGENTS.md              skills -> .agents/skills/
   codex      AGENTS.md              skills -> .agents/skills/
   opencode   AGENTS.md              skills -> .agents/skills/
-  claude     AGENTS.md + CLAUDE.md  skills -> .claude/skills/
+  claude     AGENTS.md              skills -> .claude/skills/
 
 Agents that share a folder are written once. Without a terminal, init runs
 non-interactively using the flags and defaults.

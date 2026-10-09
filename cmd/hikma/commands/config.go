@@ -109,7 +109,7 @@ The agent controls which paths hikma uses for skills and scaffold output:
   copilot    .agents/skills/   AGENTS.md only          GitHub Copilot
   codex      .agents/skills/   AGENTS.md only          Codex CLI
   opencode   .agents/skills/   AGENTS.md only          OpenCode
-  claude     .claude/skills/   AGENTS.md + CLAUDE.md   Claude Code
+  claude     .claude/skills/   AGENTS.md              Claude Code
 
 The active agent can also be overridden per-command with --agent,
 or set for CI via the HIKMA_AGENT environment variable.`,

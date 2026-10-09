@@ -5,6 +5,10 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Changed
+- `hikma init --agent claude` writes only `AGENTS.md`; Claude Code reads it when there is no `CLAUDE.md`. The generated `CLAUDE.md` stub is gone.
+- `skill create` generates a SKILL.md that follows the Agent Skills spec: `metadata` holds only string `owner` and `team`, and the placeholder `compatibility`, `email`, `policy`, and `last_validated` fields are removed.
+- `registry validate` checks the Agent Skills spec: name and description length, `compatibility` length, string-only `metadata`, and warns on fields outside the spec, non-spec names, and SKILL.md files over 500 lines.
+- Docs: new "Agents and folders" guide; the use-cases section is removed.
 - `hikma update` and `hikma --help` point to `brew upgrade` and the install script instead of stale text; examples use placeholders instead of a specific registry.
 - `hikma skill install` prints a file count per folder instead of every file, and `skill remove` deletes agent folders it leaves empty.
 - File hashes in `.hikma/lock.json` ignore CRLF versus LF line endings in text files, so a lockfile written on one platform verifies on another. Binary files are still hashed byte for byte.

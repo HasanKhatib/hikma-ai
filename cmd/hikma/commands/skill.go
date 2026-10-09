@@ -7,7 +7,6 @@ import (
 	"os/exec"
 	"path/filepath"
 	"strings"
-	"time"
 
 	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
@@ -78,7 +77,7 @@ func newSkillCreateCmd() *cobra.Command {
 			}
 
 			// Resolve author from gh; flags override resolved values.
-			owner, email := resolveGHUser()
+			owner := resolveGHUser()
 			if flagOwner != "" {
 				owner = flagOwner
 			}
@@ -89,10 +88,8 @@ func newSkillCreateCmd() *cobra.Command {
 			created, err := scaffold.CreateSkill(scaffold.SkillOptions{
 				SkillName:   name,
 				Owner:       owner,
-				Email:       email,
 				Team:        flagTeam,
 				Description: flagDescription,
-				Date:        time.Now().Format("2006-01-02"),
 				TargetDir:   targetDir,
 			})
 			if err != nil {
@@ -105,11 +102,7 @@ func newSkillCreateCmd() *cobra.Command {
 				fmt.Printf("  %s\n", rel)
 			}
 
-			fmt.Printf("\nOwner: %s", owner)
-			if email != "" {
-				fmt.Printf(" (%s)", email)
-			}
-			fmt.Println()
+			fmt.Printf("\nOwner: %s\n", owner)
 			fmt.Printf("\nEdit %s/SKILL.md, then run 'hikma skill push %s'.\n", targetDir, name)
 			return nil
 		},
@@ -134,25 +127,14 @@ func checkSkillName(name string) error {
 	return config.CheckSkillName(naming, name)
 }
 
-// resolveGHUser asks gh for the current user's login and primary email.
-// On any error it returns "unknown" and "".
-func resolveGHUser() (login, email string) {
+// resolveGHUser asks gh for the current user's login. On any error it
+// returns "unknown".
+func resolveGHUser() string {
 	out, err := exec.Command("gh", "api", "user", "--jq", ".login").Output()
 	if err != nil {
-		return "unknown", ""
+		return "unknown"
 	}
-	login = strings.Trim(strings.TrimSpace(string(out)), `"`)
-
-	outEmail, err := exec.Command("gh", "api", "user/emails",
-		"--jq", "[.[] | select(.primary==true)][0].email").Output()
-	if err != nil {
-		return login, ""
-	}
-	email = strings.Trim(strings.TrimSpace(string(outEmail)), `"`)
-	if email == "null" {
-		email = ""
-	}
-	return login, email
+	return strings.Trim(strings.TrimSpace(string(out)), `"`)
 }
 
 // normalizeSkillName accepts copied registry paths such as
