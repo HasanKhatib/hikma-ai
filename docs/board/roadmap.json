@@ -868,8 +868,8 @@
             },
             {
               "id": "E3.3-T4",
-              "title": "Homebrew cask and tap deploy key are set up; push the rc tag to prove the whole pipeline and verify brew install on a clean Mac",
-              "status": "todo",
+              "title": "Homebrew cask and tap deploy key set up; rc tag proved the release, tap push, brew install, and install script",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release",
