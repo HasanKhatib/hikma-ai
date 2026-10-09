@@ -799,7 +799,7 @@
             },
             {
               "id": "E3.2-T5",
-              "title": "README install, push, and lockfile docs (positioning vs other installers still to write)",
+              "title": "README positioning: why Hikma, and how it differs from gh skill and npx skills",
               "status": "done",
               "assignee": "ai+verify",
               "labels": [
