@@ -13,6 +13,7 @@ go test ./...
 go mod tidy          # go.mod and go.sum must not change
 bash scripts/test-install.sh   # if you touched scripts/
 npx agentkan validate docs/board   # if you touched docs/board
+(cd docs/site && npm ci && npm run docs:build)   # if you touched docs/site
 ```
 
 ## Registry boundary
@@ -29,7 +30,7 @@ Hikma AI is the CLI repository only. Do not add a top-level `skills/` registry f
 
 - Keep changes focused and open them against `main`.
 - Include tests for behavior changes.
-- Update the README and `docs/site` when commands, config, or registry behavior changes.
+- Update the README and the docs site (`docs/site`, one page per command) when commands, config, or registry behavior changes.
 - Use clear commit messages; conventional prefixes (`feat:`, `fix:`, `docs:`, `ci:`) are welcome.
 
 ## Planning

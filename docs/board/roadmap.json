@@ -948,8 +948,8 @@
           "tasks": [
             {
               "id": "E3.4-T1",
-              "title": "Decide whether GitHub Pages hosts docs, redirects, or mirrors content",
-              "status": "todo",
+              "title": "Decide docs hosting: GitHub Pages hosts a VitePress site built from docs/site",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "website"
@@ -972,6 +972,28 @@
               "title": "Document how Cloudflare Pages on alkhatib.tech relates to repo docs",
               "status": "done",
               "assignee": "ai+verify",
+              "labels": [
+                "docs",
+                "website"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E3.4-T4",
+              "title": "Build the VitePress docs site: home, getting started, a page per command, guides, and use cases",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "docs",
+                "website"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E3.4-T5",
+              "title": "Deploy with the Pages workflow (Node build) and check the docs build on every PR; dependabot for npm",
+              "status": "done",
+              "assignee": "ai",
               "labels": [
                 "docs",
                 "website"

@@ -117,7 +117,7 @@ func newSkillCreateCmd() *cobra.Command {
 	cmd.Flags().StringVar(&flagOwner, "owner", "", "override owner (default: resolved from gh)")
 	cmd.Flags().StringVar(&flagTeam, "team", "", "team name to write into SKILL.md metadata")
 	cmd.Flags().StringVar(&flagDescription, "description", "", "short description to pre-fill in SKILL.md")
-	cmd.Flags().StringVar(&flagAgent, "agent", "", "AI agent (copilot, codex, opencode, claude)")
+	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
 	})

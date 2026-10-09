@@ -1,83 +1,33 @@
 # Commands
 
-## `hikma init`
+| Command | What it does |
+|---|---|
+| [`hikma init`](/commands/init) | Set up a repository for one or more agents and install skills |
+| [`hikma config`](/commands/config) | Read and write configuration, with the source of each value |
+| [`hikma doctor`](/commands/doctor) | Check your environment and active settings |
+| [`hikma registry validate`](/commands/registry-validate) | Check every skill in a registry against the format |
+| [`hikma skill list`](/commands/skill-list) | List skills in a registry or any repository |
+| [`hikma skill info`](/commands/skill-info) | Show details for one skill |
+| [`hikma skill install`](/commands/skill-install) | Install a skill from a registry or any source |
+| [`hikma skill update`](/commands/skill-update) | Update installed skills from their recorded source |
+| [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
+| [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry as a pull request |
+| [`hikma completion`](/commands/completion) | Generate shell completions |
 
-Set up a repository for one or more agents: writes their instruction files, records the agents and registry in `.hikma/config.json`, and installs the requested skills into every agent's skills folder. Agents sharing a folder (`codex`, `copilot`, `opencode`) are written once. Without a terminal it runs non-interactively from flags.
+## Sources
 
-```bash
-hikma init --agent claude,codex --registry hasankhatib/ai --skill agentkan
-```
+Anywhere a command takes a source, it can be:
 
-## `hikma config`
+- GitHub shorthand: `owner/repo`
+- a git URL: `https://host/path/repo.git` or `git@host:path/repo.git`
+- a local path: `./registry` or `/abs/path`
 
-Read and write configuration. Values resolve from flag, `HIKMA_*` env var, project config (`.hikma/config.json`), then user config.
+Public sources need only `git`. For private GitHub repositories Hikma falls back to the GitHub CLI.
 
-```bash
-hikma config list                       # every value and where it came from
-hikma config get registry
-hikma config set registry hasankhatib/ai
-hikma config set agents claude,codex --project   # install into every listed agent's folder
-hikma config set agent claude                    # personal default
-hikma config set naming kebab-case      # or: loose (default); applies to create and push
-hikma config unset registry
-hikma config path
-```
+## Global flags
 
-## `hikma skill list`
+`hikma skill ...` accepts `--registry <source>` to override the configured registry for one command.
 
-List skills in the configured registry or in any repo.
+## Exit status
 
-```bash
-hikma skill list
-hikma skill list owner/repo
-```
-
-## `hikma skill install`
-
-Install a skill into the selected agent's skill folder.
-
-```bash
-hikma skill install my-skill               # from the configured registry
-hikma skill install owner/repo my-skill    # from any repo
-hikma skill install owner/repo             # pick interactively
-hikma skill install owner/repo my-skill --ref v1.2
-```
-
-## `hikma skill update`
-
-Update skills from the source recorded in `.hikma/lock.json`.
-
-```bash
-hikma skill update my-skill
-hikma skill update --all
-```
-
-## `hikma skill create`
-
-Create a local skill scaffold.
-
-```bash
-hikma skill create my-skill --description "What this skill helps with"
-```
-
-## `hikma skill push`
-
-Open a pull request against your configured registry after confirming the target. Uses your fork when you lack write access.
-
-```bash
-hikma skill push my-skill
-hikma skill push my-skill --yes
-```
-
-## `hikma registry validate`
-
-Check every skill in a registry against the skill format.
-
-```bash
-hikma registry validate .
-hikma registry validate owner/repo --ref main
-```
-
-## `hikma doctor`
-
-Check that `git` is available (and `gh`, for push) and show the active agent and registry.
+Commands exit non-zero when they fail. `registry validate` exits non-zero when any skill fails validation, so it works as a CI check.

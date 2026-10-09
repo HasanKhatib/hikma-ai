@@ -171,6 +171,13 @@ git push origin v0.1.0
 
 Try a release locally with `goreleaser release --snapshot --clean`.
 
-## Documentation Site
+## Documentation
 
-The repository can keep GitHub Pages docs for open-source reference material. A separate Cloudflare Pages site under `alkhatib.tech` can link to or mirror the same docs.
+Full docs, with a page for every command, are at **https://hasankhatib.github.io/hikma-ai/**. The source is a [VitePress](https://vitepress.dev) site in `docs/site`:
+
+```bash
+cd docs/site
+npm ci
+npm run docs:dev      # live preview
+npm run docs:build    # production build; fails on dead links
+```
