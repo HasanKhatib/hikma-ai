@@ -1061,8 +1061,8 @@
             },
             {
               "id": "E4.1-T4",
-              "title": "hikma sync: restore every skill in .hikma/lock.json on a fresh clone, like npm ci (first v0.2 task)",
-              "status": "todo",
+              "title": "hikma sync: restore every skill in .hikma/lock.json at the recorded commit, verify hashes, protect local edits, reject unsafe entries",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "feature"

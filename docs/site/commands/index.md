@@ -10,6 +10,7 @@
 | [`hikma skill info`](/commands/skill-info) | Show details for one skill |
 | [`hikma skill install`](/commands/skill-install) | Install a skill from a registry or any source |
 | [`hikma skill update`](/commands/skill-update) | Update installed skills from their recorded source |
+| [`hikma sync`](/commands/sync) | Restore every skill recorded in the lockfile |
 | [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
 | [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry as a pull request |
 | [`hikma completion`](/commands/completion) | Generate shell completions |
