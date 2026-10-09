@@ -91,7 +91,7 @@ Agents that share a folder are written once. For one-off use, set a personal def
 
 - **Install from anywhere.** A source is a GitHub `owner/repo`, any git URL, or a local path. Use `--ref` to pin a branch, tag, or commit. Installing does not enforce a naming convention.
 - **Push goes to your registry.** `hikma skill push` always targets your configured registry (a GitHub `owner/repo`), prints it with where the setting came from, and asks you to confirm (`--yes` in scripts). With write access it pushes a branch to the registry; without it, to your fork. It never force-pushes: an open PR for the skill gets a new commit, and a skill that was already merged gets a fresh branch.
-- **Installs are tracked.** `.hikma/lock.json` records each skill's source, commit, and file hashes. `hikma skill update` pulls from the recorded source, refuses to overwrite local edits without `--force`, and warns when `scripts/` changed.
+- **Installs are tracked.** `.hikma/lock.json` records each skill's source, commit, and file hashes. `hikma skill update` pulls from the recorded source, refuses to overwrite local edits without `--force`, and warns when `scripts/` changed. `hikma sync` restores everything in the lockfile on a fresh clone, at the recorded commits and checked against the recorded hashes.
 
 ## Skill repositories
 
@@ -146,6 +146,7 @@ hikma skill list [owner/repo]
 hikma skill info [owner/repo] <name>
 hikma skill install [owner/repo] [name] [--ref <ref>] [--agent claude] [--force]
 hikma skill update <name|--all> [--force]
+hikma sync [--yes] [--force] [--dry-run]
 hikma skill create <name>
 hikma skill push <name> [--registry owner/repo] [--yes] [--codeowners]
 hikma registry validate [source] [--ref <ref>]
