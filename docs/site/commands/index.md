@@ -2,43 +2,54 @@
 
 ## `hikma init`
 
-Scaffold AI-agent configuration files into a repository.
+Set up a repository for one or more agents: writes their instruction files, records the agents and registry in `.hikma/config.json`, and installs the requested skills into every agent's skills folder. Agents sharing a folder (`codex`, `copilot`, `opencode`) are written once. Without a terminal it runs non-interactively from flags.
 
 ```bash
-hikma init --agent claude --registry hasankhatib/ai
+hikma init --agent claude,codex --registry hasankhatib/ai --skill agentkan
 ```
 
-## `hikma config agent`
+## `hikma config`
 
-Get or set the active agent layout.
-
-```bash
-hikma config agent claude
-```
-
-## `hikma config registry`
-
-Get or set the active external registry.
+Read and write configuration. Values resolve from flag, `HIKMA_*` env var, project config (`.hikma/config.json`), then user config.
 
 ```bash
-hikma config registry hasankhatib/ai
+hikma config list                       # every value and where it came from
+hikma config get registry
+hikma config set registry hasankhatib/ai
+hikma config set agents claude,codex --project   # install into every listed agent's folder
+hikma config set agent claude                    # personal default
+hikma config set naming kebab-case      # or: loose (default); applies to create and push
+hikma config unset registry
+hikma config path
 ```
 
 ## `hikma skill list`
 
-List skills from the configured registry.
+List skills in the configured registry or in any repo.
 
 ```bash
 hikma skill list
-hikma skill list --registry hasankhatib/ai
+hikma skill list owner/repo
 ```
 
 ## `hikma skill install`
 
-Install a skill from the configured registry into the selected agent path.
+Install a skill into the selected agent's skill folder.
 
 ```bash
-hikma skill install agentkan --agent claude
+hikma skill install my-skill               # from the configured registry
+hikma skill install owner/repo my-skill    # from any repo
+hikma skill install owner/repo             # pick interactively
+hikma skill install owner/repo my-skill --ref v1.2
+```
+
+## `hikma skill update`
+
+Update skills from the source recorded in `.hikma/lock.json`.
+
+```bash
+hikma skill update my-skill
+hikma skill update --all
 ```
 
 ## `hikma skill create`
@@ -51,8 +62,13 @@ hikma skill create my-skill --description "What this skill helps with"
 
 ## `hikma skill push`
 
-Open a pull request against the configured registry repository.
+Open a pull request against your configured registry after confirming the target.
 
 ```bash
-hikma skill push my-skill --registry hasankhatib/ai
+hikma skill push my-skill
+hikma skill push my-skill --yes
 ```
+
+## `hikma doctor`
+
+Check that `git` is available (and `gh`, for push) and show the active agent and registry.

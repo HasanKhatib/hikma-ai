@@ -1,7 +1,7 @@
 {
   "updated": "2026-09-30",
-  "next": "E3.3-T3",
-  "note": "Run final release checks, review the diff, then push the initial implementation and tag v1.0.0 when ready.",
+  "next": "E2.3-T7",
+  "note": "Remaining for v0.1: registry validate, fork push, install script, config cleanup, OSS hygiene, then tap token, rc tag, brew check, positioning, public flip, v0.1.0. Later: v0.2 lifecycle and reach, v0.3 trust, v1.0 stable.",
   "criticalPath": [
     {
       "title": "Review and accept the MIT license choice before public promotion",
@@ -10,21 +10,28 @@
       "unblocks": "E1.2"
     },
     {
-      "title": "Decide whether this clean import is acceptable or if source history should be preserved",
-      "assignee": "me",
-      "status": "todo",
-      "unblocks": "E1.3"
-    },
-    {
       "title": "Create or prepare hasankhatib/ai as the separate registry repository",
       "assignee": "me",
       "status": "todo",
       "unblocks": "E2.1"
+    },
+    {
+      "title": "Create the HOMEBREW_TAP_GITHUB_TOKEN secret on hikma-ai and confirm HasanKhatib/homebrew-tap exists (gh could not see it)",
+      "assignee": "me",
+      "status": "todo",
+      "unblocks": "E3.3-T4"
+    },
+    {
+      "title": "Confirm clean import: repo history exists, so scan it for private names before making the repo public",
+      "assignee": "me",
+      "status": "todo",
+      "unblocks": "E1.3"
     }
   ],
   "risks": [
     "The real hasankhatib/ai registry still needs to exist with skills/index.json before skill list/install can work end to end.",
-    "GoReleaser release should be tested with a snapshot or dry run before tagging v1.0.0.",
-    "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries."
+    "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries.",
+    "HasanKhatib/ai is currently a README-only private repo; add skills and make it public before documenting it as the example registry.",
+    "Push to a registry you cannot write to fails until the fork flow lands; document it for v0.1.0."
   ]
 }
