@@ -65,3 +65,24 @@ func TestCheckSkillLongBodyWarns(t *testing.T) {
 		t.Fatalf("issues = %v", issues)
 	}
 }
+
+func TestReadProvenance(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: pdf\ndescription: d\nmetadata:\n    github-path: skills/pdf\n    github-ref: refs/tags/v1.2.0\n    github-repo: https://github.com/anthropics/skills\n    github-tree-sha: abc\n---\n"), 0o644)
+	p, ok := source.ReadProvenance(dir)
+	if !ok || p.Repo != "https://github.com/anthropics/skills" || p.TreeSHA != "abc" {
+		t.Fatalf("p = %+v ok = %v", p, ok)
+	}
+	if src, ref := p.SourceRef(); src != p.Repo || ref != "v1.2.0" {
+		t.Fatalf("source %q ref %q", src, ref)
+	}
+	p.Pinned = "deadbeef"
+	if _, ref := p.SourceRef(); ref != "deadbeef" {
+		t.Fatalf("pinned ref = %q", ref)
+	}
+
+	os.WriteFile(filepath.Join(dir, "SKILL.md"), []byte("---\nname: x\ndescription: d\n---\n"), 0o644)
+	if _, ok := source.ReadProvenance(dir); ok {
+		t.Fatal("no metadata should not count")
+	}
+}

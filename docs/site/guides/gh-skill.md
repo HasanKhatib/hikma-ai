@@ -22,4 +22,12 @@
 
 ## Using both
 
-A repository can be a source for either tool. Skills that one tool installed are not tracked by the other: Hikma will not update a skill that is not in its lockfile. Reinstall with `hikma skill install --force` to bring it under the lockfile.
+Both tools can work in the same repository, and a repository can be a source for either.
+
+Skills that `gh skill` installed are not in `.hikma/lock.json`, so Hikma will not update, sync, or remove them on its own. It notices them, though: `hikma skill list --installed` marks them, `hikma doctor` warns, and `hikma skill update --all` lists them. To hand one over, run [`hikma skill adopt`](/commands/skill-adopt). Hikma reads the source from the metadata `gh skill` wrote, so no arguments are needed.
+
+Going the other way, a skill installed by Hikma carries no tracking in `SKILL.md`, so `gh skill update` does not see it. Pick one tool per skill for updates.
+
+## What gh skill does that Hikma does not
+
+Search and preview, user-level installs (`--scope user`), and installs for many more agents. Use `gh skill` for those, and `hikma skill adopt` if you then want a lockfile.
