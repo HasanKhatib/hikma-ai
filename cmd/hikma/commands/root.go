@@ -34,6 +34,7 @@ Set a registry with: hikma config registry hasankhatib/ai`,
 		newDoctorCmd(),
 		newScaffoldCmd(),
 		newSkillCmd(),
+		newRegistryCmd(),
 		newUpdateCmd(),
 		newCompletionCmd(),
 	)

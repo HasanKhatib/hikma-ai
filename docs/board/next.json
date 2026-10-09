@@ -1,7 +1,7 @@
 {
   "updated": "2026-09-30",
-  "next": "E2.3-T7",
-  "note": "Remaining for v0.1: registry validate, fork push, install script, config cleanup, OSS hygiene, then tap token, rc tag, brew check, positioning, public flip, v0.1.0. Later: v0.2 lifecycle and reach, v0.3 trust, v1.0 stable.",
+  "next": "E3.3-T5",
+  "note": "Product work for v0.1 is done. Next: install script (E3.3-T5..T7), OSS hygiene (E3.2-T6), then tap repo and deploy key, history scan, rc tag, brew check, positioning text, public flip, v0.1.0.",
   "criticalPath": [
     {
       "title": "Review and accept the MIT license choice before public promotion",
