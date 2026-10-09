@@ -67,8 +67,8 @@ homebrew_casks:
           if OS.mac?
             system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/hikma"], must_succeed: false
           end
-    # Pre-releases (for example v0.1.0-rc.1) must not update the tap.
-    skip_upload: auto
+    # REHEARSAL ONLY (v0.1.0-rc.1): upload the cask even for a pre-release.
+    skip_upload: false
 
 changelog:
   use: github
