@@ -6,19 +6,34 @@ This repository contains the CLI only. It does not contain a bundled skill regis
 
 ## Install
 
-Homebrew (macOS and Linux):
+**macOS and Linux (Homebrew):**
 
 ```bash
 brew install HasanKhatib/tap/hikma
 ```
 
-From source:
+**Windows (Git Bash) and anywhere else:** run the install script. It downloads the matching release, verifies its checksum, and installs to `~/.local/bin`.
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash
+
+# or, signed in with the GitHub CLI:
+gh api -H "Accept: application/vnd.github.raw+json" \
+  repos/HasanKhatib/hikma-ai/contents/scripts/install.sh | bash
+
+# pin a version:
+curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash -s -- v0.1.0
+```
+
+Set `HIKMA_INSTALL_DIR` to install somewhere else. On Windows the script needs Git Bash (included with Git for Windows); make sure the install directory is on your `PATH`.
+
+**From source:**
 
 ```bash
 go install github.com/hasankhatib/hikma-ai/cmd/hikma@latest
 ```
 
-Or download the matching archive from GitHub Releases and put `hikma` on your `PATH`. Reading skills needs only `git`; the `gh` CLI is needed just for `hikma skill push`.
+Reading skills needs only `git`; the `gh` CLI is needed just for `hikma skill push`.
 
 ## Quickstart
 

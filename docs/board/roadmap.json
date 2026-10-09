@@ -810,7 +810,7 @@
             {
               "id": "E3.2-T6",
               "title": "Add issue templates, a changelog, and a review of SECURITY.md and CONTRIBUTING.md before going public",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "docs",
@@ -880,7 +880,7 @@
             {
               "id": "E3.3-T5",
               "title": "Write scripts/install.sh: detect OS and arch, download the release archive, verify checksums.txt, install to ~/.local/bin, print a PATH hint; works under Git Bash on Windows",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release",
@@ -891,7 +891,7 @@
             {
               "id": "E3.3-T6",
               "title": "Support install via gh api (private or authenticated) and curl (public); test the script in CI on ubuntu, macos, and windows Git Bash",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release",
@@ -902,7 +902,7 @@
             {
               "id": "E3.3-T7",
               "title": "Document install: brew install HasanKhatib/tap/hikma, and the one-line script for Windows and others",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs",
