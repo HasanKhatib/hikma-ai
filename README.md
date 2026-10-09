@@ -142,10 +142,12 @@ hikma config unset <key> [--project]
 hikma config path
 hikma config agent [copilot|codex|opencode|claude]
 hikma config registry [owner/repo|url]
-hikma skill list [owner/repo]
+hikma skill list [owner/repo] [--json]
+hikma skill list --installed [--json]
 hikma skill info [owner/repo] <name>
 hikma skill install [owner/repo] [name] [--ref <ref>] [--agent claude] [--force]
 hikma skill update <name|--all> [--force]
+hikma skill remove <name> [--agent <list>] [--force]
 hikma sync [--yes] [--force] [--dry-run]
 hikma skill create <name>
 hikma skill push <name> [--registry owner/repo] [--yes] [--codeowners]

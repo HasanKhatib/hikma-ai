@@ -6,10 +6,11 @@
 | [`hikma config`](/commands/config) | Read and write configuration, with the source of each value |
 | [`hikma doctor`](/commands/doctor) | Check your environment and active settings |
 | [`hikma registry validate`](/commands/registry-validate) | Check every skill in a registry against the format |
-| [`hikma skill list`](/commands/skill-list) | List skills in a registry or any repository |
+| [`hikma skill list`](/commands/skill-list) | List skills in a registry or any repository, or `--installed` here |
 | [`hikma skill info`](/commands/skill-info) | Show details for one skill |
 | [`hikma skill install`](/commands/skill-install) | Install a skill from a registry or any source |
 | [`hikma skill update`](/commands/skill-update) | Update installed skills from their recorded source |
+| [`hikma skill remove`](/commands/skill-remove) | Remove an installed skill |
 | [`hikma sync`](/commands/sync) | Restore every skill recorded in the lockfile |
 | [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
 | [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry as a pull request |
