@@ -17,8 +17,14 @@ For each skill it verifies that:
 - the frontmatter has a `description`
 - the folder name follows your [`naming`](/commands/config#naming) setting
 - no template placeholders are left (such as "Replace this description.")
+- the frontmatter follows the [Agent Skills spec](https://agentskills.io/specification): `name` up to 64 characters, `description` up to 1024, `compatibility` up to 500, and `metadata` values that are all strings
 
-Symlinks are reported as warnings because they are ignored when a skill is installed or pushed.
+These are reported as warnings, not failures:
+
+- symlinks, which are ignored when a skill is installed or pushed
+- a `name` outside the spec's lowercase-and-hyphens form (enforce it with [`naming`](/commands/config#naming))
+- frontmatter fields outside the spec, such as `when_to_use`. Claude Code accepts them, but claude.ai uploads and the Skills API reject them
+- a `SKILL.md` over 500 lines, which the spec recommends splitting into `references/`
 
 ## Example
 

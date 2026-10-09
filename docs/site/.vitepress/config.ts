@@ -19,7 +19,6 @@ export default defineConfig({
       { text: "Get Started", link: "/getting-started" },
       { text: "Commands", link: "/commands/" },
       { text: "Guides", link: "/guides/" },
-      { text: "Use Cases", link: "/use-cases/" },
       {
         text: "v0.1",
         items: [
@@ -60,19 +59,12 @@ export default defineConfig({
         text: "Guides",
         items: [
           { text: "Overview", link: "/guides/" },
+          { text: "Agents and folders", link: "/guides/agents" },
           { text: "Skill format", link: "/guides/skill-format" },
           { text: "Run a registry", link: "/guides/registry" },
           { text: "Set up a team repo", link: "/guides/team-setup" },
           { text: "Lockfile and updates", link: "/guides/lockfile" },
           { text: "Using Hikma with gh skill", link: "/guides/gh-skill" },
-        ],
-      },
-      {
-        text: "Use Cases",
-        items: [
-          { text: "Overview", link: "/use-cases/" },
-          { text: "A personal registry", link: "/use-cases/personal-registry" },
-          { text: "A team registry with review", link: "/use-cases/team-registry" },
         ],
       },
     ],

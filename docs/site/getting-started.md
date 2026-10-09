@@ -47,7 +47,7 @@ To prepare a repository for one or more agents:
 hikma init --agent claude,codex --registry owner/repo --skill my-skill
 ```
 
-This writes `AGENTS.md` (and `CLAUDE.md` for Claude), saves the agents and registry in `.hikma/config.json`, and installs the skill into `.claude/skills` and `.agents/skills`. Commit `.hikma/` so teammates share the setup. See [init](/commands/init) and [Set up a team repo](/guides/team-setup).
+This writes `AGENTS.md`, saves the agents and registry in `.hikma/config.json`, and installs the skill into `.claude/skills` and `.agents/skills`. Commit `.hikma/` so teammates share the setup. See [init](/commands/init) and [Set up a team repo](/guides/team-setup).
 
 ## 4. Use your own registry
 

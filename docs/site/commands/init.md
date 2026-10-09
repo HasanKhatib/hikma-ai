@@ -37,10 +37,10 @@ hikma init --agent claude --project-name demo --owner platform --technology Go
 
 | Agent | Instruction files | Skills folder |
 |---|---|---|
-| `claude` | `AGENTS.md`, `CLAUDE.md` | `.claude/skills/` |
+| `claude` | `AGENTS.md` | `.claude/skills/` |
 | `codex`, `copilot`, `opencode` | `AGENTS.md` | `.agents/skills/` |
 
-Agents that share a folder are written once. `CLAUDE.md` is a thin file that imports `AGENTS.md`, which holds the project rules.
+Agents that share a folder are written once. Claude Code reads `AGENTS.md` when the repo has no `CLAUDE.md`. See [Agents and folders](/guides/agents) for why each agent gets the folder it does.
 
 Existing files are skipped unless you pass `--force`. Without a terminal, `init` runs non-interactively using flags and defaults.
 

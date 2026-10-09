@@ -25,7 +25,7 @@ func TestScaffoldClaudeWritesAgentFilesWithoutBundledSkill(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Scaffold() error = %v", err)
 	}
-	if len(result.Created) != 2 || !exists(dir, "AGENTS.md") || !exists(dir, "CLAUDE.md") {
+	if len(result.Created) != 1 || !exists(dir, "AGENTS.md") || exists(dir, "CLAUDE.md") {
 		t.Fatalf("created = %v", result.Created)
 	}
 	if exists(dir, ".claude/skills") || exists(dir, ".agents") {
@@ -49,7 +49,7 @@ func TestScaffoldMultipleAgentsWritesSharedFilesOnce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(result.Created) != 2 {
+	if len(result.Created) != 1 {
 		t.Fatalf("created = %v", result.Created)
 	}
 	data, _ := os.ReadFile(filepath.Join(dir, "AGENTS.md"))
@@ -91,7 +91,7 @@ func TestScaffoldDryRunWritesNothing(t *testing.T) {
 	o := opts(dir, config.AgentClaude)
 	o.DryRun = true
 	result, err := scaffold.Scaffold(o)
-	if err != nil || len(result.Created) != 2 {
+	if err != nil || len(result.Created) != 1 {
 		t.Fatalf("%v %v", result, err)
 	}
 	if exists(dir, "AGENTS.md") {

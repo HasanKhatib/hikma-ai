@@ -167,10 +167,8 @@ func writeTemplateFile(src, dst string, data interface{}, force bool, result *Re
 type SkillOptions struct {
 	SkillName   string
 	Owner       string
-	Email       string
 	Team        string
 	Description string
-	Date        string
 	TargetDir   string
 }
 
@@ -181,17 +179,13 @@ func CreateSkill(opts SkillOptions) ([]string, error) {
 	data := struct {
 		SkillName   string
 		Owner       string
-		Email       string
 		Team        string
 		Description string
-		Date        string
 	}{
 		SkillName:   opts.SkillName,
 		Owner:       opts.Owner,
-		Email:       opts.Email,
 		Team:        opts.Team,
 		Description: opts.Description,
-		Date:        opts.Date,
 	}
 
 	var result Result
@@ -210,7 +204,6 @@ func ValidatePlaceholders(skillDir string) ([]string, error) {
 	markers := []string{
 		"{{.",
 		"Replace this description.",
-		"Describe required tools",
 		"Replace with scenarios and keywords",
 		"Replace with clear steps for the agent.",
 		"What this skill must not do",

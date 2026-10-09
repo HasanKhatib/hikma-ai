@@ -8,7 +8,7 @@ This repository contains the CLI only. It does not contain a bundled skill regis
 
 Agents read skills from folders in your repo, and tools such as [`gh skill`](https://cli.github.com/manual/gh_skill_install) (GitHub CLI) and `npx skills` already install skills from public GitHub repos. Hikma is built for a different job: **running your own registry and setting up repositories from it**.
 
-- **One command sets up a repo.** `hikma init` writes the agent instruction files (`AGENTS.md`, `CLAUDE.md`), records the agents and registry in a committed `.hikma/config.json`, and installs skills into every agent's folder, so a teammate who clones the repo gets the same setup.
+- **One command sets up a repo.** `hikma init` writes the agent instruction file (`AGENTS.md`), records the agents and registry in a committed `.hikma/config.json`, and installs skills into every agent's folder, so a teammate who clones the repo gets the same setup.
 - **Your registry is a setting, not an argument.** Bare names install from it (`hikma skill install my-skill`), and `hikma skill push` publishes to it as a pull request, through your fork when you lack write access, after showing and confirming the target.
 - **Installs are tracked outside the skill.** `.hikma/lock.json` holds source, commit, and file hashes without editing `SKILL.md`. Updates stop on local edits and flag changes to `scripts/`.
 - **Policy for your registry.** Choose a naming convention and run `hikma registry validate` in CI.
@@ -82,10 +82,10 @@ hikma init --agent claude,codex --registry owner/registry --skill my-skill
 
 | Agent | Instructions | Skills folder |
 |---|---|---|
-| `claude` | `AGENTS.md`, `CLAUDE.md` | `.claude/skills` |
+| `claude` | `AGENTS.md` | `.claude/skills` |
 | `codex`, `copilot`, `opencode` | `AGENTS.md` | `.agents/skills` |
 
-Agents that share a folder are written once. For one-off use, set a personal default with `hikma config set agent claude` or pass `--agent`.
+Agents that share a folder are written once. For one-off use, set a personal default with `hikma config set agent claude` or pass `--agent`. See [Agents and folders](https://hasankhatib.github.io/hikma-ai/guides/agents) for what each tool reads.
 
 ## How it works
 

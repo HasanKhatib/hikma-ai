@@ -18,7 +18,7 @@
 
 - **Tracking.** `gh skill` records where a skill came from inside the skill's frontmatter. Hikma keeps it in `.hikma/lock.json` and does not edit `SKILL.md`.
 - **Requirements.** Hikma reads skills with `git` alone. `gh` is only needed to publish.
-- **Agents.** Hikma supports Claude, Codex, Copilot, and OpenCode.
+- **Agents.** Hikma supports Claude, Codex, Copilot, and OpenCode. `gh skill` supports many more. See [Agents and folders](/guides/agents).
 
 ## Using both
 
