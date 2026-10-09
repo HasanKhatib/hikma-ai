@@ -107,7 +107,7 @@
           "id": "E1.2",
           "title": "Public identity and naming",
           "emoji": "N",
-          "status": "next",
+          "status": "done",
           "assignee": "me",
           "labels": [
             "brand",
@@ -122,7 +122,7 @@
             {
               "id": "E1.2-T1",
               "title": "Confirm project name, CLI name, and repository slug",
-              "status": "todo",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "brand"

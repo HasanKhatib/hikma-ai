@@ -1,7 +1,7 @@
 {
   "updated": "2026-10-10",
   "next": "E4.4-T1",
-  "note": "v0.1.0 shipped. Finished epics are closed. Next: gh skill interop (detect and adopt), custom agent layouts, the registry validation Action, and a real end-to-end push test. Human decisions pending: E1.2-T1 (name) and E1.3-T4 (history).",
+  "note": "v0.1.0 shipped. Finished epics are closed. Next: gh skill interop (detect and adopt), custom agent layouts, the registry validation Action, and a real end-to-end push test. Human decision pending: E1.3-T4 (history).",
   "criticalPath": [
     {
       "title": "Run a real end-to-end skill push against a throwaway GitHub repo",
