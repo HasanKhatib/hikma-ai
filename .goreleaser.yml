@@ -49,7 +49,11 @@ homebrew_casks:
     repository:
       owner: HasanKhatib
       name: homebrew-tap
-      token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
+      branch: main
+      # A write-enabled deploy key on the tap repo; the workflow writes the key to a file.
+      git:
+        url: git@github.com:HasanKhatib/homebrew-tap.git
+        private_key: '{{ index .Env "HOMEBREW_TAP_KEY_PATH" }}'
     directory: Casks
     homepage: https://github.com/HasanKhatib/hikma-ai
     description: Install, create, and publish reusable AI-agent skills from any repo
