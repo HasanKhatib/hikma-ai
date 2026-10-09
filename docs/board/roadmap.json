@@ -2,7 +2,7 @@
   "$schema": "./roadmap.schema.json",
   "version": 1,
   "project": "Hikma AI",
-  "updated": "2026-10-09",
+  "updated": "2026-10-10",
   "releases": [
     {
       "id": "v0.1",
@@ -14,11 +14,11 @@
     },
     {
       "id": "v0.2",
-      "title": "Lifecycle and reach",
+      "title": "Registry workflow",
       "emoji": "v0.2",
       "status": "planned",
-      "goal": "Manage the full skill lifecycle and install at project or user scope for more agents.",
-      "exit": "Users can remove, diff, and restore skills from the lockfile, install globally, and use at least two more agents."
+      "goal": "Make the registry workflow solid: restore from the lockfile, coexist with gh skill, and validate registries in CI.",
+      "exit": "hikma sync restores a repo from the lockfile, skills installed by gh skill are adopted cleanly, custom agent layouts work, and a GitHub Action validates registry pull requests."
     },
     {
       "id": "v0.3",
@@ -35,6 +35,14 @@
       "status": "planned",
       "goal": "Stable contracts, hardened quality, and complete docs.",
       "exit": "Config keys, the lockfile format, and the skill layout are documented and versioned; CI covers all supported platforms end to end."
+    },
+    {
+      "id": "later",
+      "title": "Parked",
+      "emoji": "later",
+      "status": "planned",
+      "goal": "Ideas that gh skill already covers or that wait for demand.",
+      "exit": "Revisit when users ask."
     }
   ],
   "phases": [
@@ -738,6 +746,16 @@
                 "ci"
               ],
               "planned": null
+            },
+            {
+              "id": "E3.1-T6",
+              "title": "Update GitHub Actions to the latest majors and add dependabot for actions and Go modules",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "ci"
+              ],
+              "planned": null
             }
           ]
         },
@@ -966,12 +984,12 @@
     },
     {
       "id": "P4",
-      "title": "Lifecycle and Reach",
+      "title": "Registry Workflow",
       "emoji": "P4",
       "status": "planned",
       "release": "v0.2",
-      "goal": "Round out skill management and widen where and for whom skills install.",
-      "exit": "Remove, diff, sync, global installs, and more agents work and are documented.",
+      "goal": "Harden the registry workflow and make hikma coexist with gh skill.",
+      "exit": "sync, interop, custom layouts, and registry CI are shipped and documented.",
       "epics": [
         {
           "id": "E4.1",
@@ -984,8 +1002,8 @@
           ],
           "planned": null,
           "order": 1,
-          "goal": "Add the missing lifecycle commands around install and update.",
-          "exit": "Users can remove, list, diff, and restore skills from the lockfile.",
+          "goal": "Add the lifecycle commands the lockfile makes cheap.",
+          "exit": "Users can restore a repo from the lockfile, remove a skill, and list what is installed.",
           "body": "epics/E4.1.md",
           "tasks": [
             {
@@ -1010,17 +1028,18 @@
             },
             {
               "id": "E4.1-T3",
-              "title": "hikma skill diff <name>: show local edits and upstream changes",
+              "title": "Parked (low value next to the lockfile and update output): hikma skill diff <name>: show local edits and upstream changes",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
-                "feature"
+                "feature",
+                "parked"
               ],
               "planned": null
             },
             {
               "id": "E4.1-T4",
-              "title": "hikma sync: restore every skill in .hikma/lock.json on a fresh clone, like npm ci",
+              "title": "hikma sync: restore every skill in .hikma/lock.json on a fresh clone, like npm ci (first v0.2 task)",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
@@ -1032,7 +1051,7 @@
         },
         {
           "id": "E4.2",
-          "title": "Global installs",
+          "title": "Global installs (parked)",
           "emoji": "G",
           "status": "backlog",
           "assignee": "ai+verify",
@@ -1042,8 +1061,8 @@
           ],
           "planned": null,
           "order": 2,
-          "goal": "Install skills at user scope as well as project scope.",
-          "exit": "--global installs into each agent's user skills folder with its own lockfile.",
+          "goal": "Parked: gh skill already installs at user scope; hikma stays project-focused.",
+          "exit": "Revisit if users ask for user-scope installs in hikma.",
           "body": "epics/E4.2.md",
           "tasks": [
             {
@@ -1053,7 +1072,8 @@
               "assignee": "ai+verify",
               "labels": [
                 "design",
-                "docs"
+                "docs",
+                "parked"
               ],
               "planned": null
             },
@@ -1063,13 +1083,96 @@
               "status": "todo",
               "assignee": "ai",
               "labels": [
-                "feature"
+                "feature",
+                "parked"
               ],
               "planned": null
             },
             {
               "id": "E4.2-T3",
               "title": "Document precedence when a skill exists at both scopes",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "docs",
+                "parked"
+              ],
+              "planned": null
+            }
+          ],
+          "release": "later"
+        },
+        {
+          "id": "E4.3",
+          "title": "Custom agent layouts",
+          "emoji": "A",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": [
+            "templates"
+          ],
+          "planned": null,
+          "order": 3,
+          "goal": "Let users define their own agent layouts in config instead of hikma maintaining a long agent list.",
+          "exit": "A layout defined in config (name, skills folder, instruction file) works with init, install, update, and push.",
+          "body": "epics/E4.3.md",
+          "tasks": [
+            {
+              "id": "E4.3-T1",
+              "title": "Parked (gh skill already supports many agents): Verify documented skill and instruction locations for Cursor and Gemini CLI",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "docs",
+                "parked"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T2",
+              "title": "Parked (gh skill already supports many agents): Add layout entries and templates for the verified agents",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "parked",
+                "templates"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T3",
+              "title": "Tests for init and install paths per layout, built-in and custom",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T4",
+              "title": "Config schema for custom layouts (agents.<name>.skillsDir and instructionFile), validated on load",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "config",
+                "design"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T5",
+              "title": "Resolve custom layouts in ResolveTargets, init, install, update, and doctor; dedupe shared folders",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T6",
+              "title": "Document custom layouts with an example (Cursor or Gemini CLI) and where to find the tool docs",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -1080,47 +1183,109 @@
           ]
         },
         {
-          "id": "E4.3",
-          "title": "More agents",
-          "emoji": "A",
+          "id": "E4.4",
+          "title": "Interop with gh skill",
+          "emoji": "I",
           "status": "backlog",
           "assignee": "ai+verify",
           "labels": [
-            "templates"
+            "interop",
+            "skills"
           ],
           "planned": null,
-          "order": 3,
-          "goal": "Support additional agents through the layout table.",
-          "exit": "At least two more agents install skills and instruction files to their documented locations.",
-          "body": "epics/E4.3.md",
+          "order": 4,
+          "goal": "Let hikma and gh skill manage skills in the same repo without clashing.",
+          "exit": "Skills installed by gh skill are detected and can be adopted into the lockfile; docs say when to use which tool.",
+          "body": "epics/E4.4.md",
           "tasks": [
             {
-              "id": "E4.3-T1",
-              "title": "Verify documented skill and instruction locations for Cursor and Gemini CLI",
+              "id": "E4.4-T1",
+              "title": "Detect skills whose SKILL.md carries gh skill provenance metadata and that have no lock entry (doctor and list --installed)",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
+                "interop"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.4-T2",
+              "title": "hikma skill adopt <name>: record an existing skill in the lockfile with its source and hashes",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "interop"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.4-T3",
+              "title": "Make update and sync skip or warn clearly on skills hikma does not track",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "ux"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.4-T4",
+              "title": "Test a repo with skills installed by both tools; document coexistence and that search and preview are gh skill features",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "test",
                 "docs"
               ],
               "planned": null
-            },
+            }
+          ]
+        },
+        {
+          "id": "E4.5",
+          "title": "Registry CI",
+          "emoji": "Y",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": [
+            "ci",
+            "registry"
+          ],
+          "planned": null,
+          "order": 5,
+          "goal": "Run registry validation automatically on registry pull requests.",
+          "exit": "A reusable GitHub Action validates a registry on every pull request with annotations on the offending files.",
+          "body": "epics/E4.5.md",
+          "tasks": [
             {
-              "id": "E4.3-T2",
-              "title": "Add layout entries and templates for the verified agents",
+              "id": "E4.5-T1",
+              "title": "registry validate --format github: emit workflow annotations (::error file=...) for each problem",
               "status": "todo",
               "assignee": "ai",
               "labels": [
-                "templates"
+                "feature"
               ],
               "planned": null
             },
             {
-              "id": "E4.3-T3",
-              "title": "Add tests per agent for init and install paths",
+              "id": "E4.5-T2",
+              "title": "Composite action (action.yml) that installs the pinned hikma release and runs registry validate",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "ci",
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.5-T3",
+              "title": "Example workflow and docs for registry owners; use it in the example registry",
               "status": "todo",
               "assignee": "ai",
               "labels": [
-                "test"
+                "docs"
               ],
               "planned": null
             }
@@ -1175,12 +1340,13 @@
             },
             {
               "id": "E5.1-T3",
-              "title": "Optional registry checksum manifest checked on install",
+              "title": "Parked (low demand): Optional registry checksum manifest checked on install",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
-                "security",
-                "registry"
+                "parked",
+                "registry",
+                "security"
               ],
               "planned": null
             },
