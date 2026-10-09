@@ -30,9 +30,13 @@ fi
 sum() { if command -v sha256sum >/dev/null; then sha256sum "$1"; else shasum -a 256 "$1"; fi; }
 (cd "$WORK/release" && sum "$ARCHIVE" | awk -v f="$ARCHIVE" '{print $1 "  " f}' > checksums.txt)
 
-# A file:// URL needs a leading slash after the scheme, also for Windows drive paths.
-BASE="file://$WORK/release"
-case "$BASE" in file://[A-Za-z]:*) BASE="file:///${BASE#file://}" ;; esac
+# Windows curl cannot read MSYS paths like /tmp/...; use a mixed C:/... path there.
+RELEASE_DIR="$WORK/release"
+if command -v cygpath >/dev/null 2>&1; then RELEASE_DIR="$(cygpath -m "$RELEASE_DIR")"; fi
+case "$RELEASE_DIR" in
+  /*) BASE="file://$RELEASE_DIR" ;;
+  *)  BASE="file:///$RELEASE_DIR" ;;
+esac
 
 echo "== install"
 DEST="$WORK/bin"
