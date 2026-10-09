@@ -8,7 +8,7 @@
       "id": "v0.1",
       "title": "Public MVP",
       "emoji": "v0.1",
-      "status": "active",
+      "status": "done",
       "goal": "Hikma AI ships as a neutral open-source CLI: brew on macOS and Linux, an install script elsewhere, and skills from any repo.",
       "exit": "A public repo with a tagged release installs via brew and the install script, installs and pushes skills against a real registry, and contains no bundled registry."
     },
@@ -16,7 +16,7 @@
       "id": "v0.2",
       "title": "Registry workflow",
       "emoji": "v0.2",
-      "status": "planned",
+      "status": "active",
       "goal": "Make the registry workflow solid: restore from the lockfile, coexist with gh skill, and validate registries in CI.",
       "exit": "hikma sync restores a repo from the lockfile, skills installed by gh skill are adopted cleanly, custom agent layouts work, and a GitHub Action validates registry pull requests."
     },
@@ -59,7 +59,7 @@
           "id": "E1.1",
           "title": "Claude-only project foundation",
           "emoji": "C",
-          "status": "active",
+          "status": "done",
           "assignee": "ai",
           "labels": [
             "docs",
@@ -216,7 +216,7 @@
       "id": "P2",
       "title": "CLI With External Registries",
       "emoji": "P2",
-      "status": "planned",
+      "status": "done",
       "release": "v0.1",
       "goal": "Make the CLI usable by any internet user with their own separate registry repository.",
       "exit": "A user can initialize Hikma AI, point it at a separate registry such as hasankhatib/ai, and install or update skills without private assumptions or bundled registry content.",
@@ -225,7 +225,7 @@
           "id": "E2.1",
           "title": "User-owned registry configuration",
           "emoji": "R",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "feature",
@@ -357,7 +357,7 @@
           "id": "E2.2",
           "title": "Neutral scaffold templates",
           "emoji": "T",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "templates",
@@ -459,7 +459,7 @@
           "id": "E2.3",
           "title": "Skill lifecycle for public users",
           "emoji": "S",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "feature",
@@ -625,7 +625,7 @@
           "id": "E2.4",
           "title": "CLI-only repository boundary",
           "emoji": "B",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "architecture",
@@ -676,7 +676,7 @@
       "id": "P3",
       "title": "Open Source Release",
       "emoji": "P3",
-      "status": "planned",
+      "status": "done",
       "release": "v0.1",
       "goal": "Prepare the public repository for outside users and repeatable releases.",
       "exit": "A tagged release is available with binaries, installation docs, and clear contribution guidance.",
@@ -685,7 +685,7 @@
           "id": "E3.1",
           "title": "Build, test, and quality gates",
           "emoji": "Q",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "test",
@@ -763,7 +763,7 @@
           "id": "E3.2",
           "title": "Public documentation",
           "emoji": "D",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "docs"
@@ -842,7 +842,7 @@
           "id": "E3.3",
           "title": "Release packaging",
           "emoji": "R",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "release"
@@ -934,7 +934,7 @@
           "id": "E3.4",
           "title": "Documentation site and pages",
           "emoji": "W",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "docs",
@@ -1008,7 +1008,7 @@
       "id": "P4",
       "title": "Registry Workflow",
       "emoji": "P4",
-      "status": "planned",
+      "status": "active",
       "release": "v0.2",
       "goal": "Harden the registry workflow and make hikma coexist with gh skill.",
       "exit": "sync, interop, custom layouts, and registry CI are shipped and documented.",

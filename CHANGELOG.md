@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Changed
+- `hikma update` and `hikma --help` point to `brew upgrade` and the install script instead of stale text; examples use placeholders instead of a specific registry.
+- `hikma skill install` prints a file count per folder instead of every file, and `skill remove` deletes agent folders it leaves empty.
 - File hashes in `.hikma/lock.json` ignore CRLF versus LF line endings in text files, so a lockfile written on one platform verifies on another. Binary files are still hashed byte for byte.
 
 ### Added

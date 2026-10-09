@@ -353,9 +353,7 @@ func installSkill(out io.Writer, src source.Source, co source.Checkout, skill so
 		if err := recordInstall(dir, skill.Name, src, ref, co.Commit); err != nil {
 			return err
 		}
-		for _, p := range written {
-			fmt.Fprintf(out, "  -> %s/%s\n", dir, p)
-		}
+		fmt.Fprintf(out, "  -> %s/ (%d files)\n", dir, len(written))
 	}
 	fmt.Fprintf(out, "\nOpen %s/SKILL.md to review.\n", targets[0].SkillDir(skill.Name))
 	return nil
