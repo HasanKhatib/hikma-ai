@@ -172,6 +172,7 @@ install'.`,
 					if err := os.RemoveAll(dir); err != nil {
 						return fmt.Errorf("remove %s: %w", dir, err)
 					}
+					pruneEmptyParents(dir)
 				}
 				delete(lf.Skills, key)
 				fmt.Fprintf(out, "  removed  %s\n", key)
@@ -213,4 +214,15 @@ install'.`,
 func pathExists(p string) bool {
 	_, err := os.Lstat(p)
 	return err == nil
+}
+
+// pruneEmptyParents removes now-empty parent folders of a removed skill
+// (for example .claude/skills and .claude), stopping at the first one that
+// still has content or at the project root.
+func pruneEmptyParents(dir string) {
+	for p := filepath.Dir(filepath.Clean(dir)); p != "." && p != ".." && !filepath.IsAbs(p); p = filepath.Dir(p) {
+		if os.Remove(p) != nil { // fails unless the directory is empty
+			return
+		}
+	}
 }

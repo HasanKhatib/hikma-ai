@@ -23,8 +23,8 @@ func Root() *cobra.Command {
 		Long: `hikma helps teams scaffold AI agent configuration files and install reusable
 skills from a user-configured registry repository.
 
-
-Set a registry with: hikma config registry hasankhatib/ai`,
+Install from any repo with: hikma skill install owner/repo my-skill
+Set a registry with: hikma config registry owner/registry`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
 	}

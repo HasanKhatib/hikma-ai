@@ -2,7 +2,7 @@
 
 Hikma AI is a repo-native CLI for scaffolding AI-agent instructions and installing reusable skills from a registry you control.
 
-This repository contains the CLI only. It does not contain a bundled skill registry. Point Hikma AI at a separate registry repository, for example `hasankhatib/ai`.
+This repository contains the CLI only. It does not contain a bundled skill registry. Point Hikma AI at a separate registry repository, for example your own `owner/registry` repo.
 
 ## Why Hikma
 
@@ -52,16 +52,16 @@ Reading skills needs only `git`; the `gh` CLI is needed just for `hikma skill pu
 Install a skill from any repo, no setup needed:
 
 ```bash
-hikma skill install owner/repo my-skill   # install one skill
-hikma skill install owner/repo            # pick from the skills in that repo
+hikma skill install anthropics/skills pdf   # install one skill
+hikma skill install anthropics/skills       # pick from the skills in that repo
 ```
 
 Or set a registry once and use bare names:
 
 ```bash
-hikma config set registry hasankhatib/ai
+hikma config set registry owner/registry
 hikma skill list
-hikma skill install agentkan
+hikma skill install my-skill
 ```
 
 Create a skill and publish it to your registry:
@@ -75,7 +75,7 @@ hikma registry validate .        # check every skill in a registry checkout
 Set a repo up for your agents in one step:
 
 ```bash
-hikma init --agent claude,codex --registry hasankhatib/ai --skill agentkan
+hikma init --agent claude,codex --registry owner/registry --skill my-skill
 ```
 
 `init` writes each agent's instruction files, records the agents and registry in `.hikma/config.json` (commit it so teammates share them), and installs the skills into every selected agent's folder. After that, `hikma skill install <name>` installs into all of them.
@@ -106,9 +106,9 @@ skills/
 A registry is just a repo you chose as your default source and push target. Registry values can be:
 
 ```text
-hasankhatib/ai
-https://github.com/hasankhatib/ai.git
-git@github.com:hasankhatib/ai.git
+owner/registry
+https://github.com/owner/registry.git
+git@github.com:owner/registry.git
 ./path/to/local/registry
 ```
 
