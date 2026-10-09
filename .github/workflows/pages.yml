@@ -3,6 +3,9 @@ name: Pages
 on:
   push:
     branches: [main]
+    paths:
+      - "docs/site/**"
+      - ".github/workflows/pages.yml"
   workflow_dispatch:
 
 permissions:
@@ -22,9 +25,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # "last updated" timestamps come from git history
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: docs/site/package-lock.json
       - uses: actions/configure-pages@v6
+      - name: Build the site
+        working-directory: docs/site
+        run: |
+          npm ci
+          npm run docs:build
       - uses: actions/upload-pages-artifact@v5
         with:
-          path: docs/site
+          path: docs/site/.vitepress/dist
       - id: deployment
         uses: actions/deploy-pages@v5

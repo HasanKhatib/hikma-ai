@@ -1,79 +1,58 @@
-# Registry Guide
+# Run a registry
 
-Hikma AI installs skills from any repository. A **registry** is the repository you choose as your default source and as the target of `hikma skill push`. The CLI repository itself contains no skills.
+A registry is a Git repository of skills that you choose as your default source and as the target of `hikma skill push`. There is nothing to host: Hikma reads it with `git`, and publishing is a pull request.
 
-## Skill Layout
+## Create one
 
-Hikma discovers skills without an index file. It checks, in order:
-
-1. `skills/<name>/SKILL.md`
-2. `<name>/SKILL.md` at the repository root
-3. a single `SKILL.md` at the repository root
+Any repository with skills in the [standard layout](/guides/skill-format#where-skills-live) works:
 
 ```text
 skills/
-  my-skill/
+  deploy-helper/
     SKILL.md
-    scripts/
-    references/
+  release-notes/
+    SKILL.md
 ```
 
-`SKILL.md` frontmatter supplies the description and optional `metadata.owner`.
-
-## Install From Any Source
+Point Hikma at it:
 
 ```bash
-hikma skill install owner/repo my-skill          # one skill
-hikma skill install owner/repo                   # pick from a list
-hikma skill install owner/repo my-skill --ref v1 # pin a tag, branch, or commit
+hikma config set registry owner/repo            # for you
+hikma config set registry owner/repo --project  # for everyone on a repo
 ```
 
-A source can be GitHub `owner/repo`, any git URL, or a local path. Public sources need only `git`.
+Bare names now install from it: `hikma skill install deploy-helper`.
 
-## Configure Your Registry
+## Source values
+
+```text
+owner/repo
+https://github.com/owner/repo.git
+git@github.com:owner/repo.git
+./path/to/local/registry
+```
+
+## Public, private, and local
+
+| Registry | Works with |
+|---|---|
+| Public GitHub repo | `git` only |
+| Private GitHub repo | your git credentials, or the GitHub CLI as a fallback |
+| Other git host | read-only; `skill push` needs GitHub |
+| Local path | read-only; handy while writing skills |
+
+## Check it
 
 ```bash
-hikma config set registry hasankhatib/ai
-hikma config set registry hasankhatib/ai --project   # share with your team via .hikma/config.json
+hikma registry validate .
 ```
 
-With a registry set, bare names work: `hikma skill install my-skill`. Override it for one command with `--registry`.
-
-## Validating
-
-```bash
-hikma registry validate .          # a registry checkout
-hikma registry validate owner/repo # any repo
-```
-
-Each skill must have `SKILL.md` frontmatter with a `name` matching its folder and a `description`, a folder name that fits your naming setting, and no template placeholders. `push` runs the same checks first.
+Run this in your registry's CI so every pull request is checked. It exits non-zero when any skill is invalid.
 
 ## Publishing
 
-`hikma skill push <name>` opens a pull request against your configured registry, which must be a GitHub `owner/repo`. It prints the target registry and where the setting came from, then asks you to confirm (`--yes` skips the prompt). Pushing requires the `gh` CLI.
+`hikma skill push <name>` opens a pull request against the registry. See [skill push](/commands/skill-push) for the confirmation prompt, fork behavior, and update behavior.
 
-- With write access, a `skill/<name>` branch is pushed to the registry.
-- Without it, `hikma` forks the registry and pushes to your fork.
-- Nothing is force-pushed. Pushing again updates the open PR with a new commit; if the earlier PR was merged or closed, a new branch is used.
+## Keep it neutral
 
-Updating `.github/CODEOWNERS` in the registry is opt-in with `--codeowners`.
-
-## Lockfile
-
-Installs are recorded in `.hikma/lock.json` (source, commit, file hashes). Commit it to make installs reproducible. `hikma skill update` uses the recorded source and stops if you edited an installed skill, unless you pass `--force`.
-
-## Examples
-
-```bash
-# Public registry on GitHub
-hikma config set registry hasankhatib/ai
-
-# Private registry: works with your existing git or gh credentials
-hikma config set registry my-org/private-skills --project
-
-# Local registry, handy while authoring skills
-hikma config set registry ./path/to/skills-repo
-hikma skill install my-skill
-```
-
-Pushing (`hikma skill push`) always needs a GitHub `owner/repo` registry. A local or non-GitHub registry is read-only.
+Hikma ships with no registry and no default. Installing from a repository is always something you chose, and every `install` prints the source it used.

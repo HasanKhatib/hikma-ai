@@ -467,7 +467,7 @@ pushed to your fork. Nothing is force-pushed.`,
 		},
 	}
 
-	cmd.Flags().StringVar(&flagAgent, "agent", "", "AI agent (copilot, codex, opencode, claude)")
+	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	cmd.Flags().BoolVarP(&assumeYes, "yes", "y", false, "skip the confirmation prompt")
 	cmd.Flags().BoolVar(&withCodeowners, "codeowners", false, "also add the skill owner to .github/CODEOWNERS in the registry")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
