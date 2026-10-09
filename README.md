@@ -4,6 +4,18 @@ Hikma AI is a repo-native CLI for scaffolding AI-agent instructions and installi
 
 This repository contains the CLI only. It does not contain a bundled skill registry. Point Hikma AI at a separate registry repository, for example `hasankhatib/ai`.
 
+## Why Hikma
+
+Agents read skills from folders in your repo, and tools such as [`gh skill`](https://cli.github.com/manual/gh_skill_install) (GitHub CLI) and `npx skills` already install skills from public GitHub repos. Hikma is built for a different job: **running your own registry and setting up repositories from it**.
+
+- **One command sets up a repo.** `hikma init` writes the agent instruction files (`AGENTS.md`, `CLAUDE.md`), records the agents and registry in a committed `.hikma/config.json`, and installs skills into every agent's folder, so a teammate who clones the repo gets the same setup.
+- **Your registry is a setting, not an argument.** Bare names install from it (`hikma skill install my-skill`), and `hikma skill push` publishes to it as a pull request, through your fork when you lack write access, after showing and confirming the target.
+- **Installs are tracked outside the skill.** `.hikma/lock.json` holds source, commit, and file hashes without editing `SKILL.md`. Updates stop on local edits and flag changes to `scripts/`.
+- **Policy for your registry.** Choose a naming convention and run `hikma registry validate` in CI.
+- **Light requirements.** Reading skills needs only `git`; no GitHub CLI or account.
+
+If you only want to browse and install public skills for many different agents, `gh skill` is first-party and supports far more agents than Hikma's four. Hikma follows the same `skills/<name>/SKILL.md` layout, so a repo that works with one works with the other.
+
 ## Install
 
 **macOS and Linux (Homebrew):**
