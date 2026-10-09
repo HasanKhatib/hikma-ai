@@ -1,6 +1,7 @@
 package source
 
 import (
+	"bytes"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
@@ -181,7 +182,18 @@ func copyFile(src, dst string) error {
 	return out.Close()
 }
 
+// normalizeLineEndings turns CRLF into LF in text files so a skill hashes the
+// same on every platform (git may check files out with CRLF on Windows).
+// Binary files, recognized by a NUL byte, are left untouched.
+func normalizeLineEndings(data []byte) []byte {
+	if bytes.IndexByte(data, 0) >= 0 {
+		return data
+	}
+	return bytes.ReplaceAll(data, []byte("\r\n"), []byte("\n"))
+}
+
 // HashDir returns a sha256 per file, keyed by slash-separated relative path.
+// Line endings in text files are normalized; see normalizeLineEndings.
 func HashDir(dir string) (map[string]string, error) {
 	hashes := map[string]string{}
 	err := filepath.WalkDir(dir, func(path string, d fs.DirEntry, err error) error {
@@ -205,7 +217,7 @@ func HashDir(dir string) (map[string]string, error) {
 		if err != nil {
 			return err
 		}
-		sum := sha256.Sum256(data)
+		sum := sha256.Sum256(normalizeLineEndings(data))
 		hashes[filepath.ToSlash(rel)] = hex.EncodeToString(sum[:])
 		return nil
 	})
