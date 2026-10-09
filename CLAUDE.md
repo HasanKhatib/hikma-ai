@@ -56,5 +56,5 @@ This repo now contains the CLI source. Keep future changes aligned with `docs/mi
 - No hosted registry or marketplace; registries are plain repos.
 - No support for pushing to non-GitHub hosts.
 - No package managers beyond Homebrew; other platforms use the install script.
+- No skill search or preview, and no user-scope (global) installs: use `gh skill` for those. Hikma is the registry workflow layer: repo setup, a configured registry, a gated push, a lockfile, and policy.
 - No telemetry, auto-update, or TUI until there is clear demand.
-

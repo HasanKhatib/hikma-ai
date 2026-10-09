@@ -1,7 +1,7 @@
 {
   "updated": "2026-09-30",
-  "next": "E5.2-T3",
-  "note": "v0.1.0 tagged after the rc rehearsal passed (release, tap push, brew install, install script). Follow-ups: macOS notarization removes the cask quarantine hook (Homebrew 7 warns that postflight is deprecated); weigh v0.2 scope against gh skill; confirm naming (E1.2-T1) and docs hosting (E3.4-T1).",
+  "next": "E4.1-T4",
+  "note": "v0.1.0 is released. v0.2 is now the registry workflow: sync, remove and list --installed, gh skill interop with adopt, custom agent layouts, and a registry validation Action. Parked: global installs, more built-in agents, skill diff, checksum manifest.",
   "criticalPath": [
     {
       "title": "Create or prepare hasankhatib/ai as the separate registry repository",
