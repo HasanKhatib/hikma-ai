@@ -1,25 +1,13 @@
 {
   "updated": "2026-09-30",
-  "next": "E3.3-T4",
-  "note": "Tap repo HasanKhatib/homebrew-tap and its deploy key are in place; history scan was clean (keep history). Next: make hikma-ai public (needs your OK), positioning text, rc tag (temporarily uploading to the tap), brew check, then v0.1.0.",
+  "next": "E5.2-T3",
+  "note": "v0.1.0 tagged after the rc rehearsal passed (release, tap push, brew install, install script). Follow-ups: macOS notarization removes the cask quarantine hook (Homebrew 7 warns that postflight is deprecated); weigh v0.2 scope against gh skill; confirm naming (E1.2-T1) and docs hosting (E3.4-T1).",
   "criticalPath": [
-    {
-      "title": "Review and accept the MIT license choice before public promotion",
-      "assignee": "me",
-      "status": "todo",
-      "unblocks": "E1.2"
-    },
     {
       "title": "Create or prepare hasankhatib/ai as the separate registry repository",
       "assignee": "me",
       "status": "todo",
       "unblocks": "E2.1"
-    },
-    {
-      "title": "Confirm keeping the existing git history (scan found no private names or secrets), then approve making hikma-ai public",
-      "assignee": "me",
-      "status": "todo",
-      "unblocks": "E1.3"
     }
   ],
   "risks": [
