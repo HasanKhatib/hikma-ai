@@ -1,55 +1,20 @@
 package config
 
 import (
-	"encoding/json"
 	"fmt"
+	"github.com/hasankhatib/hikma-ai/internal/source"
 	"os"
 	"path/filepath"
 	"strings"
 )
 
-// Agent represents the user-facing AI agent selection.
-type Agent string
-
-const (
-	AgentCopilot  Agent = "copilot"
-	AgentCodex    Agent = "codex"
-	AgentOpenCode Agent = "opencode"
-	AgentClaude   Agent = "claude"
-)
-
-// AgentDescriptions maps each valid agent to a short, user-facing description.
-var AgentDescriptions = map[Agent]string{
-	AgentCopilot:  "GitHub Copilot using AGENTS.md and .agents/skills",
-	AgentCodex:    "Codex CLI using AGENTS.md and .agents/skills",
-	AgentOpenCode: "OpenCode using AGENTS.md and .agents/skills",
-	AgentClaude:   "Claude Code using CLAUDE.md and .claude/skills",
-}
-
-// ValidAgents lists all recognised user-facing agent values.
-var ValidAgents = []Agent{AgentCopilot, AgentCodex, AgentOpenCode, AgentClaude}
-
-// Profile represents an internal AI tool layout value.
-type Profile string
-
-const (
-	ProfileDefault Profile = "default"
-	ProfileClaude  Profile = "claude"
-)
-
-// ValidProfiles lists all recognised profile values.
-var ValidProfiles = []Profile{ProfileDefault, ProfileClaude}
-
 // Config holds user-level hikma configuration.
 type Config struct {
 	Agent    Agent  `json:"agent,omitempty"`
 	Registry string `json:"registry,omitempty"`
-}
-
-// Selection is the resolved agent identity and layout profile.
-type Selection struct {
-	Agent   Agent
-	Profile Profile
+	Naming   string `json:"naming,omitempty"`
+	// Agents lists every agent a project installs skills for.
+	Agents []string `json:"agents,omitempty"`
 }
 
 // Registry is the normalized GitHub registry identity.
@@ -90,18 +55,7 @@ func Load() (Config, error) {
 	if err != nil {
 		return Config{}, err
 	}
-	data, err := os.ReadFile(path)
-	if os.IsNotExist(err) {
-		return Config{}, nil
-	}
-	if err != nil {
-		return Config{}, fmt.Errorf("cannot read config file: %w", err)
-	}
-	var c Config
-	if err := json.Unmarshal(data, &c); err != nil {
-		return Config{}, fmt.Errorf("cannot parse config file: %w", err)
-	}
-	return c, nil
+	return loadFile(path)
 }
 
 // Save writes c to os.UserConfigDir()/hikma/config.json.
@@ -110,22 +64,12 @@ func Save(c Config) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
-		return fmt.Errorf("cannot create config directory: %w", err)
-	}
-	data, err := json.MarshalIndent(c, "", "  ")
-	if err != nil {
-		return fmt.Errorf("cannot marshal config: %w", err)
-	}
-	if err := os.WriteFile(path, append(data, '\n'), 0o644); err != nil {
-		return fmt.Errorf("cannot write config file: %w", err)
-	}
-	return nil
+	return saveFile(path, c)
 }
 
 func ConfigForAgent(a Agent) (Config, error) {
 	if !ValidAgent(a) {
-		return Config{}, fmt.Errorf("unsupported agent %q - supported values: copilot, codex, opencode, claude", a)
+		return Config{}, fmt.Errorf("unsupported agent %q - supported values: %s", a, agentList())
 	}
 	c, err := Load()
 	if err != nil {
@@ -136,7 +80,7 @@ func ConfigForAgent(a Agent) (Config, error) {
 }
 
 func ConfigForRegistry(value string) (Config, error) {
-	if _, err := ParseRegistry(value); err != nil {
+	if _, err := source.Parse(value); err != nil {
 		return Config{}, err
 	}
 	c, err := Load()
@@ -147,42 +91,38 @@ func ConfigForRegistry(value string) (Config, error) {
 	return c, nil
 }
 
-// ResolveSelection returns the effective agent selection using flag, env, config, then copilot.
+// ResolveSelection returns the effective agent selection using flag, env, project config, user config, then copilot.
 func ResolveSelection(flagAgent string) (Selection, error) {
 	if flagAgent != "" {
 		return selectionFromAgent(flagAgent)
 	}
-	if env := os.Getenv("HIKMA_AGENT"); env != "" {
-		return selectionFromAgent(env)
-	}
-	c, err := Load()
+	e, err := Lookup(KeyAgent)
 	if err != nil {
 		return Selection{}, err
 	}
-	if c.Agent != "" {
-		if !ValidAgent(c.Agent) {
-			return Selection{}, fmt.Errorf("unsupported agent %q in config file - supported values: copilot, codex, opencode, claude\nrun 'hikma config agent' to reconfigure", c.Agent)
-		}
-		return Selection{Agent: c.Agent, Profile: ProfileForAgent(c.Agent)}, nil
+	if e.Source == SourceEnv {
+		return selectionFromAgent(e.Value)
 	}
-	return Selection{Agent: AgentCopilot, Profile: ProfileDefault}, nil
+	a := Agent(e.Value)
+	if !ValidAgent(a) {
+		return Selection{}, fmt.Errorf("unsupported agent %q in %s config - supported values: %s\nrun 'hikma config set agent <value>' to reconfigure", a, e.Source, agentList())
+	}
+	return SelectionFor(a), nil
 }
 
+// ResolveRegistry returns the effective registry using flag, env, project config, then user config.
 func ResolveRegistry(flagRegistry string) (Registry, error) {
 	if flagRegistry != "" {
 		return ParseRegistry(flagRegistry)
 	}
-	if env := os.Getenv("HIKMA_REGISTRY"); env != "" {
-		return ParseRegistry(env)
-	}
-	c, err := Load()
+	e, err := Lookup(KeyRegistry)
 	if err != nil {
 		return Registry{}, err
 	}
-	if c.Registry != "" {
-		return ParseRegistry(c.Registry)
+	if e.Value == "" {
+		return Registry{}, fmt.Errorf("no registry configured - run 'hikma config set registry <owner/repo>' or pass --registry")
 	}
-	return Registry{}, fmt.Errorf("no registry configured - run 'hikma config registry <owner/repo>' or pass --registry")
+	return ParseRegistry(e.Value)
 }
 
 func ParseRegistry(value string) (Registry, error) {
@@ -205,49 +145,7 @@ func ParseRegistry(value string) (Registry, error) {
 func selectionFromAgent(val string) (Selection, error) {
 	a := Agent(val)
 	if !ValidAgent(a) {
-		return Selection{}, fmt.Errorf("unsupported agent %q - supported values: copilot, codex, opencode, claude", val)
+		return Selection{}, fmt.Errorf("unsupported agent %q - supported values: %s", val, agentList())
 	}
-	return Selection{Agent: a, Profile: ProfileForAgent(a)}, nil
-}
-
-func ValidAgent(a Agent) bool {
-	for _, v := range ValidAgents {
-		if a == v {
-			return true
-		}
-	}
-	return false
-}
-
-func ProfileForAgent(a Agent) Profile {
-	if a == AgentClaude {
-		return ProfileClaude
-	}
-	return ProfileDefault
-}
-
-func Valid(p Profile) bool {
-	for _, v := range ValidProfiles {
-		if p == v {
-			return true
-		}
-	}
-	return false
-}
-
-func SkillDir(name string, p Profile) string {
-	return filepath.Join(SkillBasePath(p), name)
-}
-
-func SkillBasePath(p Profile) string {
-	switch p {
-	case ProfileClaude:
-		return ".claude/skills"
-	default:
-		return ".agents/skills"
-	}
-}
-
-func AgentSkillDir(name string, a Agent) string {
-	return SkillDir(name, ProfileForAgent(a))
+	return SelectionFor(a), nil
 }
