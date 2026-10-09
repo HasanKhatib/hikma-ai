@@ -10,6 +10,7 @@ import (
 	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
+	"github.com/hasankhatib/hikma-ai/internal/source"
 	"github.com/spf13/cobra"
 )
 
@@ -19,43 +20,50 @@ func newScaffoldCmd() *cobra.Command {
 	var dryRun bool
 	var flagProjectName, flagOwner, flagTechnology string
 	var flagAgent, flagRegistry string
+	var flagSkills []string
 
 	cmd := &cobra.Command{
-		Use:     "scaffold",
-		Aliases: []string{"init"},
-		Short:   "Scaffold AI agent configuration into the current repo",
+		Use:     "init",
+		Aliases: []string{"scaffold"},
+		Short:   "Set up AI agent instructions and skills in the current repo",
 		Args:    cobra.NoArgs,
-		Long: `Scaffold writes AI agent configuration files into a repository.
+		Long: `Set up a repository for one or more AI agents.
 
-Flags control what is written:
-  --agent <value>         AI agent: copilot, codex, opencode, claude (default: from hikma config)
-  --registry <owner/repo> skill registry to save in user config
+init writes each selected agent's instruction files, records the agents (and an
+optional registry) in .hikma/config.json so teammates share them, and can install
+skills into every selected agent's skills folder.
+
+Flags:
+  --agent <list>          agents, comma-separated: copilot, codex, opencode, claude
+  --registry <source>     project registry: owner/repo, git URL, or local path
+  --skill <name>          install this skill from the registry (repeatable)
   --path <dir>            target directory (default: current working directory)
   --force                 overwrite existing files
-  --dry-run               print what would be written without writing anything
+  --dry-run               print what would happen without changing anything
   --project-name <name>   project name (skips prompt)
   --owner <owner>         owner / team name (skips prompt)
   --technology <tech>     technology stack (skips prompt)
 
-Agent controls which files are written and where skills are installed:
-  copilot    AGENTS.md only          skills -> .agents/skills/
-  codex      AGENTS.md only          skills -> .agents/skills/
-  opencode   AGENTS.md only          skills -> .agents/skills/
-  claude     AGENTS.md + CLAUDE.md   skills -> .claude/skills/
+Where each agent reads from:
+  copilot    AGENTS.md              skills -> .agents/skills/
+  codex      AGENTS.md              skills -> .agents/skills/
+  opencode   AGENTS.md              skills -> .agents/skills/
+  claude     AGENTS.md + CLAUDE.md  skills -> .claude/skills/
 
-Set your default agent once with: hikma config agent
-Set your registry once with: hikma config registry hasankhatib/ai
+Agents that share a folder are written once. Without a terminal, init runs
+non-interactively using the flags and defaults.
 
-When --project-name, --owner, and --technology are all provided, scaffold runs
-non-interactively without requiring a TTY.`,
+Examples:
+  hikma init --agent claude --registry hasankhatib/ai --skill agentkan
+  hikma init --agent claude,codex --project-name demo`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Resolve target path.
+			out := cmd.OutOrStdout()
+			cwd, err := os.Getwd()
+			if err != nil {
+				return fmt.Errorf("could not determine working directory: %w", err)
+			}
 			if path == "" {
-				var err error
-				path, err = os.Getwd()
-				if err != nil {
-					return fmt.Errorf("could not determine working directory: %w", err)
-				}
+				path = cwd
 			} else {
 				abs, err := filepath.Abs(path)
 				if err != nil {
@@ -63,39 +71,20 @@ non-interactively without requiring a TTY.`,
 				}
 				path = abs
 			}
-
-			// Non-interactive mode: all three value flags provided - no prompts needed.
-			nonInteractive := flagProjectName != "" && flagOwner != "" && flagTechnology != ""
-
-			// Guard: stdin must be an interactive terminal before we attempt prompts,
-			// unless all required values are provided via flags.
-			if !nonInteractive && !dryRun {
-				fi, err := os.Stdin.Stat()
-				if err != nil || (fi.Mode()&os.ModeCharDevice) == 0 {
-					return fmt.Errorf(
-						"hikma scaffold requires an interactive terminal\n" +
-							"  Prompts cannot be answered when stdin is not a TTY\n" +
-							"  To use non-interactively, provide: --project-name, --owner, --technology",
-					)
-				}
+			if len(flagSkills) > 0 && path != cwd {
+				return fmt.Errorf("--skill installs into the current directory; run hikma init from %s", path)
 			}
 
-			// Resolve agent/layout - print as first output line before any prompts.
-			isAgentOverride := flagAgent != ""
-			selection, err := config.ResolveSelection(flagAgent)
-			if err != nil {
-				return fmt.Errorf("error: %w\nrun 'hikma doctor' to check your environment", err)
-			}
-			printActiveSelection(selection, isAgentOverride)
-			fmt.Printf("Scaffold output: %s\n", scaffoldOutput(selection.Profile))
+			// Prompts only when attached to a terminal and not everything came from flags.
+			allFlags := flagProjectName != "" && flagOwner != "" && flagTechnology != ""
+			interactive := isInteractive() && !allFlags && !dryRun
 
 			// Check for a git repository by walking up the directory tree.
-			_, isGitRepo := scaffold.FindGitRoot(path)
+			gitRoot, isGitRepo := scaffold.FindGitRoot(path)
 
 			var reader *bufio.Reader
-			if !nonInteractive && !dryRun {
+			if interactive {
 				reader = bufio.NewReader(os.Stdin)
-
 				if !isGitRepo {
 					fmt.Fprintf(os.Stderr, "warning: this directory is not a git repository\n")
 					fmt.Fprintf(os.Stderr, "  Files written here will not be version-controlled.\n")
@@ -104,122 +93,126 @@ non-interactively without requiring a TTY.`,
 						return err
 					}
 					if strings.ToLower(strings.TrimSpace(ans)) != "y" {
-						fmt.Println("Aborted.")
+						fmt.Fprintln(out, "Aborted.")
 						return nil
 					}
-				} else if gr, _ := scaffold.FindGitRoot(path); gr != path {
-					fmt.Printf("note: git root is %s - scaffolding into %s\n", gr, path)
+				} else if gitRoot != path {
+					fmt.Fprintf(out, "note: git root is %s - scaffolding into %s\n", gitRoot, path)
 				}
 			}
 
 			projectName, owner, technology, err := resolveScaffoldValues(
-				reader, path, flagProjectName, flagOwner, flagTechnology, dryRun,
+				reader, path, flagProjectName, flagOwner, flagTechnology, !interactive,
 			)
 			if err != nil {
 				return err
 			}
 
-			if !nonInteractive && !dryRun {
-				// 4th prompt: AI agent (skipped when --agent is set).
-				if !isAgentOverride {
-					labelFor := func(a config.Agent) string {
-						return fmt.Sprintf("%s - %s", a, config.AgentDescriptions[a])
-					}
-					options := []string{
-						labelFor(config.AgentCopilot),
-						labelFor(config.AgentCodex),
-						labelFor(config.AgentOpenCode),
-						labelFor(config.AgentClaude),
-					}
-					labelToAgent := map[string]config.Agent{
-						labelFor(config.AgentCopilot):  config.AgentCopilot,
-						labelFor(config.AgentCodex):    config.AgentCodex,
-						labelFor(config.AgentOpenCode): config.AgentOpenCode,
-						labelFor(config.AgentClaude):   config.AgentClaude,
-					}
-					defaultLabel := labelFor(config.AgentCopilot)
-					for label, a := range labelToAgent {
-						if a == selection.Agent {
-							defaultLabel = label
-							break
-						}
-					}
-					var selected string
-					agentSelect := &survey.Select{
-						Message: "AI agent:",
-						Options: options,
-						Default: defaultLabel,
-					}
-					if err := survey.AskOne(agentSelect, &selected); err != nil {
-						return err
-					}
-					chosen := labelToAgent[selected]
-					selection = config.Selection{Agent: chosen, Profile: config.ProfileForAgent(chosen)}
+			agents, err := chooseAgents(flagAgent, interactive)
+			if err != nil {
+				return err
+			}
+			targets, err := config.ResolveTargets(joinAgents(agents))
+			if err != nil {
+				return err
+			}
+			printTargets(out, targets, flagAgent != "")
+			fmt.Fprintf(out, "Instruction files: %s\n", strings.Join(config.InstructionFiles(agents), ", "))
+
+			// Resolve the registry up front so a bad --skill request fails before any file is written.
+			registryValue := flagRegistry
+			if registryValue == "" {
+				if e, err := config.Lookup(config.KeyRegistry); err == nil {
+					registryValue = e.Value
 				}
 			}
-
-			opts := scaffold.Options{
-				ProjectName: projectName,
-				Owner:       owner,
-				Technology:  technology,
-				Profile:     selection.Profile,
-				Path:        path,
-				Force:       force,
-				DryRun:      dryRun,
+			if flagRegistry != "" {
+				if _, err := source.Parse(flagRegistry); err != nil {
+					return err
+				}
+			}
+			if len(flagSkills) > 0 && registryValue == "" {
+				return fmt.Errorf("--skill needs a registry: pass --registry <owner/repo> or run 'hikma config set registry <owner/repo>'")
 			}
 
 			if dryRun {
-				fmt.Printf("Dry run - nothing will be written.\n\n")
+				fmt.Fprintf(out, "Dry run - nothing will be written.\n\n")
 			} else {
-				fmt.Printf("\nScaffolding %s...\n", projectName)
+				fmt.Fprintf(out, "\nSetting up %s...\n", projectName)
 			}
 
-			sr, err := scaffold.Scaffold(opts)
+			sr, err := scaffold.Scaffold(scaffold.Options{
+				ProjectName: projectName,
+				Owner:       owner,
+				Technology:  technology,
+				Agents:      agents,
+				Registry:    registryValue,
+				Path:        path,
+				Force:       force,
+				DryRun:      dryRun,
+			})
 			if err != nil {
 				return err
 			}
 
 			if dryRun {
 				for _, p := range sr.Created {
-					fmt.Printf("  would write %s\n", relOrFull(path, p))
+					fmt.Fprintf(out, "  would write %s\n", relOrFull(path, p))
+				}
+				fmt.Fprintf(out, "  would write .hikma/config.json (agents: %s)\n", joinAgents(agents))
+				for _, name := range flagSkills {
+					fmt.Fprintf(out, "  would install skill %s from %s\n", name, registryValue)
 				}
 				return nil
 			}
 
 			for _, p := range sr.Created {
-				fmt.Printf("  Created %s\n", relOrFull(path, p))
+				fmt.Fprintf(out, "  Created %s\n", relOrFull(path, p))
 			}
 			for _, p := range sr.Overwritten {
-				fmt.Printf("  Overwrote %s\n", relOrFull(path, p))
+				fmt.Fprintf(out, "  Overwrote %s\n", relOrFull(path, p))
 			}
 			for _, p := range sr.Skipped {
-				rel := relOrFull(path, p)
-				fmt.Printf("  Skipped %-30s (already exists - use --force to overwrite)\n", rel)
+				fmt.Fprintf(out, "  Skipped %-30s (already exists - use --force to overwrite)\n", relOrFull(path, p))
 			}
 
-			if len(sr.Created) > 0 || len(sr.Skipped) > 0 {
-				if flagRegistry != "" {
-					if err := runConfigRegistrySet(cmd, flagRegistry); err != nil {
-						return err
-					}
-				} else {
-					fmt.Printf("\nRun 'hikma config registry hasankhatib/ai' to choose a registry.\n")
+			// Share the agents (and registry) with teammates through project config.
+			projectCfg := config.ProjectConfigFile(path)
+			if err := config.SetFile(projectCfg, config.KeyAgents, joinAgents(agents)); err != nil {
+				return err
+			}
+			if flagRegistry != "" {
+				if err := config.SetFile(projectCfg, config.KeyRegistry, flagRegistry); err != nil {
+					return err
 				}
-				fmt.Printf("Run 'hikma skill list' to browse configured registry skills.\n")
+			}
+			fmt.Fprintf(out, "  Wrote %s\n", relOrFull(path, projectCfg))
+
+			if len(flagSkills) > 0 {
+				if err := installInitSkills(cmd, flagSkills, flagRegistry, targets, force); err != nil {
+					return err
+				}
 			}
 
+			fmt.Fprintln(out)
+			if registryValue == "" {
+				fmt.Fprintln(out, "Next: hikma config set registry <owner/repo> --project, then hikma skill install <name>")
+			} else if len(flagSkills) == 0 {
+				fmt.Fprintln(out, "Next: hikma skill list, then hikma skill install <name>")
+			}
 			return nil
 		},
 	}
 
 	cmd.Flags().StringVar(&path, "path", "", "target directory (default: current working directory)")
-	cmd.Flags().BoolVar(&force, "force", false, "overwrite existing files")
-	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "print what would be written without writing anything")
+	cmd.Flags().BoolVar(&force, "force", false, "overwrite existing files and reinstall skills")
+	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "print what would happen without changing anything")
 	cmd.Flags().StringVar(&flagProjectName, "project-name", "", "project name (skips interactive prompt)")
 	cmd.Flags().StringVar(&flagOwner, "owner", "", "owner / team name (skips interactive prompt)")
 	cmd.Flags().StringVar(&flagTechnology, "technology", "", "technology stack (skips interactive prompt)")
-	cmd.Flags().StringVar(&flagAgent, "agent", "", "AI agent (copilot, codex, opencode, claude)")
-	cmd.Flags().StringVar(&flagRegistry, "registry", "", "registry to save for skill commands (owner/repo or GitHub URL)")
+	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
+	cmd.Flags().StringVar(&flagRegistry, "registry", "", "project registry: owner/repo, git URL, or local path")
+	cmd.Flags().StringArrayVar(&flagSkills, "skill", nil, "skill to install from the registry (repeatable)")
 
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
@@ -228,8 +221,88 @@ non-interactively without requiring a TTY.`,
 	return cmd
 }
 
-func resolveScaffoldValues(reader *bufio.Reader, path, projectName, owner, technology string, dryRun bool) (string, string, string, error) {
-	if dryRun {
+func joinAgents(agents []config.Agent) string {
+	names := make([]string, len(agents))
+	for i, a := range agents {
+		names[i] = string(a)
+	}
+	return strings.Join(names, ",")
+}
+
+// chooseAgents returns the agents to set up: the --agent flag, a prompt when
+// interactive, or the already-configured agents.
+func chooseAgents(flagAgent string, interactive bool) ([]config.Agent, error) {
+	if flagAgent != "" {
+		return config.ParseAgents(flagAgent)
+	}
+	current, err := config.ResolveTargets("")
+	if err != nil {
+		return nil, err
+	}
+	var defaults []string
+	for _, t := range current {
+		defaults = append(defaults, labelForAgent(t.Agent))
+	}
+	if !interactive {
+		agents := make([]config.Agent, len(current))
+		for i, t := range current {
+			agents[i] = t.Agent
+		}
+		return agents, nil
+	}
+
+	var options []string
+	byLabel := map[string]config.Agent{}
+	for _, a := range config.ValidAgents {
+		options = append(options, labelForAgent(a))
+		byLabel[labelForAgent(a)] = a
+	}
+	var selected []string
+	if err := survey.AskOne(&survey.MultiSelect{
+		Message: "AI agents (space to select):",
+		Options: options,
+		Default: defaults,
+	}, &selected, survey.WithValidator(survey.MinItems(1))); err != nil {
+		return nil, err
+	}
+	agents := make([]config.Agent, len(selected))
+	for i, label := range selected {
+		agents[i] = byLabel[label]
+	}
+	return agents, nil
+}
+
+func labelForAgent(a config.Agent) string {
+	return fmt.Sprintf("%s - %s", a, config.LayoutFor(a).Description)
+}
+
+// installInitSkills installs the named skills from the registry into every target.
+func installInitSkills(cmd *cobra.Command, names []string, flagRegistry string, targets []config.Selection, force bool) error {
+	out := cmd.OutOrStdout()
+	fmt.Fprintln(out)
+	src, co, cleanup, err := openSource(out, "", flagRegistry, "")
+	if err != nil {
+		return err
+	}
+	defer cleanup()
+	skills, err := discoverSkills(src, co)
+	if err != nil {
+		return err
+	}
+	for _, name := range names {
+		skill, ok := source.Find(skills, name)
+		if !ok {
+			return fmt.Errorf("skill %q not found in %s", name, src.Display)
+		}
+		if err := installSkill(out, src, co, skill, targets, force, ""); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func resolveScaffoldValues(reader *bufio.Reader, path, projectName, owner, technology string, noPrompts bool) (string, string, string, error) {
+	if noPrompts {
 		if projectName == "" {
 			projectName = filepath.Base(path)
 		}

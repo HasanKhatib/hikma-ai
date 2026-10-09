@@ -6,81 +6,121 @@ This repository contains the CLI only. It does not contain a bundled skill regis
 
 ## Install
 
+Homebrew (macOS and Linux):
+
+```bash
+brew install HasanKhatib/tap/hikma
+```
+
 From source:
 
 ```bash
 go install github.com/hasankhatib/hikma-ai/cmd/hikma@latest
 ```
 
-From a release archive, download the matching asset from GitHub Releases and place the `hikma` binary on your `PATH`.
+Or download the matching archive from GitHub Releases and put `hikma` on your `PATH`. Reading skills needs only `git`; the `gh` CLI is needed just for `hikma skill push`.
 
 ## Quickstart
 
-Configure your preferred agent and registry:
+Install a skill from any repo, no setup needed:
 
 ```bash
-hikma config agent claude
-hikma config registry hasankhatib/ai
+hikma skill install owner/repo my-skill   # install one skill
+hikma skill install owner/repo            # pick from the skills in that repo
 ```
 
-Initialize a repository:
+Or set a registry once and use bare names:
 
 ```bash
-hikma init --agent claude --registry hasankhatib/ai
-```
-
-Browse and install skills:
-
-```bash
+hikma config set registry hasankhatib/ai
 hikma skill list
 hikma skill install agentkan
 ```
 
-Create a new local skill:
+Create a skill and publish it to your registry:
 
 ```bash
 hikma skill create my-skill --description "What this skill helps with"
+hikma skill push my-skill        # shows the target registry and asks to confirm
 ```
 
-## Registry Model
+Set a repo up for your agents in one step:
 
-Hikma AI expects a separate GitHub repository with a `skills/` directory and an index file:
+```bash
+hikma init --agent claude,codex --registry hasankhatib/ai --skill agentkan
+```
+
+`init` writes each agent's instruction files, records the agents and registry in `.hikma/config.json` (commit it so teammates share them), and installs the skills into every selected agent's folder. After that, `hikma skill install <name>` installs into all of them.
+
+| Agent | Instructions | Skills folder |
+|---|---|---|
+| `claude` | `AGENTS.md`, `CLAUDE.md` | `.claude/skills` |
+| `codex`, `copilot`, `opencode` | `AGENTS.md` | `.agents/skills` |
+
+Agents that share a folder are written once. For one-off use, set a personal default with `hikma config set agent claude` or pass `--agent`.
+
+## How it works
+
+- **Install from anywhere.** A source is a GitHub `owner/repo`, any git URL, or a local path. Use `--ref` to pin a branch, tag, or commit. Installing does not enforce a naming convention.
+- **Push goes to your registry.** `hikma skill push` always targets your configured registry (a GitHub `owner/repo`), prints it with where the setting came from, and asks you to confirm. Use `--yes` in scripts.
+- **Installs are tracked.** `.hikma/lock.json` records each skill's source, commit, and file hashes. `hikma skill update` pulls from the recorded source, refuses to overwrite local edits without `--force`, and warns when `scripts/` changed.
+
+## Skill repositories
+
+Any repo with skills works. Hikma looks for `skills/<name>/SKILL.md`, then `<name>/SKILL.md` at the top level, then a single `SKILL.md` at the root. No index file is needed.
 
 ```text
 skills/
-  index.json
   my-skill/
     SKILL.md
 ```
 
-Registry values can be provided as:
+A registry is just a repo you chose as your default source and push target. Registry values can be:
 
 ```text
 hasankhatib/ai
 https://github.com/hasankhatib/ai.git
 git@github.com:hasankhatib/ai.git
+./path/to/local/registry
 ```
 
 Configuration precedence:
 
 1. Command flag: `--registry`.
 2. Environment variable: `HIKMA_REGISTRY`.
-3. User config: `hikma config registry <owner/repo>`.
+3. Project config: `.hikma/config.json` (commit it to share a registry with your team).
+4. User config: `hikma config set registry <owner/repo>`.
+
+The same order applies to `agent` (`--agent`, `HIKMA_AGENT`) and `agents` (`HIKMA_AGENTS`); a project's `agents` list wins over a personal `agent` default. See where each value comes from with `hikma config list`.
+
+## Skill Naming
+
+By default skill names are not restricted. To require kebab-case names when creating and pushing skills:
+
+```bash
+hikma config set naming kebab-case   # or: loose (default)
+```
+
+Installing never enforces a naming convention.
 
 ## Commands
 
 ```bash
-hikma init
+hikma init [--agent claude,codex] [--registry <source>] [--skill <name>]...
+hikma config list
+hikma config get <key>
+hikma config set <key> <value> [--project]
+hikma config unset <key> [--project]
+hikma config path
 hikma config agent [copilot|codex|opencode|claude]
 hikma config registry [owner/repo|url]
-hikma skill list [--registry owner/repo]
-hikma skill info <name> [--registry owner/repo]
-hikma skill install <name> [--agent claude] [--registry owner/repo]
-hikma skill update <name|--all> [--registry owner/repo]
+hikma skill list [owner/repo]
+hikma skill info [owner/repo] <name>
+hikma skill install [owner/repo] [name] [--ref <ref>] [--agent claude] [--force]
+hikma skill update <name|--all> [--force]
 hikma skill create <name>
-hikma skill push <name> [--registry owner/repo]
+hikma skill push <name> [--registry owner/repo] [--yes] [--codeowners]
 hikma doctor
-hikma tap
 ```
 
 ## Development
@@ -93,12 +133,14 @@ npx agentkan validate docs/board
 
 ## Release
 
-Releases are tag-based. Pushing a `v*` tag runs GoReleaser and publishes binaries to GitHub Releases.
+Releases are tag-based. Pushing a `v*` tag runs GoReleaser, publishes binaries to GitHub Releases, and updates the Homebrew cask in `HasanKhatib/homebrew-tap` (needs the `HOMEBREW_TAP_GITHUB_TOKEN` repo secret). Pre-release tags such as `v0.1.0-rc.1` do not update the tap.
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v0.1.0
+git push origin v0.1.0
 ```
+
+Try a release locally with `goreleaser release --snapshot --clean`.
 
 ## Documentation Site
 
