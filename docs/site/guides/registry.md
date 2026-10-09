@@ -1,52 +1,66 @@
 # Registry Guide
 
-A Hikma AI registry is a separate repository that stores reusable skills. The CLI repository should not contain a top-level `skills/` registry folder.
+Hikma AI installs skills from any repository. A **registry** is the repository you choose as your default source and as the target of `hikma skill push`. The CLI repository itself contains no skills.
 
-## Minimal Shape
+## Skill Layout
+
+Hikma discovers skills without an index file. It checks, in order:
+
+1. `skills/<name>/SKILL.md`
+2. `<name>/SKILL.md` at the repository root
+3. a single `SKILL.md` at the repository root
 
 ```text
 skills/
-  index.json
   my-skill/
     SKILL.md
+    scripts/
+    references/
 ```
 
-## Configure A Registry
+`SKILL.md` frontmatter supplies the description and optional `metadata.owner`.
+
+## Install From Any Source
 
 ```bash
-hikma config registry hasankhatib/ai
+hikma skill install owner/repo my-skill          # one skill
+hikma skill install owner/repo                   # pick from a list
+hikma skill install owner/repo my-skill --ref v1 # pin a tag, branch, or commit
 ```
 
-You can also override the configured registry for one command:
+A source can be GitHub `owner/repo`, any git URL, or a local path. Public sources need only `git`.
+
+## Configure Your Registry
 
 ```bash
-hikma skill list --registry hasankhatib/ai
+hikma config set registry hasankhatib/ai
+hikma config set registry hasankhatib/ai --project   # share with your team via .hikma/config.json
 ```
 
-## Supported Registry Values
+With a registry set, bare names work: `hikma skill install my-skill`. Override it for one command with `--registry`.
 
-```text
-hasankhatib/ai
-https://github.com/hasankhatib/ai.git
-git@github.com:hasankhatib/ai.git
+## Publishing
+
+`hikma skill push <name>` opens a pull request against your configured registry, which must be a GitHub `owner/repo` you can write to. It prints the target registry and where the setting came from, then asks you to confirm (`--yes` skips the prompt). Pushing requires the `gh` CLI.
+
+Updating `.github/CODEOWNERS` in the registry is opt-in with `--codeowners`.
+
+## Lockfile
+
+Installs are recorded in `.hikma/lock.json` (source, commit, file hashes). Commit it to make installs reproducible. `hikma skill update` uses the recorded source and stops if you edited an installed skill, unless you pass `--force`.
+
+## Examples
+
+```bash
+# Public registry on GitHub
+hikma config set registry hasankhatib/ai
+
+# Private registry: works with your existing git or gh credentials
+hikma config set registry my-org/private-skills --project
+
+# Local registry, handy while authoring skills
+hikma config set registry ./path/to/skills-repo
+hikma skill install my-skill
 ```
 
-## Index File
-
-The `skills/index.json` file should contain:
-
-```json
-{
-  "generated": "2026-09-30T00:00:00Z",
-  "skills": [
-    {
-      "name": "agentkan",
-      "description": "Maintain an agentkan roadmap board.",
-      "owner": "hasankhatib",
-      "email": "",
-      "last_validated": "2026-09-30",
-      "compatibility": "Claude Code"
-    }
-  ]
-}
-```
+Pushing (`hikma skill push`) always needs a GitHub `owner/repo` registry. A local or non-GitHub registry is read-only.

@@ -26,7 +26,8 @@ type Options struct {
 	ProjectName string
 	Owner       string
 	Technology  string
-	Profile     config.Profile // supported values: "default", "claude"
+	Agents      []config.Agent // agents to write instruction files for
+	Registry    string         // optional; mentioned in the generated instructions
 	Path        string
 	Force       bool
 	DryRun      bool
@@ -39,82 +40,64 @@ type Result struct {
 	Skipped     []string
 }
 
-// Scaffold writes AI agent configuration files into opts.Path.
-// If opts.DryRun is true, no files are written and no network calls are made;
-// the Result.Created slice is populated with what would have been written.
-// It returns a Result listing every file created, overwritten, or skipped.
+// Scaffold writes the instruction files for opts.Agents into opts.Path. Each
+// agent contributes the files named in its layout; shared files such as
+// AGENTS.md are written once. With DryRun set nothing is written and
+// Result.Created lists what would have been.
 func Scaffold(opts Options) (Result, error) {
 	var result Result
 
-	// Validate profile before any disk writes.
-	if opts.Profile == "" {
-		opts.Profile = config.ProfileDefault
+	if len(opts.Agents) == 0 {
+		return result, fmt.Errorf("no agent selected")
 	}
-	if !config.Valid(opts.Profile) {
-		return result, fmt.Errorf(
-			"unsupported profile %q - supported values: default, claude", opts.Profile)
+	for _, a := range opts.Agents {
+		if !config.ValidAgent(a) {
+			return result, fmt.Errorf("unsupported agent %q", a)
+		}
+	}
+
+	var skillPaths []string
+	seen := map[string]bool{}
+	for _, sel := range uniqueSelections(opts.Agents) {
+		if !seen[sel.Layout.SkillsDir] {
+			seen[sel.Layout.SkillsDir] = true
+			skillPaths = append(skillPaths, sel.Layout.SkillsDir)
+		}
 	}
 
 	data := struct {
 		ProjectName string
 		Owner       string
 		Technology  string
-		SkillPath   string
+		Registry    string
+		SkillPaths  string
 	}{
 		ProjectName: opts.ProjectName,
 		Owner:       opts.Owner,
 		Technology:  opts.Technology,
-		SkillPath:   config.SkillBasePath(opts.Profile),
+		Registry:    opts.Registry,
+		SkillPaths:  "`" + strings.Join(skillPaths, "`, `") + "`",
 	}
 
-	templateRoot := "templates/scaffold"
-	if opts.DryRun {
-		// Collect what would be written without touching disk or network.
-		var templateFiles []string
-		templateFiles = append(templateFiles, filepath.Join(opts.Path, "AGENTS.md"))
-		// Include profile-specific template files.
-		if opts.Profile != config.ProfileDefault {
-			profileRoot := templateRoot + "/ai-agents/" + string(opts.Profile)
-			if err := collectTemplatePaths(profileRoot, opts.Path, &templateFiles); err != nil {
-				return result, err
-			}
+	for _, name := range config.InstructionFiles(opts.Agents) {
+		dst := filepath.Join(opts.Path, name)
+		if opts.DryRun {
+			result.Created = append(result.Created, dst)
+			continue
 		}
-		result.Created = append(result.Created, templateFiles...)
-		return result, nil
-	}
-
-	// Write AGENTS.md; profile-specific file added below if non-default.
-	src := templateRoot + "/AGENTS.md"
-	dst := filepath.Join(opts.Path, "AGENTS.md")
-	if err := writeTemplateFile(src, dst, data, opts.Force, &result); err != nil {
-		return result, err
-	}
-
-	// Write profile-specific adapter file (CLAUDE.md) when non-default.
-	if opts.Profile != config.ProfileDefault {
-		profileRoot := templateRoot + "/ai-agents/" + string(opts.Profile)
-		if err := walkAndWrite(profileRoot, opts.Path, data, opts.Force, &result); err != nil {
+		if err := writeTemplateFile("templates/scaffold/"+name, dst, data, opts.Force, &result); err != nil {
 			return result, err
 		}
 	}
-
 	return result, nil
 }
 
-// collectTemplatePaths walks srcRoot in the embedded FS and appends the
-// destination paths (relative to dstRoot) to paths. Used for --dry-run.
-func collectTemplatePaths(srcRoot, dstRoot string, paths *[]string) error {
-	return fs.WalkDir(FS, srcRoot, func(path string, d fs.DirEntry, err error) error {
-		if err != nil || d.IsDir() {
-			return err
-		}
-		rel, err := filepath.Rel(srcRoot, path)
-		if err != nil {
-			return err
-		}
-		*paths = append(*paths, filepath.Join(dstRoot, rel))
-		return nil
-	})
+func uniqueSelections(agents []config.Agent) []config.Selection {
+	sels := make([]config.Selection, len(agents))
+	for i, a := range agents {
+		sels[i] = config.SelectionFor(a)
+	}
+	return sels
 }
 
 // walkAndWrite recursively writes all files from srcRoot (in embed.FS) into dstRoot.
@@ -123,7 +106,6 @@ func walkAndWrite(srcRoot, dstRoot string, data interface{}, force bool, result 
 		if err != nil {
 			return err
 		}
-		// Compute destination path relative to srcRoot.
 		rel, err := filepath.Rel(srcRoot, path)
 		if err != nil {
 			return err

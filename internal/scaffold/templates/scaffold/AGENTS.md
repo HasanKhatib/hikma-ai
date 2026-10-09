@@ -2,18 +2,16 @@
 
 ## Project
 
-{{.ProjectName}} - {{.Technology}}
+{{.ProjectName}}{{if .Technology}} - {{.Technology}}{{end}}
+{{- if .Owner}}
 Owner: {{.Owner}}
+{{- end}}
 
 ## Rules
 
 - Never modify production config without explicit instruction
 - Never commit secrets or credentials
 - Never run destructive operations without explicit confirmation
-
-## Stack
-
-- Technology: {{.Technology}}
 
 ## Build and run
 
@@ -25,8 +23,10 @@ Owner: {{.Owner}}
 
 ## Skills
 
-Load skills from `{{.SkillPath}}` when the task matches their trigger keywords.
-Run `hikma skill list` to see available skills.
+Skills are installed with the `hikma` CLI into {{.SkillPaths}}. Load a skill when the task matches its description.
+
+- Installed skills and where they came from are recorded in `.hikma/lock.json`.
+- Install one with `hikma skill install <owner/repo> <name>`{{if .Registry}}, or `hikma skill install <name>` to use the project registry `{{.Registry}}`{{end}}.
 
 ## Boundaries
 

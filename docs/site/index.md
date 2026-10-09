@@ -8,8 +8,8 @@ The CLI does not ship with a skill registry. Configure a separate registry repos
 
 ```bash
 go install github.com/hasankhatib/hikma-ai/cmd/hikma@latest
-hikma config agent claude
-hikma config registry hasankhatib/ai
+hikma config set agent claude
+hikma config set registry hasankhatib/ai
 hikma init --agent claude
 hikma skill list
 ```
