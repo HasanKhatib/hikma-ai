@@ -4,7 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
-First public release (v0.1.0) in preparation.
+## [0.1.0] - 2026-10-09
+
+First public release.
 
 ### Added
 - Install skills from any source: GitHub `owner/repo`, a git URL, or a local path, with `--ref` to pin a version; pick from a list when no skill name is given.
@@ -15,3 +17,6 @@ First public release (v0.1.0) in preparation.
 - `hikma registry validate` checks skills against the skill format and your naming setting (`loose` or `kebab-case`).
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
+
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/HasanKhatib/hikma-ai/releases/tag/v0.1.0
