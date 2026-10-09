@@ -38,7 +38,9 @@ Keys: agent, registry`,
 
 func newConfigRegistryCmd() *cobra.Command {
 	return &cobra.Command{
-		Use:   "registry [owner/repo|url]",
+		Use:    "registry [owner/repo|url]",
+		Hidden: true, // alias for 'config get|set registry'
+
 		Short: "Get or set the active skill registry",
 		Args:  cobra.MaximumNArgs(1),
 		Long: `Get or set the active skill registry.
@@ -91,6 +93,7 @@ func runConfigRegistrySet(cmd *cobra.Command, val string) error {
 
 func newConfigAgentCmd() *cobra.Command {
 	return &cobra.Command{
+		Hidden:    true, // alias for 'config get|set agent'
 		Use:       "agent [value]",
 		Short:     "Get or set the active AI agent (copilot, codex, opencode, claude)",
 		Args:      cobra.MaximumNArgs(1),
@@ -184,7 +187,8 @@ func scopeFromFlag(project bool) config.Scope {
 }
 
 func newConfigListCmd() *cobra.Command {
-	return &cobra.Command{
+	var asJSON bool
+	cmd := &cobra.Command{
 		Use:   "list",
 		Short: "Show every config value and where it comes from",
 		Args:  cobra.NoArgs,
@@ -192,6 +196,18 @@ func newConfigListCmd() *cobra.Command {
 			entries, err := config.List()
 			if err != nil {
 				return err
+			}
+			if asJSON {
+				type row struct {
+					Key    string `json:"key"`
+					Value  string `json:"value"`
+					Source string `json:"source"`
+				}
+				rows := make([]row, len(entries))
+				for i, e := range entries {
+					rows[i] = row{e.Key, e.Value, describeSource(e)}
+				}
+				return printJSON(rows)
 			}
 			for _, e := range entries {
 				v := e.Value
@@ -203,6 +219,8 @@ func newConfigListCmd() *cobra.Command {
 			return nil
 		},
 	}
+	cmd.Flags().BoolVar(&asJSON, "json", false, "output as JSON")
+	return cmd
 }
 
 func describeSource(e config.Entry) string {

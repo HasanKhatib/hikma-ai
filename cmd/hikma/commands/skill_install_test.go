@@ -361,3 +361,69 @@ func TestOverlappingAgentsShareOneSkillFolder(t *testing.T) {
 		t.Fatalf("lock entries = %v", lf.Keys())
 	}
 }
+
+func writeSkill(t *testing.T, dir, name, body string) {
+	t.Helper()
+	write(t, filepath.Join(dir, "skills", name, "SKILL.md"), body)
+}
+
+func TestRegistryValidateReportsProblems(t *testing.T) {
+	reg := t.TempDir()
+	project(t)
+	writeSkill(t, reg, "good", "---\nname: good\ndescription: fine\n---\n# good\n")
+	writeSkill(t, reg, "wrongname", "---\nname: other\ndescription: d\n---\n")
+	writeSkill(t, reg, "nodesc", "---\nname: nodesc\n---\n")
+	writeSkill(t, reg, "nofm", "# no frontmatter\n")
+	writeSkill(t, reg, "todo", "---\nname: todo\ndescription: Replace this description.\n---\n")
+
+	out, err := run(t, "registry", "validate", reg)
+	if err == nil {
+		t.Fatalf("expected failure\n%s", out)
+	}
+	for _, want := range []string{
+		"ok    good",
+		`does not match folder "wrongname"`,
+		"missing `description`",
+		"must start with YAML frontmatter",
+		"unfilled placeholder",
+		"5 skill(s) checked, 4 failed",
+	} {
+		if !strings.Contains(out, want) {
+			t.Errorf("output missing %q:\n%s", want, out)
+		}
+	}
+}
+
+func TestRegistryValidateHonorsNamingSetting(t *testing.T) {
+	reg := t.TempDir()
+	project(t)
+	writeSkill(t, reg, "My Skill", "---\nname: My Skill\ndescription: d\n---\n")
+	if out, err := run(t, "registry", "validate", reg); err != nil {
+		t.Fatalf("loose naming should pass: %v\n%s", err, out)
+	}
+	if _, err := run(t, "config", "set", "naming", "kebab-case"); err != nil {
+		t.Fatal(err)
+	}
+	out, err := run(t, "registry", "validate", reg)
+	if err == nil || !strings.Contains(out, "kebab-case") {
+		t.Fatalf("kebab-case should fail: %v\n%s", err, out)
+	}
+}
+
+func TestRegistryValidateFailsWhenNoSkills(t *testing.T) {
+	project(t)
+	if _, err := run(t, "registry", "validate", t.TempDir()); err == nil {
+		t.Fatal("expected error for an empty registry")
+	}
+}
+
+// Skills in the current directory must never be treated as a registry.
+func TestCommandsDoNotReadSkillsFromCurrentDirectory(t *testing.T) {
+	proj := project(t)
+	writeSkill(t, proj, "local", "---\nname: local\ndescription: d\n---\n")
+	for _, args := range [][]string{{"skill", "list"}, {"skill", "install", "local"}, {"skill", "info", "local"}} {
+		if out, err := run(t, args...); err == nil || !strings.Contains(err.Error(), "no registry configured") {
+			t.Errorf("%v: err = %v\n%s", args, err, out)
+		}
+	}
+}

@@ -42,6 +42,7 @@ Create a skill and publish it to your registry:
 ```bash
 hikma skill create my-skill --description "What this skill helps with"
 hikma skill push my-skill        # shows the target registry and asks to confirm
+hikma registry validate .        # check every skill in a registry checkout
 ```
 
 Set a repo up for your agents in one step:
@@ -62,7 +63,7 @@ Agents that share a folder are written once. For one-off use, set a personal def
 ## How it works
 
 - **Install from anywhere.** A source is a GitHub `owner/repo`, any git URL, or a local path. Use `--ref` to pin a branch, tag, or commit. Installing does not enforce a naming convention.
-- **Push goes to your registry.** `hikma skill push` always targets your configured registry (a GitHub `owner/repo`), prints it with where the setting came from, and asks you to confirm. Use `--yes` in scripts.
+- **Push goes to your registry.** `hikma skill push` always targets your configured registry (a GitHub `owner/repo`), prints it with where the setting came from, and asks you to confirm (`--yes` in scripts). With write access it pushes a branch to the registry; without it, to your fork. It never force-pushes: an open PR for the skill gets a new commit, and a skill that was already merged gets a fresh branch.
 - **Installs are tracked.** `.hikma/lock.json` records each skill's source, commit, and file hashes. `hikma skill update` pulls from the recorded source, refuses to overwrite local edits without `--force`, and warns when `scripts/` changed.
 
 ## Skill repositories
@@ -107,7 +108,7 @@ Installing never enforces a naming convention.
 
 ```bash
 hikma init [--agent claude,codex] [--registry <source>] [--skill <name>]...
-hikma config list
+hikma config list [--json]
 hikma config get <key>
 hikma config set <key> <value> [--project]
 hikma config unset <key> [--project]
@@ -120,6 +121,7 @@ hikma skill install [owner/repo] [name] [--ref <ref>] [--agent claude] [--force]
 hikma skill update <name|--all> [--force]
 hikma skill create <name>
 hikma skill push <name> [--registry owner/repo] [--yes] [--codeowners]
+hikma registry validate [source] [--ref <ref>]
 hikma doctor
 ```
 

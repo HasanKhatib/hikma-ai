@@ -39,9 +39,22 @@ hikma config set registry hasankhatib/ai --project   # share with your team via 
 
 With a registry set, bare names work: `hikma skill install my-skill`. Override it for one command with `--registry`.
 
+## Validating
+
+```bash
+hikma registry validate .          # a registry checkout
+hikma registry validate owner/repo # any repo
+```
+
+Each skill must have `SKILL.md` frontmatter with a `name` matching its folder and a `description`, a folder name that fits your naming setting, and no template placeholders. `push` runs the same checks first.
+
 ## Publishing
 
-`hikma skill push <name>` opens a pull request against your configured registry, which must be a GitHub `owner/repo` you can write to. It prints the target registry and where the setting came from, then asks you to confirm (`--yes` skips the prompt). Pushing requires the `gh` CLI.
+`hikma skill push <name>` opens a pull request against your configured registry, which must be a GitHub `owner/repo`. It prints the target registry and where the setting came from, then asks you to confirm (`--yes` skips the prompt). Pushing requires the `gh` CLI.
+
+- With write access, a `skill/<name>` branch is pushed to the registry.
+- Without it, `hikma` forks the registry and pushes to your fork.
+- Nothing is force-pushed. Pushing again updates the open PR with a new commit; if the earlier PR was merged or closed, a new branch is used.
 
 Updating `.github/CODEOWNERS` in the registry is opt-in with `--codeowners`.
 

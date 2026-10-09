@@ -62,11 +62,20 @@ hikma skill create my-skill --description "What this skill helps with"
 
 ## `hikma skill push`
 
-Open a pull request against your configured registry after confirming the target.
+Open a pull request against your configured registry after confirming the target. Uses your fork when you lack write access.
 
 ```bash
 hikma skill push my-skill
 hikma skill push my-skill --yes
+```
+
+## `hikma registry validate`
+
+Check every skill in a registry against the skill format.
+
+```bash
+hikma registry validate .
+hikma registry validate owner/repo --ref main
 ```
 
 ## `hikma doctor`
