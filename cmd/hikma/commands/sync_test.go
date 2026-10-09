@@ -72,7 +72,7 @@ func TestSyncRestoresTheRecordedCommitNotTheNewest(t *testing.T) {
 		t.Fatalf("sync: %v\n%s", err, out)
 	}
 	data, _ := os.ReadFile(filepath.Join(proj, ".claude", "skills", "alpha", "scripts", "run.sh"))
-	if string(data) != "echo v1\n" {
+	if strings.ReplaceAll(string(data), "\r\n", "\n") != "echo v1\n" { // git may check out CRLF on Windows
 		t.Fatalf("sync must restore the recorded commit, got %q", data)
 	}
 }
