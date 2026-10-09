@@ -70,7 +70,9 @@ func Parse(value string) (Source, error) {
 
 func isLocalPath(s string) bool {
 	return strings.HasPrefix(s, "./") || strings.HasPrefix(s, "../") || strings.HasPrefix(s, "~") ||
-		s == "." || s == ".." || filepath.IsAbs(s) || strings.HasPrefix(s, `.\`) || strings.HasPrefix(s, `..\`)
+		s == "." || s == ".." || filepath.IsAbs(s) || strings.HasPrefix(s, `.\`) || strings.HasPrefix(s, `..\`) ||
+		// A leading separator is a path on every platform (IsAbs is false for "/x" on Windows).
+		strings.HasPrefix(s, "/") || strings.HasPrefix(s, `\`)
 }
 
 func expandPath(p string) (string, error) {
