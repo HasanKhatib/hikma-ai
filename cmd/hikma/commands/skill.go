@@ -30,6 +30,7 @@ func newSkillCmd() *cobra.Command {
 		newSkillInfoCmd(&flagRegistry),
 		newSkillInstallCmd(&flagRegistry),
 		newSkillUpdateCmd(),
+		newSkillRemoveCmd(),
 		newSkillCreateCmd(),
 		newSkillPushCmd(&flagRegistry),
 	)
