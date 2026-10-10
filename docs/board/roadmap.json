@@ -1343,7 +1343,7 @@
             {
               "id": "E5.1-T1",
               "title": "hikma sync --frozen: fail if the lockfile and installed files differ or a commit cannot be fetched",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "security"
@@ -1353,7 +1353,7 @@
             {
               "id": "E5.1-T2",
               "title": "hikma skill verify: re-hash installed files against the lockfile",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "security"
@@ -1375,7 +1375,7 @@
             {
               "id": "E5.1-T4",
               "title": "Confirm before applying an update that changes scripts/",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "security",
