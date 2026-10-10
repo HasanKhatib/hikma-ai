@@ -424,7 +424,7 @@ func replaceDir(targetDir string, fill func(dst string) ([]string, error)) ([]st
 }
 
 func newSkillUpdateCmd() *cobra.Command {
-	var all, force bool
+	var all, force, yes bool
 	var flagAgent string
 
 	cmd := &cobra.Command{
@@ -486,7 +486,7 @@ Local edits are detected by file hash and block the update unless --force is use
 				}
 			}
 
-			u := &updater{out: out, errOut: cmd.ErrOrStderr(), force: force, lf: lf, checkouts: map[string]*openCheckout{}}
+			u := &updater{out: out, errOut: cmd.ErrOrStderr(), force: force, yes: yes, lf: lf, checkouts: map[string]*openCheckout{}}
 			defer u.close()
 			var updated, skipped int
 			for _, key := range keys {
@@ -521,6 +521,7 @@ Local edits are detected by file hash and block the update unless --force is use
 
 	cmd.Flags().BoolVar(&all, "all", false, "update every skill recorded in .hikma/lock.json")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite local changes")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "apply updates that change scripts/ without asking")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
@@ -537,7 +538,7 @@ type openCheckout struct {
 // updater shares one checkout per source and ref across a whole update run.
 type updater struct {
 	out, errOut io.Writer
-	force       bool
+	force, yes  bool
 	lf          lock.File
 	checkouts   map[string]*openCheckout
 }
@@ -578,14 +579,14 @@ func (u *updater) update(key string) error {
 	if _, err := os.Stat(localDir); err != nil {
 		return fmt.Errorf("%s is missing; reinstall it", localDir)
 	}
-	if !u.force {
-		current, err := source.HashDir(localDir)
-		if err != nil {
-			return err
-		}
-		if a, m, r := source.DiffFiles(e.Files, current); len(a)+len(m)+len(r) > 0 {
-			return fmt.Errorf("%s has local changes; use --force to overwrite them", localDir)
-		}
+	current, err := source.HashDir(localDir)
+	if err != nil {
+		return err
+	}
+	a, m, r := source.DiffFiles(e.Files, current)
+	locallyEdited := len(a)+len(m)+len(r) > 0
+	if locallyEdited && !u.force {
+		return fmt.Errorf("%s has local changes; use --force to overwrite them", localDir)
 	}
 
 	c, err := u.checkout(e)
@@ -606,19 +607,36 @@ func (u *updater) update(key string) error {
 		return err
 	}
 	added, modified, removed := source.DiffFiles(e.Files, incoming)
-	if len(added)+len(modified)+len(removed) == 0 {
+	if len(added)+len(modified)+len(removed) == 0 && !locallyEdited {
 		fmt.Fprintf(u.out, "%s is up to date (%s @ %s)\n", e.Name, c.src.Display, shortCommit(c.co.Commit))
 		e.Commit = c.co.Commit
 		u.lf.Skills[key] = e
 		return nil
 	}
 
-	fmt.Fprintf(u.out, "Updating %s from %s @ %s\n", e.Name, c.src.Display, shortCommit(c.co.Commit))
+	if locallyEdited && len(added)+len(modified)+len(removed) == 0 {
+		fmt.Fprintf(u.out, "Restoring %s to %s @ %s (local changes overwritten)\n", e.Name, c.src.Display, shortCommit(c.co.Commit))
+		printChanges(u.out, "reverted", append(append(append([]string{}, a...), m...), r...))
+	} else {
+		fmt.Fprintf(u.out, "Updating %s from %s @ %s\n", e.Name, c.src.Display, shortCommit(c.co.Commit))
+	}
 	printChanges(u.out, "added", added)
 	printChanges(u.out, "modified", modified)
 	printChanges(u.out, "removed", removed)
 	if touchesScripts(added, modified, removed) {
 		fmt.Fprintln(u.out, "  warning: scripts/ changed - review before use")
+		if !u.yes {
+			if !isInteractive() {
+				return fmt.Errorf("scripts/ changed; review with 'hikma skill diff %s' and re-run with --yes to apply", e.Name)
+			}
+			var ok bool
+			if err := survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("Apply this update to %s, including the scripts/ changes?", e.Name), Default: false}, &ok); err != nil {
+				return err
+			}
+			if !ok {
+				return fmt.Errorf("update of %s declined", e.Name)
+			}
+		}
 	}
 
 	if _, err := replaceDir(localDir, func(dst string) ([]string, error) { return source.CopyDir(srcDir, dst) }); err != nil {

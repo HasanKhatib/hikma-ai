@@ -16,7 +16,7 @@ import (
 )
 
 func newSyncCmd() *cobra.Command {
-	var force, yes, dryRun bool
+	var force, yes, dryRun, frozen bool
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Restore every skill recorded in .hikma/lock.json",
@@ -31,15 +31,20 @@ are skipped unless you pass --force.
 Because the lockfile comes from the repository you cloned, sync lists what it
 will fetch and asks you to confirm (--yes skips the prompt, and is required
 without a terminal). Lockfile entries that point outside the agent skill
-folders are rejected.`,
+folders are rejected.
+
+With --frozen, sync must reproduce the lockfile exactly and fails, changing
+nothing, if it cannot: a skill with local changes, an entry not pinned to a
+commit, or a source that cannot be fetched at its recorded commit. Use it in CI.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runSync(cmd, force, yes, dryRun)
+			return runSync(cmd, force, yes, dryRun, frozen)
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite skills that have local changes")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "skip the confirmation prompt")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be restored without changing anything")
+	cmd.Flags().BoolVar(&frozen, "frozen", false, "fail on any drift instead of skipping: for CI (needs --yes)")
 	return cmd
 }
 
@@ -96,7 +101,7 @@ func sameFiles(a, b map[string]string) bool {
 	return len(added)+len(modified)+len(removed) == 0
 }
 
-func runSync(cmd *cobra.Command, force, yes, dryRun bool) error {
+func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 	out := cmd.OutOrStdout()
 	lf, err := lock.Load(".")
 	if err != nil {
@@ -135,6 +140,15 @@ func runSync(cmd *cobra.Command, force, yes, dryRun bool) error {
 			fmt.Fprintf(cmd.ErrOrStderr(), "  refused  %s\n", msg)
 		}
 		return fmt.Errorf("%d lockfile entr(ies) refused; nothing was changed", len(invalid))
+	}
+
+	if frozen {
+		if problems := frozenProblems(items, force); len(problems) > 0 {
+			for _, msg := range problems {
+				fmt.Fprintf(cmd.ErrOrStderr(), "  drift    %s\n", msg)
+			}
+			return fmt.Errorf("frozen: %d problem(s) with .hikma/lock.json; nothing was changed", len(problems))
+		}
 	}
 
 	var work []syncItem
@@ -319,4 +333,20 @@ func describeDrift(added, modified, removed []string) string {
 		parts = append(parts, "missing: "+strings.Join(removed, ", "))
 	}
 	return strings.Join(parts, "; ")
+}
+
+// frozenProblems lists why a frozen sync cannot reproduce the lockfile exactly.
+func frozenProblems(items []syncItem, force bool) []string {
+	var problems []string
+	for _, it := range items {
+		if it.state == syncModified && !force {
+			problems = append(problems, fmt.Sprintf("%s has local changes (use --force to overwrite them)", it.key))
+		}
+		if it.state != syncOK && it.entry.Commit == "" {
+			if src, err := source.Parse(it.entry.Source); err != nil || src.Kind != source.KindLocal {
+				problems = append(problems, fmt.Sprintf("%s is not pinned to a commit in the lockfile", it.key))
+			}
+		}
+	}
+	return problems
 }

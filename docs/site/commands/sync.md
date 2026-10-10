@@ -3,7 +3,7 @@
 Restore every skill recorded in `.hikma/lock.json`.
 
 ```bash
-hikma sync [--yes] [--force] [--dry-run]
+hikma sync [--yes] [--force] [--dry-run] [--frozen]
 ```
 
 Use it on a fresh clone to get exactly the skills the repository was committed with, the way `npm ci` restores dependencies from a lockfile.
@@ -43,11 +43,18 @@ The lockfile comes from the repository you cloned, so `sync` treats it as untrus
 | `-y`, `--yes` | Skip the confirmation prompt |
 | `--force` | Overwrite skills that have local changes |
 | `--dry-run` | Show the plan without changing anything |
+| `--frozen` | Fail on any drift instead of skipping it. For CI |
 
 ## In CI
 
 ```bash
-hikma sync --yes
+hikma sync --frozen --yes
 ```
 
-exits non-zero if a skill could not be restored, was skipped because of local changes, or does not match the lockfile.
+`--frozen` must reproduce the lockfile exactly, and fails before changing anything when it cannot:
+
+- a skill has local changes (`--force` overwrites them instead)
+- an entry is not pinned to a commit
+- a source cannot be fetched at its recorded commit, or its files do not match the recorded hashes
+
+Without `--frozen`, `hikma sync --yes` skips skills with local changes and exits non-zero. To check without fetching anything, use [`hikma skill verify`](/commands/skill-verify).
