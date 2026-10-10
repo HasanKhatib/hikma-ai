@@ -617,3 +617,9 @@ kbd,
     transition: none;
   }
 }
+
+/* The home page is one screen: drop VitePress's bottom margin so it cannot scroll. */
+
+.VPHome {
+  margin-bottom: 0 !important;
+}
