@@ -4,7 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- `hikma skill update --force` now restores a skill you edited even when upstream has not changed; before, it reported "up to date" and kept your edits.
+- `hikma skill update` asks before applying an update that changes `scripts/`. Without a terminal it refuses until you pass `--yes`.
+
 ### Added
+- `hikma skill verify [<name>]` re-hashes installed skills against `.hikma/lock.json`, offline, and exits non-zero on any difference.
+- `hikma sync --frozen` fails, changing nothing, when the lockfile cannot be reproduced exactly: local changes, an entry without a pinned commit, or a source that cannot be fetched. For CI.
 - `hikma skill diff <name>` shows local edits and the upstream changes an update would bring, marking files changed on both sides; `--patch` prints the contents. It changes nothing.
 
 ## [0.2.0] - 2026-10-10

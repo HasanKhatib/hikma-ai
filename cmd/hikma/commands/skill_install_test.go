@@ -227,9 +227,18 @@ func TestUpdateUsesRecordedSourceAndProtectsLocalEdits(t *testing.T) {
 		t.Fatalf("expected local-changes error:\n%s", out)
 	}
 
+	// A change to scripts/ needs confirmation; without a terminal that means --yes (the reason goes to stderr).
 	out, err = run(t, "skill", "update", "alpha", "--agent", "claude", "--force")
+	if err == nil {
+		t.Fatalf("expected the update to be refused without --yes\n%s", out)
+	}
+	if data, _ := os.ReadFile(filepath.Join(proj, ".claude", "skills", "alpha", "scripts", "run.sh")); string(data) != "echo v1\n" {
+		t.Fatalf("script changed without confirmation: %q", data)
+	}
+
+	out, err = run(t, "skill", "update", "alpha", "--agent", "claude", "--force", "--yes")
 	if err != nil {
-		t.Fatalf("--force update: %v\n%s", err, out)
+		t.Fatalf("--force --yes update: %v\n%s", err, out)
 	}
 	if !strings.Contains(out, "scripts/run.sh") || !strings.Contains(out, "scripts/ changed") {
 		t.Fatalf("expected a scripts warning:\n%s", out)

@@ -36,6 +36,10 @@ The lockfile is separate from the skill. Hikma does not modify `SKILL.md`.
 - **Your edits are safe.** If an installed file no longer matches its recorded hash, `update` stops and tells you. Use `--force` to overwrite.
 - **Changes are visible.** An update lists added, modified, and removed files and warns when `scripts/` changed.
 
+## Checking
+
+`hikma skill verify` re-hashes the installed files against the lockfile and fails if anything differs, offline. `hikma sync --frozen` does the same on a fresh clone and refuses to continue on any drift. Both are meant for CI.
+
 ## Restoring
 
 On a fresh clone, `hikma sync` installs everything in the lockfile at the recorded commits and checks the files against the recorded hashes. See [sync](/commands/sync).

@@ -20,7 +20,7 @@ func newSkillCmd() *cobra.Command {
 	var flagRegistry string
 	cmd := &cobra.Command{
 		Use:   "skill",
-		Short: "Install, update, diff, remove, adopt, create, and publish skills",
+		Short: "Install, update, diff, verify, remove, adopt, create, and publish skills",
 	}
 	cmd.PersistentFlags().StringVar(&flagRegistry, "registry", "", "registry to use for this command (owner/repo, git URL, or local path)")
 
@@ -32,6 +32,7 @@ func newSkillCmd() *cobra.Command {
 		newSkillRemoveCmd(),
 		newSkillAdoptCmd(),
 		newSkillDiffCmd(),
+		newSkillVerifyCmd(),
 		newSkillCreateCmd(),
 		newSkillPushCmd(&flagRegistry),
 	)
