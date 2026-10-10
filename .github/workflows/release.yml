@@ -25,10 +25,18 @@ jobs:
           umask 077
           printf '%s\n' "$TAP_KEY" > "$RUNNER_TEMP/tap_deploy_key"
           echo "HOMEBREW_TAP_KEY_PATH=$RUNNER_TEMP/tap_deploy_key" >> "$GITHUB_ENV"
+      - name: Release notes from CHANGELOG
+        run: |
+          v="${GITHUB_REF_NAME#v}"
+          v="${v%%-*}"
+          awk -v v="$v" '/^## \[/ { p = index($0, "[" v "]") > 0; next } p' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
+          [ -s "$RUNNER_TEMP/notes.md" ] || echo "Release $GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
       - uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: latest
-          args: release --clean
+          args: release --clean --release-notes=${{ runner.temp }}/notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Build the pushed tag even when another tag (such as an rc) points at the same commit.
+          GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
