@@ -1017,7 +1017,7 @@
           "id": "E4.1",
           "title": "Complete skill lifecycle",
           "emoji": "L",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "skills"
@@ -1050,8 +1050,8 @@
             },
             {
               "id": "E4.1-T3",
-              "title": "Parked (low value next to the lockfile and update output): hikma skill diff <name>: show local edits and upstream changes",
-              "status": "todo",
+              "title": "hikma skill diff <name>: show local edits and upstream changes",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "feature",

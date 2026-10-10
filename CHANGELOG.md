@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `hikma skill diff <name>` shows local edits and the upstream changes an update would bring, marking files changed on both sides; `--patch` prints the contents. It changes nothing.
+
 ## [0.2.0] - 2026-10-10
 
 ### Changed
