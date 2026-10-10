@@ -4,16 +4,19 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-10-10
+
 ### Changed
 - `hikma init --agent claude` writes only `AGENTS.md`; Claude Code reads it when there is no `CLAUDE.md`. The generated `CLAUDE.md` stub is gone.
 - `skill create` generates a SKILL.md that follows the Agent Skills spec: `metadata` holds only string `owner` and `team`, and the placeholder `compatibility`, `email`, `policy`, and `last_validated` fields are removed.
 - `registry validate` checks the Agent Skills spec: name and description length, `compatibility` length, string-only `metadata`, and warns on fields outside the spec, non-spec names, and SKILL.md files over 500 lines.
-- Docs: new "Agents and folders" guide; the use-cases section is removed.
+- Docs: new "Agents and folders" guide, a custom site theme with a one-screen homepage and a new logo; the use-cases section is removed.
 - `hikma update` and `hikma --help` point to `brew upgrade` and the install script instead of stale text; examples use placeholders instead of a specific registry.
 - `hikma skill install` prints a file count per folder instead of every file, and `skill remove` deletes agent folders it leaves empty.
 - File hashes in `.hikma/lock.json` ignore CRLF versus LF line endings in text files, so a lockfile written on one platform verifies on another. Binary files are still hashed byte for byte.
 
 ### Added
+- `hikma skill install --pin <ref>` is an alias of `--ref`, matching `gh skill`.
 - `hikma skill adopt <name>` records a skill installed by `gh skill` (or any skill, with `--source`) in `.hikma/lock.json`. `skill list --installed`, `doctor`, and `skill update` now point at skills installed by `gh skill` that Hikma does not track.
 - `hikma registry validate --format github` prints GitHub workflow annotations with file and line, and the repository is now a reusable GitHub Action (`uses: HasanKhatib/hikma-ai@<tag>`) that validates a registry on pull requests.
 - `hikma skill remove <name>` deletes an installed skill and its lockfile entry, keeping untracked skills and local edits unless `--force`.
@@ -34,5 +37,6 @@ First public release.
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
 
-[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/HasanKhatib/hikma-ai/releases/tag/v0.1.0

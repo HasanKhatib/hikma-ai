@@ -34,7 +34,7 @@ gh api -H "Accept: application/vnd.github.raw+json" \
   repos/HasanKhatib/hikma-ai/contents/scripts/install.sh | bash
 
 # pin a version:
-curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash -s -- v0.1.0
+curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash -s -- v0.2.0
 ```
 
 Set `HIKMA_INSTALL_DIR` to install somewhere else. On Windows the script needs Git Bash (included with Git for Windows); make sure the install directory is on your `PATH`.
@@ -166,11 +166,11 @@ npx agentkan validate docs/board
 
 ## Release
 
-Releases are tag-based. Pushing a `v*` tag runs GoReleaser, publishes binaries to GitHub Releases, and updates the Homebrew cask in `HasanKhatib/homebrew-tap` (using the `HOMEBREW_TAP_DEPLOY_KEY` repo secret, a write-enabled deploy key on the tap). Pre-release tags such as `v0.1.0-rc.1` do not update the tap.
+Releases are tag-based. Pushing a `v*` tag runs GoReleaser, publishes binaries to GitHub Releases, and updates the Homebrew cask in `HasanKhatib/homebrew-tap` (using the `HOMEBREW_TAP_DEPLOY_KEY` repo secret, a write-enabled deploy key on the tap). Pre-release tags such as `v0.2.0-rc.1` do not update the tap.
 
 ```bash
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
 Try a release locally with `goreleaser release --snapshot --clean`.
