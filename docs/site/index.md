@@ -23,8 +23,4 @@ import { withBase } from "vitepress";
     <p class="hk-flow"><code>hikma init</code><i aria-hidden="true">&#8594;</i><code>skill install</code><i aria-hidden="true">&#8594;</i><code>skill push</code></p>
   </div>
 </div>
-<div class="hk-home-footer">
-  <span>MIT licensed</span>
-  <a href="https://github.com/HasanKhatib/hikma-ai">GitHub</a>
-</div>
 </div>
