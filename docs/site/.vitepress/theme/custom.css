@@ -1,14 +1,823 @@
+/* Hikma docs theme. The homepage extends VitePress's shared layout and navigation. */
+
 :root {
-  --vp-c-brand-1: #0f766e;
-  --vp-c-brand-2: #0d9488;
-  --vp-c-brand-3: #14b8a6;
-  --vp-c-brand-soft: rgba(20, 184, 166, 0.14);
-  --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: linear-gradient(120deg, #0f766e 30%, #14b8a6);
+  --paper: #f6f2e8;
+  --paper-2: #ece6d6;
+  --ink: #14201e;
+  --muted: #646b63;
+  --line: #d3ccb8;
+  --panel: #fcfaf4;
+  --forest: #0b4f4a;
+  --forest-2: #136761;
+  --signal: #f2b84b;
+  --orange: #b4532a;
+  --grid-line: rgba(11, 79, 74, 0.14);
+  --code: #0c1615;
+  --code-muted: #91a69f;
+  --code-text: #f2f6f1;
+  --code-text-2: #b7c6c0;
+  --code-text-3: #9dafaa;
+  --code-line: rgba(226, 239, 233, 0.19);
+  --shadow: 0 24px 64px rgba(11, 60, 56, 0.18);
+  --vp-c-bg: var(--paper);
+  --vp-c-bg-alt: var(--paper-2);
+  --vp-c-bg-elv: var(--panel);
+  --vp-c-border: var(--line);
+  --vp-c-divider: var(--line);
+  --vp-c-text-1: var(--ink);
+  --vp-c-text-2: var(--muted);
+  --vp-c-brand-1: var(--forest);
+  --vp-c-brand-2: var(--forest-2);
+  --vp-c-brand-3: var(--forest-2);
+  --vp-c-brand-soft: color-mix(in srgb, var(--forest) 12%, transparent);
 }
 
 .dark {
-  --vp-c-brand-1: #2dd4bf;
-  --vp-c-brand-2: #14b8a6;
-  --vp-c-brand-3: #0d9488;
+  --paper: #101816;
+  --paper-2: #17211e;
+  --ink: #f1ede2;
+  --muted: #a9b0a6;
+  --line: #36443f;
+  --panel: #1a2622;
+  --forest: #f2c46d;
+  --forest-2: #e0ae4e;
+  --signal: #f2c46d;
+  --orange: #ff9a6b;
+  --grid-line: rgba(242, 196, 109, 0.09);
+  --code: #080f0e;
+  --code-muted: #87a198;
+  --code-text: #f2f6f1;
+  --code-text-2: #b7c6c0;
+  --code-text-3: #9dafaa;
+  --code-line: rgba(226, 239, 233, 0.19);
+  --shadow: 0 24px 68px rgba(0, 0, 0, 0.3);
+  --vp-c-bg: var(--paper);
+  --vp-c-bg-alt: var(--paper-2);
+  --vp-c-bg-elv: var(--panel);
+  --vp-c-border: var(--line);
+  --vp-c-divider: var(--line);
+  --vp-c-text-1: var(--ink);
+  --vp-c-text-2: var(--muted);
+  --vp-c-brand-1: var(--forest);
+  --vp-c-brand-2: var(--forest-2);
+  --vp-c-brand-3: var(--forest-2);
+}
+
+body {
+  background: radial-gradient(var(--grid-line) 1px, transparent 1.2px) 0 0 / 22px 22px, var(--paper);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+}
+
+code,
+pre,
+kbd,
+.vp-doc code,
+.vp-code {
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace !important;
+}
+
+.vp-doc h1,
+.vp-doc h2,
+.vp-doc h3 {
+  letter-spacing: -0.03em;
+}
+
+.hk-hero a,
+.hk-workflow a {
+  text-decoration: none;
+}
+
+.hk-full-bleed {
+  position: relative;
+  isolation: isolate;
+}
+
+.hk-full-bleed::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 auto 0 50%;
+  width: 100vw;
+  transform: translateX(-50%);
+  background: var(--code);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Hero */
+
+.hk-eyebrow bdi {
+  margin-right: 10px;
+  padding-right: 11px;
+  border-right: 1px solid var(--line);
+  color: var(--forest);
+  font:
+    700 17px/1 "Amiri", "Noto Naskh Arabic", "Geeza Pro", "Segoe UI", serif;
+  letter-spacing: 0;
+}
+
+
+.hk-hero-wrap {
+  display: flex;
+  align-items: center;
+  min-height: clamp(610px, calc(100svh - var(--vp-nav-height) - 56px), 800px);
+}
+
+.hk-hero {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 72px 24px 82px;
+  display: grid;
+  grid-template-columns: minmax(0, 1.02fr) minmax(410px, 0.98fr);
+  gap: clamp(42px, 7vw, 92px);
+  align-items: center;
+}
+
+.hk-hero-copy {
+  animation: hk-enter 0.65s ease-out both;
+}
+
+.hk-eyebrow {
+  margin: 0 0 17px;
+  color: var(--orange);
+  font:
+    700 12px/1.4 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.hk-hero h1 {
+  max-width: 650px;
+  margin: 0 0 25px;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  font-size: clamp(52px, 6.2vw, 78px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.07em;
+}
+
+.hk-hero h1 em {
+  color: var(--forest);
+  font-style: normal;
+}
+
+.hk-hero-tagline {
+  max-width: 550px;
+  margin: 0 0 30px;
+  color: var(--muted);
+  font-size: 18px;
+  line-height: 1.6;
+}
+
+.hk-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.hk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 1px solid var(--forest);
+  border-radius: 5px;
+  font-size: 14px;
+  font-weight: 700;
+  transition:
+    transform 0.16s ease,
+    box-shadow 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.hk-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(11, 60, 56, 0.18);
+}
+
+.hk-button.hk-button-brand {
+  background: var(--forest);
+  color: var(--paper);
+}
+
+.dark .hk-button.hk-button-brand {
+  color: #1a1407;
+}
+
+.hk-button.hk-button-alt {
+  border-color: var(--line);
+  color: var(--forest);
+}
+
+.hk-button.hk-button-alt:hover {
+  border-color: var(--forest);
+}
+
+.hk-button:focus-visible,
+.hk-workflow-step:focus-visible,
+.hk-guide-link:focus-visible,
+.hk-install-panel button:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--orange) 55%, transparent);
+  outline-offset: 4px;
+}
+
+.hk-hero-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 21px;
+  margin: 23px 0 0;
+  color: var(--muted);
+  font:
+    650 12px/1.5 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hk-hero-meta span + span::before {
+  content: "/";
+  margin-right: 21px;
+  color: var(--line);
+}
+
+.hk-hero-image {
+  display: flex;
+  justify-content: center;
+  animation: hk-enter 0.7s 0.16s ease-out both;
+}
+
+/* Install panel */
+
+.hk-install-panel {
+  width: 100%;
+  max-width: 540px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 9px;
+  background: var(--code);
+  color: var(--code-text);
+  box-shadow: var(--shadow);
+  font-family: "SFMono-Regular", Consolas, monospace;
+}
+
+.hk-install-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 50px;
+  padding: 0 12px 0 18px;
+  border-bottom: 1px solid var(--code-line);
+}
+
+.hk-install-tabs {
+  display: flex;
+  align-items: center;
+  align-self: stretch;
+  gap: 4px;
+}
+
+.hk-install-tabs button,
+.hk-copy-button {
+  border: 0;
+  background: transparent;
+  font:
+    650 12px/1 "SFMono-Regular",
+    Consolas,
+    monospace;
+  cursor: pointer;
+}
+
+.hk-install-tabs button {
+  position: relative;
+  padding: 0 10px;
+  color: var(--code-text-2);
+}
+
+.hk-install-tabs button[aria-selected="true"] {
+  color: var(--signal);
+}
+
+.hk-install-tabs button[aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  right: 8px;
+  bottom: -20px;
+  left: 8px;
+  height: 2px;
+  background: var(--signal);
+}
+
+.hk-copy-button {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid var(--code-line);
+  border-radius: 3px;
+  color: var(--code-text-2);
+}
+
+.hk-copy-button:hover {
+  border-color: rgba(242, 184, 75, 0.5);
+  color: var(--signal);
+}
+
+.hk-install-command {
+  min-height: 255px;
+  padding: 31px 25px 27px;
+}
+
+.hk-install-label {
+  margin: 0;
+  color: var(--code-text-2);
+  font-size: 12px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hk-install-heading {
+  display: flex;
+  min-height: 31px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.hk-shell-switch {
+  display: inline-flex;
+  padding: 3px;
+  border: 1px solid var(--code-line);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.hk-shell-switch button {
+  min-height: 25px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: var(--code-text-3);
+  font:
+    650 10px/1 "SFMono-Regular",
+    Consolas,
+    monospace;
+  cursor: pointer;
+}
+
+.hk-shell-switch button[aria-pressed="true"] {
+  background: rgba(242, 184, 75, 0.12);
+  color: var(--signal);
+}
+
+.hk-install-lines {
+  display: grid;
+  gap: 7px;
+}
+
+.hk-install-line {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: start;
+}
+
+.hk-install-line > span {
+  padding-top: 3px;
+  color: var(--signal);
+  font-size: 13px;
+}
+
+.hk-install-command .hk-install-line code {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #fffbea;
+  font-size: 13px;
+  line-height: 1.9;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.hk-install-next {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 48px;
+  padding: 0 20px 0 25px;
+  border-top: 1px solid var(--code-line);
+  color: var(--code-text-2);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.hk-install-next span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.hk-install-next i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--signal);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--signal) 75%, transparent);
+}
+
+.vp-doc .hk-install-next code {
+  padding: 4px 7px;
+  border: 0;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--signal);
+  font-size: 12px;
+}
+
+/* Connected workflow */
+
+.hk-workflow-wrap {
+  color: var(--code-text);
+}
+
+.hk-workflow {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 74px 24px 45px;
+}
+
+.hk-workflow-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 30px;
+  margin-bottom: 45px;
+}
+
+.hk-workflow-heading .hk-eyebrow {
+  order: 2;
+  max-width: 230px;
+  margin: 0 0 6px;
+  color: var(--code-text-2);
+  text-align: right;
+}
+
+.hk-workflow h2 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--code-text);
+  font-size: clamp(35px, 4.6vw, 56px);
+  line-height: 0.99;
+  letter-spacing: -0.06em;
+}
+
+.hk-workflow-grid {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  border: 1px solid var(--code-line);
+  background: var(--code-line);
+}
+
+.hk-workflow-step {
+  position: relative;
+  display: flex;
+  min-width: 0;
+  min-height: 340px;
+  padding: 25px;
+  flex-direction: column;
+  background: var(--code);
+  color: var(--code-text);
+  transition: background 0.18s ease;
+}
+
+.hk-workflow-step:hover {
+  background: #15231f;
+}
+
+.hk-workflow-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.hk-workflow-number {
+  color: var(--code-text-2);
+  font:
+    700 11px/1 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.08em;
+}
+
+.hk-workflow-arrow {
+  color: var(--signal);
+  font-size: 18px;
+  transition: transform 0.18s ease;
+}
+
+.hk-workflow-step:hover .hk-workflow-arrow {
+  transform: translate(3px, -3px);
+}
+
+.hk-workflow-node {
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 83px;
+  margin: 28px 0 23px;
+}
+
+.hk-workflow-node::before {
+  content: "";
+  position: absolute;
+  left: -25px;
+  right: -26px;
+  top: 50%;
+  height: 1px;
+  background: rgba(242, 184, 75, 0.25);
+}
+
+.hk-workflow-node span {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 11px;
+  border: 1px solid rgba(242, 184, 75, 0.55);
+  border-radius: 3px;
+  background: var(--code);
+  color: var(--signal);
+  font:
+    650 12px/1 "SFMono-Regular",
+    Consolas,
+    monospace;
+}
+
+.hk-workflow-step:hover .hk-workflow-node span {
+  background: #15231f;
+}
+
+.hk-workflow-step h3 {
+  margin: 0 0 9px;
+  color: var(--code-text);
+  font-size: 21px;
+  letter-spacing: -0.035em;
+}
+
+.hk-workflow-step p {
+  max-width: 290px;
+  margin: 0 0 26px;
+  color: var(--code-text-2);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.vp-doc .hk-workflow .hk-workflow-step code {
+  width: fit-content;
+  margin-top: auto;
+  padding: 5px 7px;
+  border: 0;
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--signal);
+  font-size: 12px;
+}
+
+.hk-guide-row {
+  display: grid;
+  grid-template-columns: 1.1fr repeat(4, 1fr);
+  margin-top: 28px;
+  border-top: 1px solid var(--code-line);
+  border-bottom: 1px solid var(--code-line);
+}
+
+.hk-guide-intro,
+.hk-workflow a.hk-guide-link {
+  min-height: 108px;
+  padding: 20px;
+  border-right: 1px solid var(--code-line);
+}
+
+.hk-guide-intro span,
+.hk-guide-link > span {
+  color: var(--code-text-3);
+  font:
+    700 11px/1 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.1em;
+}
+
+.hk-guide-intro p {
+  max-width: 220px;
+  margin: 13px 0 0;
+  color: var(--code-text-2);
+  font-size: 14px;
+  line-height: 1.55;
+}
+
+.vp-doc .hk-workflow a.hk-guide-link {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  color: var(--code-text);
+  transition: background 0.16s ease;
+}
+
+.hk-guide-link:last-child {
+  border-right: 0;
+}
+
+.hk-guide-link strong {
+  margin-top: auto;
+  color: inherit;
+  font-size: 15px;
+}
+
+.hk-guide-link i {
+  position: absolute;
+  right: 19px;
+  bottom: 18px;
+  color: var(--signal);
+  font-style: normal;
+  transition: transform 0.16s ease;
+}
+
+.vp-doc .hk-workflow a.hk-guide-link:hover {
+  background: #15231f;
+  color: var(--signal);
+}
+
+.hk-guide-link:hover i {
+  transform: translate(3px, -3px);
+}
+
+@keyframes hk-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+}
+
+@media (max-width: 900px) {
+  .hk-hero-wrap {
+    min-height: 0;
+  }
+
+  .hk-hero {
+    grid-template-columns: 1fr;
+    padding-top: 62px;
+  }
+
+  .hk-hero-copy {
+    max-width: 680px;
+  }
+
+  .hk-hero-image,
+  .hk-install-panel {
+    max-width: 680px;
+  }
+
+  .hk-workflow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .hk-workflow-step {
+    min-height: 280px;
+  }
+
+  .hk-workflow-node::before {
+    right: -25px;
+  }
+
+  .hk-guide-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .hk-guide-intro {
+    grid-column: 1 / -1;
+    min-height: 90px;
+    border-right: 0;
+    border-bottom: 1px solid var(--code-line);
+  }
+}
+
+@media (max-width: 640px) {
+  .hk-hero {
+    padding: 49px 20px 62px;
+    gap: 45px;
+  }
+
+  .hk-hero h1 {
+    font-size: clamp(45px, 14vw, 62px);
+  }
+
+  .hk-hero-tagline {
+    font-size: 16px;
+  }
+
+  .hk-hero-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .hk-button {
+    width: 100%;
+  }
+
+  .hk-hero-meta {
+    display: grid;
+    gap: 5px;
+  }
+
+  .hk-hero-meta span + span::before {
+    content: none;
+  }
+
+  .hk-install-command {
+    min-height: 270px;
+    padding: 27px 20px 24px;
+  }
+
+  .hk-workflow {
+    padding: 58px 20px 38px;
+  }
+
+  .hk-workflow-heading {
+    display: block;
+    margin-bottom: 32px;
+  }
+
+  .hk-workflow-heading .hk-eyebrow {
+    max-width: none;
+    margin-bottom: 15px;
+    text-align: left;
+  }
+
+  .hk-workflow h2 {
+    font-size: 37px;
+  }
+
+  .hk-workflow-step {
+    min-height: 300px;
+    padding: 22px;
+  }
+
+  .hk-workflow-node::before {
+    left: -22px;
+    right: -22px;
+  }
+
+  .hk-guide-row {
+    grid-template-columns: 1fr;
+  }
+
+  .hk-guide-intro,
+  .hk-guide-link {
+    min-height: 92px;
+    border-right: 0;
+    border-bottom: 1px solid var(--code-line);
+  }
+
+  .hk-guide-link:last-child {
+    border-bottom: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hk-hero-copy,
+  .hk-hero-image {
+    animation: none;
+  }
+
+  .hk-button,
+  .hk-workflow-arrow {
+    transition: none;
+  }
+}
+
+/* Install panel hint */
+
+.hk-install-hint {
+  margin: 0;
+  color: var(--code-text-3);
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
 }

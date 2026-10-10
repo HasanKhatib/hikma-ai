@@ -1,52 +1,94 @@
 ---
 layout: home
-
-hero:
-  name: Hikma
-  text: Skills for your AI agents, from a registry you own
-  tagline: Set up a repository for Claude, Codex, Copilot, or OpenCode in one command, and install, update, and publish reusable skills through plain Git repositories.
-  actions:
-    - theme: brand
-      text: Get started
-      link: /getting-started
-    - theme: alt
-      text: Command reference
-      link: /commands/
-    - theme: alt
-      text: View on GitHub
-      link: https://github.com/HasanKhatib/hikma-ai
-
-features:
-  - title: One command sets up a repo
-    details: "`hikma init` writes each agent's instruction files, saves the agents and registry in a committed config, and installs skills into every agent's folder."
-  - title: Your registry is a setting
-    details: Bare names install from your registry. `hikma skill push` opens a pull request into it, through your fork when you lack write access, after you confirm the target.
-  - title: Installs you can trust
-    details: A lockfile records the source, commit, and file hashes. Updates stop on local edits and flag changes to scripts.
-  - title: Policy for your registry
-    details: Choose a naming rule and run `hikma registry validate` to check every skill against the format.
-  - title: Plain Git, light requirements
-    details: Reading skills needs only `git`. Registries are ordinary repositories; there is nothing to host.
-  - title: Works alongside gh skill
-    details: Both tools read the same `skills/<name>/SKILL.md` layout, so a repository that works with one works with the other.
 ---
 
-## Install
+<script setup>
+import { withBase } from "vitepress";
+</script>
 
-::: code-group
+<div class="hk-hero-wrap">
+<div class="hk-hero">
+  <div class="hk-hero-copy">
+    <p class="hk-eyebrow"><bdi lang="ar" dir="rtl">حكمة</bdi> Skills for AI agents</p>
+    <h1>Skills for your agents, <em>from a registry you own.</em></h1>
+    <p class="hk-hero-tagline">Set up a repository for Claude, Codex, Copilot, or OpenCode in one command. Install, update, and publish reusable skills through plain Git repositories.</p>
+    <div class="hk-hero-actions">
+      <a class="hk-button hk-button-brand" :href="withBase('/getting-started')">Get started <span aria-hidden="true">&#8599;</span></a>
+      <a class="hk-button hk-button-alt" :href="withBase('/commands/')">Command reference</a>
+    </div>
+    <p class="hk-hero-meta"><span>macOS, Linux, Windows</span><span>Only needs git</span><span>MIT licensed</span></p>
+  </div>
+  <div class="hk-hero-image">
+    <InstallPanel />
+  </div>
+</div>
+</div>
 
-```bash [Homebrew]
-brew install HasanKhatib/tap/hikma
-```
+<div class="hk-workflow-wrap hk-full-bleed">
+<div class="hk-workflow">
+  <div class="hk-workflow-heading">
+    <p class="hk-eyebrow">The hikma workflow</p>
+    <h2>Set up the repo. Install the skill.<br />Publish what works.</h2>
+  </div>
 
-```bash [Script (macOS, Linux, Windows Git Bash)]
-curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash
-```
+  <div class="hk-workflow-grid">
+    <a class="hk-workflow-step" :href="withBase('/commands/init')">
+      <div class="hk-workflow-topline">
+        <span class="hk-workflow-number">01 / SET UP</span>
+        <span class="hk-workflow-arrow" aria-hidden="true">&#8599;</span>
+      </div>
+      <div class="hk-workflow-node"><span>AGENTS.md</span></div>
+      <h3>One command per repository.</h3>
+      <p>Write the agent instructions, save the agents and registry in a committed config, and install skills into every agent's folder.</p>
+      <code>hikma init</code>
+    </a>
+    <a class="hk-workflow-step" :href="withBase('/commands/skill-install')">
+      <div class="hk-workflow-topline">
+        <span class="hk-workflow-number">02 / INSTALL</span>
+        <span class="hk-workflow-arrow" aria-hidden="true">&#8599;</span>
+      </div>
+      <div class="hk-workflow-node"><span>.hikma/lock.json</span></div>
+      <h3>Installs you can trust.</h3>
+      <p>A lockfile records the source, commit, and file hashes. Updates stop on local edits and flag changes to scripts.</p>
+      <code>hikma skill install</code>
+    </a>
+    <a class="hk-workflow-step" :href="withBase('/commands/skill-push')">
+      <div class="hk-workflow-topline">
+        <span class="hk-workflow-number">03 / PUBLISH</span>
+        <span class="hk-workflow-arrow" aria-hidden="true">&#8599;</span>
+      </div>
+      <div class="hk-workflow-node"><span>registry / pull request</span></div>
+      <h3>Share it by pull request.</h3>
+      <p>Confirm the target registry, push a branch, and open a pull request. Through your fork when you lack write access.</p>
+      <code>hikma skill push</code>
+    </a>
+  </div>
 
-```bash [From source]
-go install github.com/hasankhatib/hikma-ai/cmd/hikma@latest
-```
-
-:::
-
-Then follow [Getting started](/getting-started).
+  <div class="hk-guide-row">
+    <div class="hk-guide-intro">
+      <span>GO DEEPER</span>
+      <p>Follow a guide or look up one command.</p>
+    </div>
+    <a class="hk-guide-link" :href="withBase('/guides/agents')">
+      <span>GUIDE 01</span>
+      <strong>Agents and folders</strong>
+      <i aria-hidden="true">&#8599;</i>
+    </a>
+    <a class="hk-guide-link" :href="withBase('/guides/registry')">
+      <span>GUIDE 02</span>
+      <strong>Run a registry</strong>
+      <i aria-hidden="true">&#8599;</i>
+    </a>
+    <a class="hk-guide-link" :href="withBase('/guides/gh-skill')">
+      <span>GUIDE 03</span>
+      <strong>Use with gh skill</strong>
+      <i aria-hidden="true">&#8599;</i>
+    </a>
+    <a class="hk-guide-link" :href="withBase('/commands/')">
+      <span>REFERENCE</span>
+      <strong>Browse commands</strong>
+      <i aria-hidden="true">&#8599;</i>
+    </a>
+  </div>
+</div>
+</div>
