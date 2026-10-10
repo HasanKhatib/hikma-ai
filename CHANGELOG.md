@@ -15,6 +15,7 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 - `hikma skill adopt <name>` records a skill installed by `gh skill` (or any skill, with `--source`) in `.hikma/lock.json`. `skill list --installed`, `doctor`, and `skill update` now point at skills installed by `gh skill` that Hikma does not track.
+- `hikma registry validate --format github` prints GitHub workflow annotations with file and line, and the repository is now a reusable GitHub Action (`uses: HasanKhatib/hikma-ai@<tag>`) that validates a registry on pull requests.
 - `hikma skill remove <name>` deletes an installed skill and its lockfile entry, keeping untracked skills and local edits unless `--force`.
 - `hikma skill list --installed` shows what is installed in this repository (`ok`, `modified`, `missing`, or `untracked`).
 - `hikma sync` restores every skill in `.hikma/lock.json` at its recorded commit, verifies the files against the recorded hashes, protects local edits, and rejects lockfile entries outside the agent skill folders.
