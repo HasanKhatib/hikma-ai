@@ -20,7 +20,7 @@ export default defineConfig({
       { text: "Commands", link: "/commands/" },
       { text: "Guides", link: "/guides/" },
       {
-        text: "v0.1",
+        text: "v0.2",
         items: [
           { text: "Releases", link: "https://github.com/HasanKhatib/hikma-ai/releases" },
           { text: "Changelog", link: "https://github.com/HasanKhatib/hikma-ai/blob/main/CHANGELOG.md" },
