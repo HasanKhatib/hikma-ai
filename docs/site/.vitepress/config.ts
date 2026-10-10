@@ -49,6 +49,7 @@ export default defineConfig({
           { text: "skill install", link: "/commands/skill-install" },
           { text: "skill update", link: "/commands/skill-update" },
           { text: "skill remove", link: "/commands/skill-remove" },
+          { text: "skill adopt", link: "/commands/skill-adopt" },
           { text: "sync", link: "/commands/sync" },
           { text: "skill create", link: "/commands/skill-create" },
           { text: "skill push", link: "/commands/skill-push" },

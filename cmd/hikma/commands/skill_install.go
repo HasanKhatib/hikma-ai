@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -15,6 +16,7 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/mattn/go-isatty"
 	"github.com/spf13/cobra"
+	"github.com/spf13/pflag"
 )
 
 // resolveSource picks the source for a command: --registry flag, then config.
@@ -301,7 +303,13 @@ a branch, tag, or commit. Skill names are not restricted on install.`,
 	}
 
 	cmd.Flags().BoolVar(&force, "force", false, "reinstall even if already installed")
-	cmd.Flags().StringVar(&ref, "ref", "", "branch, tag, or commit to install from")
+	cmd.Flags().StringVar(&ref, "ref", "", "branch, tag, or commit to install from (--pin is an alias, as in gh skill)")
+	cmd.Flags().SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
+		if name == "pin" {
+			name = "ref"
+		}
+		return pflag.NormalizedName(name)
+	})
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
@@ -469,6 +477,11 @@ Local edits are detected by file hash and block the update unless --force is use
 					}
 				}
 				if len(keys) == 0 {
+					for _, t := range targets {
+						if _, gh := source.ReadProvenance(t.SkillDir(name)); gh {
+							return fmt.Errorf("%q was installed by gh skill and is not tracked by hikma; run 'hikma skill adopt %s' to track it", name, name)
+						}
+					}
 					return fmt.Errorf("%q is not installed by hikma for the selected agents (no entry in .hikma/lock.json)", name)
 				}
 			}
@@ -489,6 +502,9 @@ Local edits are detected by file hash and block the update unless --force is use
 			}
 			if all {
 				fmt.Fprintf(out, "\nDone: %d processed, %d skipped.\n", updated, skipped)
+				if gh := ghManagedUntracked(); len(gh) > 0 {
+					fmt.Fprintf(out, "Not tracked by hikma (installed by gh skill): %s. Run 'hikma skill adopt <name>' to include them.\n", adoptHint(gh))
+				}
 			}
 			if skipped > 0 && !all {
 				return fmt.Errorf("update failed")
@@ -553,7 +569,10 @@ func (u *updater) checkout(e lock.Entry) (*openCheckout, error) {
 func (u *updater) update(key string) error {
 	e, ok := u.lf.Skills[key]
 	if !ok {
-		return fmt.Errorf("not installed by hikma (no entry in .hikma/lock.json); run 'hikma skill install --force' to track it")
+		if _, gh := source.ReadProvenance(filepath.FromSlash(key)); gh {
+			return fmt.Errorf("installed by gh skill and not tracked by hikma; run 'hikma skill adopt %s' to track it", path.Base(key))
+		}
+		return fmt.Errorf("not installed by hikma (no entry in .hikma/lock.json); run 'hikma skill adopt %s --source <owner/repo>' or 'hikma skill install --force'", path.Base(key))
 	}
 	localDir := filepath.FromSlash(key)
 	if _, err := os.Stat(localDir); err != nil {
