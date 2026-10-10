@@ -124,15 +124,16 @@ kbd,
 
 .hk-hero-wrap {
   display: flex;
-  align-items: center;
-  min-height: clamp(610px, calc(100svh - var(--vp-nav-height) - 56px), 800px);
+  flex-direction: column;
+  min-height: calc(100svh - var(--vp-nav-height));
 }
 
 .hk-hero {
+  flex: 1;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 72px 24px 82px;
+  padding: 32px 24px;
   display: grid;
   grid-template-columns: minmax(0, 1.02fr) minmax(410px, 0.98fr);
   gap: clamp(42px, 7vw, 92px);
@@ -160,7 +161,7 @@ kbd,
   padding: 0;
   border: 0;
   color: var(--ink);
-  font-size: clamp(52px, 6.2vw, 78px);
+  font-size: clamp(46px, 5.2vw, 68px);
   font-weight: 800;
   line-height: 0.95;
   letter-spacing: -0.07em;
@@ -175,7 +176,7 @@ kbd,
   max-width: 550px;
   margin: 0 0 30px;
   color: var(--muted);
-  font-size: 18px;
+  font-size: 19px;
   line-height: 1.6;
 }
 
@@ -334,8 +335,7 @@ kbd,
 }
 
 .hk-install-command {
-  min-height: 255px;
-  padding: 31px 25px 27px;
+  padding: 26px 25px 24px;
 }
 
 .hk-install-label {
@@ -445,369 +445,10 @@ kbd,
   font-size: 12px;
 }
 
-/* Connected workflow */
-
-.hk-workflow-wrap {
-  color: var(--code-text);
-}
-
-.hk-workflow {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 74px 24px 45px;
-}
-
-.hk-workflow-heading {
-  display: flex;
-  align-items: end;
-  justify-content: space-between;
-  gap: 30px;
-  margin-bottom: 45px;
-}
-
-.hk-workflow-heading .hk-eyebrow {
-  order: 2;
-  max-width: 230px;
-  margin: 0 0 6px;
-  color: var(--code-text-2);
-  text-align: right;
-}
-
-.hk-workflow h2 {
-  margin: 0;
-  padding: 0;
-  border: 0;
-  color: var(--code-text);
-  font-size: clamp(35px, 4.6vw, 56px);
-  line-height: 0.99;
-  letter-spacing: -0.06em;
-}
-
-.hk-workflow-grid {
-  position: relative;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1px;
-  border: 1px solid var(--code-line);
-  background: var(--code-line);
-}
-
-.hk-workflow-step {
-  position: relative;
-  display: flex;
-  min-width: 0;
-  min-height: 340px;
-  padding: 25px;
-  flex-direction: column;
-  background: var(--code);
-  color: var(--code-text);
-  transition: background 0.18s ease;
-}
-
-.hk-workflow-step:hover {
-  background: #15231f;
-}
-
-.hk-workflow-topline {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.hk-workflow-number {
-  color: var(--code-text-2);
-  font:
-    700 11px/1 "SFMono-Regular",
-    Consolas,
-    monospace;
-  letter-spacing: 0.08em;
-}
-
-.hk-workflow-arrow {
-  color: var(--signal);
-  font-size: 18px;
-  transition: transform 0.18s ease;
-}
-
-.hk-workflow-step:hover .hk-workflow-arrow {
-  transform: translate(3px, -3px);
-}
-
-.hk-workflow-node {
-  position: relative;
-  display: flex;
-  align-items: center;
-  height: 83px;
-  margin: 28px 0 23px;
-}
-
-.hk-workflow-node::before {
-  content: "";
-  position: absolute;
-  left: -25px;
-  right: -26px;
-  top: 50%;
-  height: 1px;
-  background: rgba(242, 184, 75, 0.25);
-}
-
-.hk-workflow-node span {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  min-height: 34px;
-  padding: 0 11px;
-  border: 1px solid rgba(242, 184, 75, 0.55);
-  border-radius: 3px;
-  background: var(--code);
-  color: var(--signal);
-  font:
-    650 12px/1 "SFMono-Regular",
-    Consolas,
-    monospace;
-}
-
-.hk-workflow-step:hover .hk-workflow-node span {
-  background: #15231f;
-}
-
-.hk-workflow-step h3 {
-  margin: 0 0 9px;
-  color: var(--code-text);
-  font-size: 21px;
-  letter-spacing: -0.035em;
-}
-
-.hk-workflow-step p {
-  max-width: 290px;
-  margin: 0 0 26px;
-  color: var(--code-text-2);
-  font-size: 15px;
-  line-height: 1.6;
-}
-
-.vp-doc .hk-workflow .hk-workflow-step code {
-  width: fit-content;
-  margin-top: auto;
-  padding: 5px 7px;
-  border: 0;
-  border-radius: 3px;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--signal);
-  font-size: 12px;
-}
-
-.hk-guide-row {
-  display: grid;
-  grid-template-columns: 1.1fr repeat(4, 1fr);
-  margin-top: 28px;
-  border-top: 1px solid var(--code-line);
-  border-bottom: 1px solid var(--code-line);
-}
-
-.hk-guide-intro,
-.hk-workflow a.hk-guide-link {
-  min-height: 108px;
-  padding: 20px;
-  border-right: 1px solid var(--code-line);
-}
-
-.hk-guide-intro span,
-.hk-guide-link > span {
-  color: var(--code-text-3);
-  font:
-    700 11px/1 "SFMono-Regular",
-    Consolas,
-    monospace;
-  letter-spacing: 0.1em;
-}
-
-.hk-guide-intro p {
-  max-width: 220px;
-  margin: 13px 0 0;
-  color: var(--code-text-2);
-  font-size: 14px;
-  line-height: 1.55;
-}
-
-.vp-doc .hk-workflow a.hk-guide-link {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  color: var(--code-text);
-  transition: background 0.16s ease;
-}
-
-.hk-guide-link:last-child {
-  border-right: 0;
-}
-
-.hk-guide-link strong {
-  margin-top: auto;
-  color: inherit;
-  font-size: 15px;
-}
-
-.hk-guide-link i {
-  position: absolute;
-  right: 19px;
-  bottom: 18px;
-  color: var(--signal);
-  font-style: normal;
-  transition: transform 0.16s ease;
-}
-
-.vp-doc .hk-workflow a.hk-guide-link:hover {
-  background: #15231f;
-  color: var(--signal);
-}
-
-.hk-guide-link:hover i {
-  transform: translate(3px, -3px);
-}
-
 @keyframes hk-enter {
   from {
     opacity: 0;
     transform: translateY(14px);
-  }
-}
-
-@media (max-width: 900px) {
-  .hk-hero-wrap {
-    min-height: 0;
-  }
-
-  .hk-hero {
-    grid-template-columns: 1fr;
-    padding-top: 62px;
-  }
-
-  .hk-hero-copy {
-    max-width: 680px;
-  }
-
-  .hk-hero-image,
-  .hk-install-panel {
-    max-width: 680px;
-  }
-
-  .hk-workflow-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .hk-workflow-step {
-    min-height: 280px;
-  }
-
-  .hk-workflow-node::before {
-    right: -25px;
-  }
-
-  .hk-guide-row {
-    grid-template-columns: repeat(2, 1fr);
-  }
-
-  .hk-guide-intro {
-    grid-column: 1 / -1;
-    min-height: 90px;
-    border-right: 0;
-    border-bottom: 1px solid var(--code-line);
-  }
-}
-
-@media (max-width: 640px) {
-  .hk-hero {
-    padding: 49px 20px 62px;
-    gap: 45px;
-  }
-
-  .hk-hero h1 {
-    font-size: clamp(45px, 14vw, 62px);
-  }
-
-  .hk-hero-tagline {
-    font-size: 16px;
-  }
-
-  .hk-hero-actions {
-    display: grid;
-    grid-template-columns: 1fr;
-  }
-
-  .hk-button {
-    width: 100%;
-  }
-
-  .hk-hero-meta {
-    display: grid;
-    gap: 5px;
-  }
-
-  .hk-hero-meta span + span::before {
-    content: none;
-  }
-
-  .hk-install-command {
-    min-height: 270px;
-    padding: 27px 20px 24px;
-  }
-
-  .hk-workflow {
-    padding: 58px 20px 38px;
-  }
-
-  .hk-workflow-heading {
-    display: block;
-    margin-bottom: 32px;
-  }
-
-  .hk-workflow-heading .hk-eyebrow {
-    max-width: none;
-    margin-bottom: 15px;
-    text-align: left;
-  }
-
-  .hk-workflow h2 {
-    font-size: 37px;
-  }
-
-  .hk-workflow-step {
-    min-height: 300px;
-    padding: 22px;
-  }
-
-  .hk-workflow-node::before {
-    left: -22px;
-    right: -22px;
-  }
-
-  .hk-guide-row {
-    grid-template-columns: 1fr;
-  }
-
-  .hk-guide-intro,
-  .hk-guide-link {
-    min-height: 92px;
-    border-right: 0;
-    border-bottom: 1px solid var(--code-line);
-  }
-
-  .hk-guide-link:last-child {
-    border-bottom: 0;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hk-hero-copy,
-  .hk-hero-image {
-    animation: none;
-  }
-
-  .hk-button,
-  .hk-workflow-arrow {
-    transition: none;
   }
 }
 
@@ -820,4 +461,159 @@ kbd,
   font-weight: 650;
   letter-spacing: 0.06em;
   text-transform: uppercase;
+}
+
+
+/* One-screen home: quiet link, flow line, footer */
+
+.hk-text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transition: color 0.16s ease;
+}
+
+.hk-text-link:hover {
+  color: var(--forest);
+}
+
+.hk-text-link:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--orange) 55%, transparent);
+  outline-offset: 2px;
+}
+
+.hk-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 18px 2px 0;
+  color: var(--muted);
+  font:
+    650 12px/1.5 "SFMono-Regular",
+    Consolas,
+    monospace;
+}
+
+.hk-flow i {
+  color: var(--orange);
+  font-style: normal;
+}
+
+.hk-home-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 20px;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 24px 20px;
+  color: var(--muted);
+  font:
+    650 11px/1.5 "SFMono-Regular",
+    Consolas,
+    monospace;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.hk-home-footer a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.hk-home-footer a:hover {
+  color: var(--forest);
+}
+
+.hk-hero-image {
+  flex-direction: column;
+  align-items: center;
+}
+
+.hk-hero-image .hk-flow {
+  width: 100%;
+  max-width: 540px;
+}
+
+@media (max-width: 900px) {
+  .hk-hero {
+    grid-template-columns: 1fr;
+    gap: 28px;
+    padding-top: 28px;
+  }
+
+  .hk-hero-image,
+  .hk-install-panel {
+    max-width: 680px;
+  }
+}
+
+@media (max-width: 640px) {
+  .hk-hero {
+    padding: 22px 20px;
+    gap: 22px;
+  }
+
+  .hk-hero h1 {
+    margin-bottom: 14px;
+    font-size: clamp(36px, 11vw, 48px);
+  }
+
+  .hk-hero-tagline {
+    margin-bottom: 18px;
+    font-size: 16px;
+  }
+
+  .hk-eyebrow {
+    margin-bottom: 12px;
+  }
+
+  .hk-install-command {
+    padding: 20px 18px 18px;
+  }
+
+  .hk-install-heading {
+    margin-bottom: 10px;
+  }
+
+  .hk-home-footer {
+    padding: 0 20px 16px;
+  }
+}
+
+@media (max-width: 640px) and (max-height: 760px) {
+  .hk-flow,
+  .hk-install-heading {
+    display: none;
+  }
+
+  .hk-install-command {
+    padding: 18px;
+  }
+
+  .hk-hero {
+    gap: 18px;
+  }
+
+  .hk-hero h1 {
+    font-size: clamp(32px, 9.5vw, 42px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hk-hero-copy,
+  .hk-hero-image {
+    animation: none;
+  }
+
+  .hk-button {
+    transition: none;
+  }
 }
