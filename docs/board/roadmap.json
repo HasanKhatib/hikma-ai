@@ -1208,7 +1208,7 @@
           "id": "E4.4",
           "title": "Interop with gh skill",
           "emoji": "I",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "interop",
@@ -1223,7 +1223,7 @@
             {
               "id": "E4.4-T1",
               "title": "Detect skills whose SKILL.md carries gh skill provenance metadata and that have no lock entry (doctor and list --installed)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "interop"
@@ -1233,7 +1233,7 @@
             {
               "id": "E4.4-T2",
               "title": "hikma skill adopt <name>: record an existing skill in the lockfile with its source and hashes",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "feature",
@@ -1244,7 +1244,7 @@
             {
               "id": "E4.4-T3",
               "title": "Make update and sync skip or warn clearly on skills hikma does not track",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "ux"
@@ -1254,7 +1254,7 @@
             {
               "id": "E4.4-T4",
               "title": "Test a repo with skills installed by both tools; document coexistence and that search and preview are gh skill features",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "test",
@@ -1283,7 +1283,7 @@
             {
               "id": "E4.5-T1",
               "title": "registry validate --format github: emit workflow annotations (::error file=...) for each problem",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature"
@@ -1293,7 +1293,7 @@
             {
               "id": "E4.5-T2",
               "title": "Composite action (action.yml) that installs the pinned hikma release and runs registry validate",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "ci",
