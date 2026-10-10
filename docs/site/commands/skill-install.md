@@ -23,7 +23,7 @@ With a source but no name, a terminal shows a picker. Without a terminal the ski
 
 | Flag | Description |
 |---|---|
-| `--ref <ref>` | Branch, tag, or commit to install from |
+| `--ref <ref>` | Branch, tag, or commit to install from. `--pin` is an alias, matching `gh skill` |
 | `--agent <list>` | Agents, comma-separated, overriding your configuration |
 | `--force` | Reinstall even if already installed |
 | `--registry <source>` | Registry for bare names, for this command |

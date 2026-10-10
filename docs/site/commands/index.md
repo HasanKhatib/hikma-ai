@@ -11,6 +11,7 @@
 | [`hikma skill install`](/commands/skill-install) | Install a skill from a registry or any source |
 | [`hikma skill update`](/commands/skill-update) | Update installed skills from their recorded source |
 | [`hikma skill remove`](/commands/skill-remove) | Remove an installed skill |
+| [`hikma skill adopt`](/commands/skill-adopt) | Track a skill that `gh skill` or another tool installed |
 | [`hikma sync`](/commands/sync) | Restore every skill recorded in the lockfile |
 | [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
 | [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry as a pull request |

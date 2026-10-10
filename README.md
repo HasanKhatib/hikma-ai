@@ -148,6 +148,7 @@ hikma skill info [owner/repo] <name>
 hikma skill install [owner/repo] [name] [--ref <ref>] [--agent claude] [--force]
 hikma skill update <name|--all> [--force]
 hikma skill remove <name> [--agent <list>] [--force]
+hikma skill adopt <name> [--source <owner/repo>]
 hikma sync [--yes] [--force] [--dry-run]
 hikma skill create <name>
 hikma skill push <name> [--registry owner/repo] [--yes] [--codeowners]

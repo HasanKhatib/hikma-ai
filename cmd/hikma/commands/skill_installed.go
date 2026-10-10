@@ -30,6 +30,7 @@ type installedSkill struct {
 	Source string `json:"source,omitempty"`
 	Ref    string `json:"ref,omitempty"`
 	Commit string `json:"commit,omitempty"`
+	Origin string `json:"origin,omitempty"` // "gh skill" for untracked skills that carry its metadata
 }
 
 // listInstalledSkills combines the lockfile with the skill folders on disk.
@@ -74,7 +75,12 @@ func listInstalledSkills() ([]installedSkill, error) {
 			if _, err := os.Stat(filepath.Join(filepath.FromSlash(key), "SKILL.md")); err != nil {
 				continue
 			}
-			rows = append(rows, installedSkill{Name: e.Name(), Path: key, Status: stateUntracked})
+			row := installedSkill{Name: e.Name(), Path: key, Status: stateUntracked}
+			if prov, ok := source.ReadProvenance(filepath.FromSlash(key)); ok {
+				row.Origin = "gh skill"
+				row.Source = prov.Repo
+			}
+			rows = append(rows, row)
 		}
 	}
 	sort.Slice(rows, func(i, j int) bool { return rows[i].Path < rows[j].Path })
@@ -104,7 +110,9 @@ func printInstalledTable(w io.Writer, rows []installedSkill) {
 	fmt.Fprintf(w, "%-42s  %-10s  %s\n", "PATH", "STATUS", "SOURCE")
 	for _, r := range rows {
 		src := r.Source
-		if src != "" {
+		if r.Status == stateUntracked && r.Origin != "" {
+			src = fmt.Sprintf("installed by %s from %s; run: hikma skill adopt %s", r.Origin, r.Source, r.Name)
+		} else if src != "" {
 			src += atCommit(lock.Entry{Commit: r.Commit, Ref: r.Ref})
 		} else {
 			src = "(not recorded in .hikma/lock.json)"
