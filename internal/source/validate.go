@@ -37,6 +37,8 @@ const (
 type Issue struct {
 	Severity string `json:"severity"`
 	Message  string `json:"message"`
+	File     string `json:"file,omitempty"` // relative to the skill folder, when known
+	Line     int    `json:"line,omitempty"`
 }
 
 func errorf(format string, a ...any) Issue {

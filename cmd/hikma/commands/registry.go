@@ -3,7 +3,10 @@ package commands
 import (
 	"fmt"
 	"io"
+	"path"
 	"path/filepath"
+	"strconv"
+	"strings"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
@@ -21,7 +24,7 @@ func newRegistryCmd() *cobra.Command {
 }
 
 func newRegistryValidateCmd() *cobra.Command {
-	var ref string
+	var ref, format string
 	cmd := &cobra.Command{
 		Use:   "validate [<source>]",
 		Short: "Check every skill in a registry against the skill format",
@@ -32,10 +35,16 @@ matches the folder and a description, that the folder name follows your naming
 setting (hikma config set naming), and that no template placeholders are left.
 
 The source is owner/repo, a git URL, or a path ('.' for the repo you are in).
-Without an argument the configured registry is used.`,
+Without an argument the configured registry is used.
+
+--format github also prints GitHub Actions workflow commands, so problems show
+up as annotations on the files in a pull request.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if format != "text" && format != "github" {
+				return fmt.Errorf("unknown --format %q (use text or github)", format)
+			}
 			repo := ""
 			if len(args) == 1 {
 				repo = args[0]
@@ -63,6 +72,9 @@ Without an argument the configured registry is used.`,
 				if printIssuesFor(out, s.Name, issues) {
 					failed++
 				}
+				if format == "github" {
+					printGitHubAnnotations(out, s.Rel, issues)
+				}
 			}
 			fmt.Fprintf(out, "\n%d skill(s) checked, %d failed.\n", len(skills), failed)
 			if failed > 0 {
@@ -72,6 +84,7 @@ Without an argument the configured registry is used.`,
 		},
 	}
 	cmd.Flags().StringVar(&ref, "ref", "", "branch, tag, or commit to validate")
+	cmd.Flags().StringVar(&format, "format", "text", "output format: text or github (workflow annotations)")
 	return cmd
 }
 
@@ -92,7 +105,14 @@ func validateSkillDirAs(dir, name string, isRoot bool) ([]source.Issue, error) {
 		return nil, err
 	}
 	for _, p := range placeholders {
-		issues = append(issues, source.Issue{Severity: source.SeverityError, Message: "unfilled placeholder " + p})
+		issue := source.Issue{Severity: source.SeverityError, Message: "unfilled placeholder " + p}
+		// p is "file:line: text"
+		if parts := strings.SplitN(p, ":", 3); len(parts) == 3 {
+			if n, err := strconv.Atoi(parts[1]); err == nil {
+				issue.File, issue.Line = filepath.ToSlash(parts[0]), n
+			}
+		}
+		issues = append(issues, issue)
 	}
 	return issues, nil
 }
@@ -118,4 +138,33 @@ func printIssuesFor(w io.Writer, name string, issues []source.Issue) bool {
 // printIssues prints validation problems for the skill in dir and reports whether any is an error.
 func printIssues(w io.Writer, dir string, issues []source.Issue) bool {
 	return printIssuesFor(w, dir, issues)
+}
+
+// printGitHubAnnotations writes one workflow command per issue. File paths are
+// relative to the registry root; rel is the skill's folder ("." for a root skill).
+func printGitHubAnnotations(w io.Writer, rel string, issues []source.Issue) {
+	for _, i := range issues {
+		level := "warning"
+		if i.Severity == source.SeverityError {
+			level = "error"
+		}
+		file := i.File
+		if file == "" {
+			file = "SKILL.md"
+		}
+		file = path.Join(rel, file)
+		props := "file=" + escapeProperty(file)
+		if i.Line > 0 {
+			props += fmt.Sprintf(",line=%d", i.Line)
+		}
+		fmt.Fprintf(w, "::%s %s::%s\n", level, props, escapeData(i.Message))
+	}
+}
+
+func escapeData(s string) string {
+	return strings.NewReplacer("%", "%25", "\r", "%0D", "\n", "%0A").Replace(s)
+}
+
+func escapeProperty(s string) string {
+	return strings.NewReplacer("%", "%25", "\r", "%0D", "\n", "%0A", ":", "%3A", ",", "%2C").Replace(s)
 }

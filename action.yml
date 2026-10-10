@@ -1,0 +1,32 @@
+name: Validate Hikma registry
+description: Check every skill in a registry against the Agent Skills format and annotate problems on the pull request.
+author: HasanKhatib
+
+inputs:
+  path:
+    description: Registry directory to validate, relative to the workspace.
+    default: "."
+  version:
+    description: Hikma release to install, such as v0.2.0. Pin it; "latest" follows new releases. Needs v0.2.0 or later.
+    default: latest
+  naming:
+    description: Naming rule for skill folders, "loose" or "kebab-case". Overrides .hikma/config.json.
+    default: ""
+
+runs:
+  using: composite
+  steps:
+    - name: Install hikma
+      shell: bash
+      env:
+        HIKMA_VERSION: ${{ inputs.version }}
+        HIKMA_INSTALL_DIR: ${{ runner.temp }}/hikma-bin
+      run: |
+        bash "${{ github.action_path }}/scripts/install.sh"
+        echo "$HIKMA_INSTALL_DIR" >> "$GITHUB_PATH"
+    - name: Validate registry
+      shell: bash
+      env:
+        HIKMA_NAMING: ${{ inputs.naming }}
+        REGISTRY_PATH: ${{ inputs.path }}
+      run: hikma registry validate "$REGISTRY_PATH" --format github

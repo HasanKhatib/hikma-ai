@@ -47,7 +47,37 @@ git@github.com:owner/repo.git
 hikma registry validate .
 ```
 
-Run this in your registry's CI so every pull request is checked. It exits non-zero when any skill is invalid.
+It exits non-zero when any skill is invalid, so it works as a pull request check.
+
+## Check it on every pull request
+
+Hikma ships a GitHub Action that installs a pinned release and validates the registry. Problems show up as annotations on the files in the pull request.
+
+```yaml
+# .github/workflows/validate.yml
+name: Validate skills
+on: pull_request
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: HasanKhatib/hikma-ai@v0.2.0
+        with:
+          version: v0.2.0
+```
+
+| Input | Default | Description |
+|---|---|---|
+| `path` | `.` | Registry directory to validate |
+| `version` | `latest` | Hikma release to install. Pin it, so a new release cannot change your CI |
+| `naming` | from `.hikma/config.json` | `loose` or `kebab-case` |
+
+The action needs Hikma v0.2.0 or later, the first release with `--format github`. It runs on Linux, macOS, and Windows runners. Without the action, run `hikma registry validate . --format github` in any step after installing Hikma.
 
 ## Publishing
 
