@@ -10,6 +10,7 @@
 | [`hikma skill info`](/commands/skill-info) | Show details for one skill |
 | [`hikma skill install`](/commands/skill-install) | Install a skill from a registry or any source |
 | [`hikma skill update`](/commands/skill-update) | Update installed skills from their recorded source |
+| [`hikma skill diff`](/commands/skill-diff) | Show local edits and upstream changes for a skill |
 | [`hikma skill remove`](/commands/skill-remove) | Remove an installed skill |
 | [`hikma skill adopt`](/commands/skill-adopt) | Track a skill that `gh skill` or another tool installed |
 | [`hikma sync`](/commands/sync) | Restore every skill recorded in the lockfile |

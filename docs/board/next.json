@@ -1,7 +1,7 @@
 {
   "updated": "2026-10-10",
-  "next": "E4.1-T3",
-  "note": "v0.2.0 shipped (adopt and gh skill interop, spec-aligned validation, registry Action). Next: the parked diff command (E4.1-T3), custom agent layouts (E4.3), then verifiable installs (E5.1). Human decision pending: E1.3-T4 (history).",
+  "next": "E4.3-T3",
+  "note": "skill diff (E4.1) is built. Next: custom agent layouts (E4.3), then verifiable installs (E5.1). Human decision pending: E1.3-T4 (history).",
   "criticalPath": [],
   "risks": [
     "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries.",
