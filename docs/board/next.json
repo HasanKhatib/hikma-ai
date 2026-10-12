@@ -1,7 +1,7 @@
 {
   "updated": "2026-10-12",
-  "next": "E4.3-T4",
-  "note": "Skill diff (E4.1) is built. Verifiable installs (E5.1) are built but the epic stays active until the parked checksum manifest (E5.1-T3) is decided. E4.3 starts at T4 (config schema), then T5 and T7; the layout tests (T3) follow once the code exists. Decided 2026-10-12: layouts key for custom layouts (E4.3), then user-scope installs via --global (E4.2, v0.4) with a lockfile at ~/.hikma/lock.json; duplicates warn and never block. Order: E4.3 (incl. the sync validation fix), E5.2 signing, tag v0.3, then the scope refactor (E4.2-T4) and E4.2. Human decision pending: E1.3-T4 (history; the 2026-10-09 scan found nothing, so keep history) and E5.2-T3 (notarization).",
+  "next": "E4.3-T8",
+  "note": "Skill diff (E4.1) is built. Verifiable installs (E5.1) are built but the epic stays active until the parked checksum manifest (E5.1-T3) is decided. E4.3-T4 (layouts schema and validation) is done. Next: T8 (resolved layout set), then T5, T9, T7, T3 tests, T6 docs. Decided 2026-10-12: layouts key for custom layouts (E4.3), then user-scope installs via --global (E4.2, v0.4) with a lockfile at ~/.hikma/lock.json; duplicates warn and never block. Order: E4.3 (incl. the sync validation fix), E5.2 signing, tag v0.3, then the scope refactor (E4.2-T4) and E4.2. Human decision pending: E1.3-T4 (history; the 2026-10-09 scan found nothing, so keep history) and E5.2-T3 (notarization).",
   "criticalPath": [],
   "risks": [
     "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries.",

@@ -1252,8 +1252,8 @@
             },
             {
               "id": "E4.3-T4",
-              "title": "Config schema for custom layouts (layouts.<name>.skillsDir and instructionFile), validated on load: relative, no .., not under .git or .hikma, no built-in names",
-              "status": "todo",
+              "title": "Config schema for custom layouts (layouts.<name>.skillsDir and instructionFile), validated on load: relative, slash-separated, no .. or ., not under .git or .hikma (case-insensitive), no built-in names; JSON file only in v0.3",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "config",
@@ -1263,7 +1263,7 @@
             },
             {
               "id": "E4.3-T5",
-              "title": "Resolve custom layouts in ResolveTargets, init, install, update, sync, and doctor; dedupe shared folders; make sync's lock entry validation accept configured layouts, not only built-ins",
+              "title": "Use the resolved layout set in ResolveTargets, init, install, update, sync, and doctor; dedupe shared folders; sync's lock validation accepts configured layouts; refuse to replace an existing folder that is not a tracked or SKILL.md skill unless --force",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -1289,6 +1289,26 @@
               "labels": [
                 "ux",
                 "skills"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T8",
+              "title": "Replace the static agent table lookups (ValidAgent, ParseAgents, SelectionFor, LayoutFor, config show/set, scaffold) with a resolved layout set of built-ins plus config layouts",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "refactor"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T9",
+              "title": "Custom instructionFile: init writes the shared AGENTS.md template under the custom filename and never overwrites an existing file",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "templates"
               ],
               "planned": null
             }

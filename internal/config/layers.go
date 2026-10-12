@@ -125,6 +125,9 @@ func loadFile(path string) (Config, error) {
 	if err := json.Unmarshal(data, &c); err != nil {
 		return Config{}, fmt.Errorf("cannot parse config file %s: %w", path, err)
 	}
+	if err := ValidateLayouts(c.Layouts); err != nil {
+		return Config{}, fmt.Errorf("invalid config file %s: %w", path, err)
+	}
 	return c, nil
 }
 
@@ -352,5 +355,5 @@ func NamingConvention() (string, error) {
 }
 
 func (c Config) isEmpty() bool {
-	return c.Agent == "" && c.Registry == "" && c.Naming == "" && len(c.Agents) == 0
+	return c.Agent == "" && c.Registry == "" && c.Naming == "" && len(c.Agents) == 0 && len(c.Layouts) == 0
 }
