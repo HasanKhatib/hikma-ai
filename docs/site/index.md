@@ -11,8 +11,8 @@ import { withBase } from "vitepress";
 <div class="hk-hero">
   <div class="hk-hero-copy">
     <p class="hk-eyebrow"><bdi lang="ar" dir="rtl">حكمة</bdi> Hikma</p>
-    <h1>Your skills, <em>in every agent you use.</em></h1>
-    <p class="hk-hero-tagline">Push skills to a registry you own, pull them into Claude, Codex, Copilot, OpenCode, or your own agent. One CLI, plain Git.</p>
+    <h1>Skills follow you. <em>Define your source, use one CLI.</em></h1>
+    <p class="hk-hero-tagline">Publish to a registry you own, install into Claude, Codex, Copilot, OpenCode, or your own agent. Plain Git.</p>
     <div class="hk-hero-actions">
       <a class="hk-button hk-button-brand" :href="withBase('/getting-started')">Get started <span aria-hidden="true">&#8594;</span></a>
       <a class="hk-text-link" :href="withBase('/commands/')">Commands</a>

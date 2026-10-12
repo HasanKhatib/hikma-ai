@@ -1,6 +1,6 @@
 # Getting started
 
-This page takes you from nothing to a project with your agent set up and a skill pulled from your registry.
+This page takes you from nothing to a project with your agent set up and a skill installed from your registry.
 
 ## 1. Install
 

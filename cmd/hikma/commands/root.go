@@ -18,12 +18,12 @@ var version = "dev"
 func Root() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "hikma",
-		Short:   "Your personal skill library for AI coding agents",
+		Short:   "Skills follow you: publish to your registry, install into any agent",
 		Version: version,
-		Long: `hikma is a skill manager for developers. Keep your agent skills in a registry
-repo you own (plain Git), push skills to it from any project, and pull them
-into whichever agent you use: Claude, Codex, Copilot, OpenCode, or your own
-custom agent layout.
+		Long: `hikma moves your agent skills around. Define your source once, publish a skill
+from any project to a registry repo you own, then install, update, and verify
+it in whichever agent you use: Claude, Codex, Copilot, OpenCode, or a custom
+layout you define. One CLI, plain Git.
 
 Install from any repo with: hikma skill install owner/repo my-skill
 Set a registry with: hikma config registry owner/registry`,
