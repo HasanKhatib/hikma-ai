@@ -463,7 +463,7 @@ pushed to your fork. Nothing is force-pushed.`,
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp
 			}
-			return installedSkillCompletions()
+			return installedSkillCompletions(projectScope())
 		},
 	}
 

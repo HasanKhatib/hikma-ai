@@ -3,11 +3,9 @@ package commands
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
-	"github.com/hasankhatib/hikma-ai/internal/lock"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 	"github.com/spf13/cobra"
 )
@@ -26,7 +24,8 @@ every skill in the lockfile is checked.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
-			lf, err := lock.Load(".")
+			sc := projectScope()
+			lf, err := sc.loadLock()
 			if err != nil {
 				return err
 			}
@@ -58,7 +57,7 @@ every skill in the lockfile is checked.`,
 			failed := 0
 			for _, key := range keys {
 				e := lf.Skills[key]
-				dir := filepath.FromSlash(key)
+				dir := sc.path(key)
 				if _, err := os.Stat(dir); err != nil {
 					fmt.Fprintf(out, "  FAIL  %s\n          the folder is missing ('hikma sync' restores it)\n", key)
 					failed++
@@ -97,7 +96,7 @@ every skill in the lockfile is checked.`,
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp
 			}
-			return installedSkillCompletions()
+			return installedSkillCompletions(projectScope())
 		},
 	}
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")

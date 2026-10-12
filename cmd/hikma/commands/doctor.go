@@ -57,7 +57,7 @@ func runDoctor() error {
 		fmt.Printf("  ok    registry: %s (%s)\n", src.Display, origin)
 	}
 
-	if gh := ghManagedUntracked(); len(gh) > 0 {
+	if gh := ghManagedUntracked(projectScope()); len(gh) > 0 {
 		fmt.Printf("  warn  skills installed by gh skill and not tracked by hikma: %s\n        fix: run 'hikma skill adopt <name>' so update, sync, and remove manage them\n", adoptHint(gh))
 	}
 
