@@ -42,22 +42,23 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 			if err != nil {
 				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
 			}
-			lf, err := lock.Load(".")
+			sc := projectScope()
+			lf, err := sc.loadLock()
 			if err != nil {
 				return err
 			}
 
 			var dirs []string
 			for _, t := range targets {
-				dir := t.SkillDir(name)
-				if _, err := os.Stat(filepath.Join(dir, "SKILL.md")); err != nil {
+				key := sc.key(t, name)
+				if _, err := os.Stat(filepath.Join(sc.path(key), "SKILL.md")); err != nil {
 					continue
 				}
-				if hasEntry(lf, lockKey(dir)) {
-					fmt.Fprintf(out, "  already tracked  %s\n", lockKey(dir))
+				if hasEntry(lf, key) {
+					fmt.Fprintf(out, "  already tracked  %s\n", key)
 					continue
 				}
-				dirs = append(dirs, dir)
+				dirs = append(dirs, key)
 			}
 			if len(dirs) == 0 {
 				return fmt.Errorf("no untracked %q skill found in the selected agents' folders", name)
@@ -65,7 +66,7 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 
 			srcArg, ref := flagSource, flagRef
 			if srcArg == "" {
-				p, ok := source.ReadProvenance(dirs[0])
+				p, ok := source.ReadProvenance(sc.path(dirs[0]))
 				if !ok {
 					return fmt.Errorf("%s has no gh skill metadata; pass --source <owner/repo>", dirs[0])
 				}
@@ -91,15 +92,15 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 				return fmt.Errorf("skill %q not found in %s; updates would fail", name, src.Display)
 			}
 
-			for _, dir := range dirs {
-				files, err := source.HashDir(dir)
+			for _, key := range dirs {
+				files, err := source.HashDir(sc.path(key))
 				if err != nil {
 					return err
 				}
-				lf.Skills[lockKey(dir)] = lock.Entry{Name: name, Source: src.Raw, Ref: ref, Commit: co.Commit, Files: files}
-				fmt.Fprintf(out, "  adopted  %s  (%s%s)\n", lockKey(dir), src.Display, atCommit(lock.Entry{Commit: co.Commit, Ref: ref}))
+				lf.Skills[key] = lock.Entry{Name: name, Source: src.Raw, Ref: ref, Commit: co.Commit, Files: files}
+				fmt.Fprintf(out, "  adopted  %s  (%s%s)\n", key, src.Display, atCommit(lock.Entry{Commit: co.Commit, Ref: ref}))
 			}
-			return lock.Save(".", lf)
+			return sc.saveLock(lf)
 		},
 	}
 	cmd.Flags().StringVar(&flagSource, "source", "", "where the skill came from (owner/repo, git URL, or path); default: read from gh skill metadata")
@@ -112,8 +113,8 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 }
 
 // ghManagedUntracked returns skills that gh skill installed and hikma does not track.
-func ghManagedUntracked() []installedSkill {
-	rows, err := listInstalledSkills()
+func ghManagedUntracked(sc scope) []installedSkill {
+	rows, err := listInstalledSkills(sc)
 	if err != nil {
 		return nil
 	}

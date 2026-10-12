@@ -18,10 +18,12 @@ var version = "dev"
 func Root() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:     "hikma",
-		Short:   "Scaffold AI agent configurations and manage skills from your registry",
+		Short:   "Skills follow you: publish to your registry, install into any agent",
 		Version: version,
-		Long: `hikma helps teams scaffold AI agent configuration files and install reusable
-skills from a user-configured registry repository.
+		Long: `hikma moves your agent skills around. Define your source once, publish a skill
+from any project to a registry repo you own, then install, update, and verify
+it in whichever agent you use: Claude, Codex, Copilot, OpenCode, or a custom
+layout you define. One CLI, plain Git.
 
 Install from any repo with: hikma skill install owner/repo my-skill
 Set a registry with: hikma config registry owner/registry`,

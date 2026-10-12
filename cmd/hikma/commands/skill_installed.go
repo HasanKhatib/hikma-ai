@@ -35,8 +35,8 @@ type installedSkill struct {
 
 // listInstalledSkills combines the lockfile with the skill folders on disk.
 // Skills in an agent folder without a lockfile entry are reported as untracked.
-func listInstalledSkills() ([]installedSkill, error) {
-	lf, err := lock.Load(".")
+func listInstalledSkills(sc scope) ([]installedSkill, error) {
+	lf, err := sc.loadLock()
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func listInstalledSkills() ([]installedSkill, error) {
 	for _, key := range lf.Keys() {
 		e := lf.Skills[key]
 		row := installedSkill{Name: e.Name, Path: key, Source: e.Source, Ref: e.Ref, Commit: e.Commit, Status: stateMissing}
-		dir := filepath.FromSlash(key)
+		dir := sc.path(key)
 		if dirExists(dir) {
 			current, err := source.HashDir(dir)
 			if err != nil {
@@ -64,7 +64,7 @@ func listInstalledSkills() ([]installedSkill, error) {
 		return nil, err
 	}
 	for base := range dirs {
-		entries, err := os.ReadDir(filepath.FromSlash(base))
+		entries, err := os.ReadDir(sc.path(base))
 		if err != nil {
 			continue
 		}
@@ -76,11 +76,11 @@ func listInstalledSkills() ([]installedSkill, error) {
 			if _, tracked := lf.Skills[key]; tracked {
 				continue
 			}
-			if _, err := os.Stat(filepath.Join(filepath.FromSlash(key), "SKILL.md")); err != nil {
+			if _, err := os.Stat(filepath.Join(sc.path(key), "SKILL.md")); err != nil {
 				continue
 			}
 			row := installedSkill{Name: e.Name(), Path: key, Status: stateUntracked}
-			if prov, ok := source.ReadProvenance(filepath.FromSlash(key)); ok {
+			if prov, ok := source.ReadProvenance(sc.path(key)); ok {
 				row.Origin = "gh skill"
 				row.Source = prov.Repo
 			}
@@ -92,7 +92,7 @@ func listInstalledSkills() ([]installedSkill, error) {
 }
 
 func listInstalled(cmd *cobra.Command, asJSON bool) error {
-	rows, err := listInstalledSkills()
+	rows, err := listInstalledSkills(projectScope())
 	if err != nil {
 		return err
 	}
@@ -148,15 +148,16 @@ install'.`,
 			if err != nil {
 				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
 			}
-			lf, err := lock.Load(".")
+			sc := projectScope()
+			lf, err := sc.loadLock()
 			if err != nil {
 				return err
 			}
 
 			removed, blocked := 0, 0
 			for _, t := range targets {
-				dir := t.SkillDir(name)
-				key := lockKey(dir)
+				dir := sc.skillDir(t, name)
+				key := sc.key(t, name)
 				entry, tracked := lf.Skills[key]
 				exists := pathExists(dir)
 				if !tracked && !exists {
@@ -184,7 +185,7 @@ install'.`,
 					if err := os.RemoveAll(dir); err != nil {
 						return fmt.Errorf("remove %s: %w", dir, err)
 					}
-					pruneEmptyParents(dir)
+					pruneEmptyParents(sc.root, dir)
 				}
 				delete(lf.Skills, key)
 				fmt.Fprintf(out, "  removed  %s\n", key)
@@ -193,10 +194,10 @@ install'.`,
 
 			if removed > 0 {
 				if len(lf.Skills) == 0 {
-					if err := os.Remove(lock.Path(".")); err != nil && !os.IsNotExist(err) {
+					if err := os.Remove(sc.lockPath()); err != nil && !os.IsNotExist(err) {
 						return fmt.Errorf("remove empty lockfile: %w", err)
 					}
-				} else if err := lock.Save(".", lf); err != nil {
+				} else if err := sc.saveLock(lf); err != nil {
 					return err
 				}
 			}
@@ -212,7 +213,7 @@ install'.`,
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp
 			}
-			return installedSkillCompletions()
+			return installedSkillCompletions(projectScope())
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "also remove untracked skills and skills with local changes")
@@ -231,8 +232,13 @@ func pathExists(p string) bool {
 // pruneEmptyParents removes now-empty parent folders of a removed skill
 // (for example .claude/skills and .claude), stopping at the first one that
 // still has content or at the project root.
-func pruneEmptyParents(dir string) {
-	for p := filepath.Dir(filepath.Clean(dir)); p != "." && p != ".." && !filepath.IsAbs(p); p = filepath.Dir(p) {
+func pruneEmptyParents(root, dir string) {
+	root = filepath.Clean(root)
+	for p := filepath.Dir(filepath.Clean(dir)); ; p = filepath.Dir(p) {
+		rel, err := filepath.Rel(root, p)
+		if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+			return
+		}
 		if os.Remove(p) != nil { // fails unless the directory is empty
 			return
 		}

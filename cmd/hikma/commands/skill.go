@@ -69,7 +69,7 @@ func newSkillCreateCmd() *cobra.Command {
 			}
 			printActiveSelection(selection, isAgentOverride)
 
-			targetDir, err := resolveSkillDirForAgent(name, flagAgent)
+			targetDir, err := resolveSkillDirForAgent(projectScope(), name, flagAgent)
 			if err != nil {
 				return fmt.Errorf("error: %w", err)
 			}
@@ -180,23 +180,19 @@ func preflightError(result preflight.Result) error {
 	return fmt.Errorf("%s", sb.String())
 }
 
-func resolveSkillDir(name, flagAgent string) (string, error) {
-	return resolveSkillDirForAgent(name, flagAgent)
-}
-
 // resolveSkillDirForAgent returns the existing directory for name across the
 // selected agents, or the first selected agent's directory when it does not exist yet.
-func resolveSkillDirForAgent(name, flagAgent string) (string, error) {
+func resolveSkillDirForAgent(sc scope, name, flagAgent string) (string, error) {
 	targets, err := config.ResolveTargets(flagAgent)
 	if err != nil {
 		return "", err
 	}
 	for _, t := range targets {
-		if dir := t.SkillDir(name); dirExists(dir) {
+		if dir := sc.skillDir(t, name); dirExists(dir) {
 			return dir, nil
 		}
 	}
-	return targets[0].SkillDir(name), nil
+	return sc.skillDir(targets[0], name), nil
 }
 
 func dirExists(p string) bool {

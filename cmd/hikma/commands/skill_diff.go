@@ -10,7 +10,6 @@ import (
 	"strings"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
-	"github.com/hasankhatib/hikma-ai/internal/lock"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 	"github.com/spf13/cobra"
 )
@@ -43,26 +42,27 @@ Pass --patch to print the file contents that differ.`,
 			if err != nil {
 				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
 			}
-			lf, err := lock.Load(".")
+			sc := projectScope()
+			lf, err := sc.loadLock()
 			if err != nil {
 				return err
 			}
 			var keys []string
 			for _, t := range targets {
-				if k := lockKey(t.SkillDir(name)); hasEntry(lf, k) {
+				if k := sc.key(t, name); hasEntry(lf, k) {
 					keys = append(keys, k)
 				}
 			}
 			if len(keys) == 0 {
 				for _, t := range targets {
-					if _, gh := source.ReadProvenance(t.SkillDir(name)); gh {
+					if _, gh := source.ReadProvenance(sc.skillDir(t, name)); gh {
 						return fmt.Errorf("%q was installed by gh skill and is not tracked by hikma; run 'hikma skill adopt %s' first", name, name)
 					}
 				}
 				return fmt.Errorf("%q is not installed by hikma for the selected agents (no entry in .hikma/lock.json)", name)
 			}
 
-			u := &updater{out: out, errOut: cmd.ErrOrStderr(), lf: lf, checkouts: map[string]*openCheckout{}}
+			u := &updater{sc: sc, out: out, errOut: cmd.ErrOrStderr(), lf: lf, checkouts: map[string]*openCheckout{}}
 			defer u.close()
 			for i, key := range keys {
 				if i > 0 {
@@ -78,7 +78,7 @@ Pass --patch to print the file contents that differ.`,
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp
 			}
-			return installedSkillCompletions()
+			return installedSkillCompletions(projectScope())
 		},
 	}
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
@@ -91,7 +91,7 @@ Pass --patch to print the file contents that differ.`,
 
 func diffOne(u *updater, key string, patch bool) error {
 	e := u.lf.Skills[key]
-	localDir := filepath.FromSlash(key)
+	localDir := u.sc.path(key)
 	fmt.Fprintf(u.out, "%s (%s%s)\n", key, e.Source, atCommit(e))
 
 	missing := false

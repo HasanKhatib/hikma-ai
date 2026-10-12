@@ -306,7 +306,7 @@ func installInitSkills(cmd *cobra.Command, names []string, flagRegistry string, 
 		if !ok {
 			return fmt.Errorf("skill %q not found in %s", name, src.Display)
 		}
-		if err := installSkill(out, src, co, skill, targets, force, ""); err != nil {
+		if err := installSkill(projectScope(), out, src, co, skill, targets, force, ""); err != nil {
 			return err
 		}
 	}

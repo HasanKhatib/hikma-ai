@@ -298,7 +298,7 @@ a branch, tag, or commit. Skill names are not restricted on install.`,
 					return fmt.Errorf("skill %q not found in %s", name, src.Display)
 				}
 			}
-			return installSkill(out, src, co, skill, targets, force, ref)
+			return installSkill(projectScope(), out, src, co, skill, targets, force, ref)
 		},
 	}
 
@@ -357,13 +357,13 @@ func warnOverlappingTargets(w io.Writer, targets []config.Selection) {
 }
 
 // installSkill copies one skill into every target's skills directory and records each install.
-func installSkill(out io.Writer, src source.Source, co source.Checkout, skill source.Skill, targets []config.Selection, force bool, ref string) error {
+func installSkill(sc scope, out io.Writer, src source.Source, co source.Checkout, skill source.Skill, targets []config.Selection, force bool, ref string) error {
 	// Path safety only: install enforces no naming convention.
 	if err := config.CheckSkillName(config.NamingLoose, skill.Name); err != nil {
 		return err
 	}
 	for _, t := range targets {
-		dir := t.SkillDir(skill.Name)
+		dir := sc.skillDir(t, skill.Name)
 		if _, err := os.Stat(dir); err == nil && !force {
 			ui.UserError("%s is already installed at %s/\n  use --force to reinstall", skill.Name, dir)
 			return fmt.Errorf("already installed")
@@ -374,35 +374,35 @@ func installSkill(out io.Writer, src source.Source, co source.Checkout, skill so
 	}
 	fmt.Fprintf(out, "Installing %s from %s...\n", skill.Name, src.Display)
 	for _, t := range targets {
-		dir := t.SkillDir(skill.Name)
+		dir := sc.skillDir(t, skill.Name)
 		written, err := replaceDir(dir, func(dst string) ([]string, error) {
 			return source.CopyDir(filepath.Join(co.Dir, filepath.FromSlash(skill.Rel)), dst)
 		})
 		if err != nil {
 			return fmt.Errorf("install %s: %w", skill.Name, err)
 		}
-		if err := recordInstall(dir, skill.Name, src, ref, co.Commit); err != nil {
+		if err := recordInstall(sc, sc.key(t, skill.Name), skill.Name, src, ref, co.Commit); err != nil {
 			return err
 		}
 		fmt.Fprintf(out, "  -> %s/ (%d files)\n", dir, len(written))
 	}
-	fmt.Fprintf(out, "\nOpen %s/SKILL.md to review.\n", targets[0].SkillDir(skill.Name))
+	fmt.Fprintf(out, "\nOpen %s/SKILL.md to review.\n", sc.skillDir(targets[0], skill.Name))
 	return nil
 }
 
 func lockKey(dir string) string { return filepath.ToSlash(filepath.Clean(dir)) }
 
-func recordInstall(dir, name string, src source.Source, ref, commit string) error {
-	files, err := source.HashDir(dir)
+func recordInstall(sc scope, key, name string, src source.Source, ref, commit string) error {
+	files, err := source.HashDir(sc.path(key))
 	if err != nil {
 		return err
 	}
-	lf, err := lock.Load(".")
+	lf, err := sc.loadLock()
 	if err != nil {
 		return err
 	}
-	lf.Skills[lockKey(dir)] = lock.Entry{Name: name, Source: src.Raw, Ref: ref, Commit: commit, Files: files}
-	return lock.Save(".", lf)
+	lf.Skills[key] = lock.Entry{Name: name, Source: src.Raw, Ref: ref, Commit: commit, Files: files}
+	return sc.saveLock(lf)
 }
 
 // requireSkillFolder refuses to replace an existing folder that holds no
@@ -486,7 +486,8 @@ Local edits are detected by file hash and block the update unless --force is use
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
-			lf, err := lock.Load(".")
+			sc := projectScope()
+			lf, err := sc.loadLock()
 			if err != nil {
 				return err
 			}
@@ -508,13 +509,13 @@ Local edits are detected by file hash and block the update unless --force is use
 					return err
 				}
 				for _, t := range targets {
-					if k := lockKey(t.SkillDir(name)); hasEntry(lf, k) {
+					if k := sc.key(t, name); hasEntry(lf, k) {
 						keys = append(keys, k)
 					}
 				}
 				if len(keys) == 0 {
 					for _, t := range targets {
-						if _, gh := source.ReadProvenance(t.SkillDir(name)); gh {
+						if _, gh := source.ReadProvenance(sc.skillDir(t, name)); gh {
 							return fmt.Errorf("%q was installed by gh skill and is not tracked by hikma; run 'hikma skill adopt %s' to track it", name, name)
 						}
 					}
@@ -522,7 +523,7 @@ Local edits are detected by file hash and block the update unless --force is use
 				}
 			}
 
-			u := &updater{out: out, errOut: cmd.ErrOrStderr(), force: force, yes: yes, lf: lf, checkouts: map[string]*openCheckout{}}
+			u := &updater{sc: sc, out: out, errOut: cmd.ErrOrStderr(), force: force, yes: yes, lf: lf, checkouts: map[string]*openCheckout{}}
 			defer u.close()
 			var updated, skipped int
 			for _, key := range keys {
@@ -533,12 +534,12 @@ Local edits are detected by file hash and block the update unless --force is use
 					updated++
 				}
 			}
-			if err := lock.Save(".", u.lf); err != nil {
+			if err := sc.saveLock(u.lf); err != nil {
 				return err
 			}
 			if all {
 				fmt.Fprintf(out, "\nDone: %d processed, %d skipped.\n", updated, skipped)
-				if gh := ghManagedUntracked(); len(gh) > 0 {
+				if gh := ghManagedUntracked(sc); len(gh) > 0 {
 					fmt.Fprintf(out, "Not tracked by hikma (installed by gh skill): %s. Run 'hikma skill adopt <name>' to include them.\n", adoptHint(gh))
 				}
 			}
@@ -551,7 +552,7 @@ Local edits are detected by file hash and block the update unless --force is use
 			if len(args) != 0 {
 				return nil, cobra.ShellCompDirectiveNoFileComp
 			}
-			return installedSkillCompletions()
+			return installedSkillCompletions(projectScope())
 		},
 	}
 
@@ -573,6 +574,7 @@ type openCheckout struct {
 
 // updater shares one checkout per source and ref across a whole update run.
 type updater struct {
+	sc          scope
 	out, errOut io.Writer
 	force, yes  bool
 	lf          lock.File
@@ -606,12 +608,12 @@ func (u *updater) checkout(e lock.Entry) (*openCheckout, error) {
 func (u *updater) update(key string) error {
 	e, ok := u.lf.Skills[key]
 	if !ok {
-		if _, gh := source.ReadProvenance(filepath.FromSlash(key)); gh {
+		if _, gh := source.ReadProvenance(u.sc.path(key)); gh {
 			return fmt.Errorf("installed by gh skill and not tracked by hikma; run 'hikma skill adopt %s' to track it", path.Base(key))
 		}
 		return fmt.Errorf("not installed by hikma (no entry in .hikma/lock.json); run 'hikma skill adopt %s --source <owner/repo>' or 'hikma skill install --force'", path.Base(key))
 	}
-	localDir := filepath.FromSlash(key)
+	localDir := u.sc.path(key)
 	if _, err := os.Stat(localDir); err != nil {
 		return fmt.Errorf("%s is missing; reinstall it", localDir)
 	}
@@ -710,8 +712,8 @@ func hasEntry(lf lock.File, key string) bool {
 }
 
 // installedSkillCompletions returns skill names recorded in the lockfile.
-func installedSkillCompletions() ([]string, cobra.ShellCompDirective) {
-	lf, err := lock.Load(".")
+func installedSkillCompletions(sc scope) ([]string, cobra.ShellCompDirective) {
+	lf, err := sc.loadLock()
 	if err != nil {
 		return nil, cobra.ShellCompDirectiveNoFileComp
 	}

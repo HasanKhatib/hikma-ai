@@ -30,7 +30,7 @@ func TestGhSkillInstallIsDetectedAsUntracked(t *testing.T) {
 	if !strings.Contains(out, "installed by gh skill") || !strings.Contains(out, "hikma skill adopt alpha") {
 		t.Fatalf("list output:\n%s", out)
 	}
-	rows, err := listInstalledSkills()
+	rows, err := listInstalledSkills(projectScope())
 	if err != nil || len(rows) != 1 || rows[0].Origin != "gh skill" || rows[0].Status != stateUntracked {
 		t.Fatalf("rows = %+v, err = %v", rows, err)
 	}
