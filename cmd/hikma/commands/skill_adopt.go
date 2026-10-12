@@ -14,6 +14,7 @@ import (
 
 func newSkillAdoptCmd() *cobra.Command {
 	var flagSource, flagRef, flagAgent string
+	var global, yes bool
 	cmd := &cobra.Command{
 		Use:   "adopt <name>",
 		Short: "Track a skill installed by another tool in .hikma/lock.json",
@@ -42,7 +43,10 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 			if err != nil {
 				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
 			}
-			sc := projectScope()
+			sc, err := scopeFor(global)
+			if err != nil {
+				return err
+			}
 			lf, err := sc.loadLock()
 			if err != nil {
 				return err
@@ -62,6 +66,13 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 			}
 			if len(dirs) == 0 {
 				return fmt.Errorf("no untracked %q skill found in the selected agents' folders", name)
+			}
+
+			if err := sc.guardWrite(); err != nil {
+				return err
+			}
+			if err := sc.confirmWrite(cmd, yes, nil); err != nil {
+				return err
 			}
 
 			srcArg, ref := flagSource, flagRef
@@ -103,6 +114,8 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 			return sc.saveLock(lf)
 		},
 	}
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "use your home directory instead of this project (~/.hikma/lock.json)")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "skip the confirmation before changing your home directory")
 	cmd.Flags().StringVar(&flagSource, "source", "", "where the skill came from (owner/repo, git URL, or path); default: read from gh skill metadata")
 	cmd.Flags().StringVar(&flagRef, "ref", "", "branch, tag, or commit to update from")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")

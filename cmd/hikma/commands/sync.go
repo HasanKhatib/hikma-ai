@@ -16,7 +16,7 @@ import (
 )
 
 func newSyncCmd() *cobra.Command {
-	var force, yes, dryRun, frozen bool
+	var force, yes, dryRun, frozen, global bool
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Restore every skill recorded in .hikma/lock.json",
@@ -38,9 +38,14 @@ nothing, if it cannot: a skill with local changes, an entry not pinned to a
 commit, or a source that cannot be fetched at its recorded commit. Use it in CI.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runSync(cmd, force, yes, dryRun, frozen)
+			sc, err := scopeFor(global)
+			if err != nil {
+				return err
+			}
+			return runSync(cmd, sc, force, yes, dryRun, frozen)
 		},
 	}
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "restore your home directory's skills from ~/.hikma/lock.json")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite skills that have local changes")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "skip the confirmation prompt")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be restored without changing anything")
@@ -101,9 +106,8 @@ func sameFiles(a, b map[string]string) bool {
 	return len(added)+len(modified)+len(removed) == 0
 }
 
-func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
+func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen bool) error {
 	out := cmd.OutOrStdout()
-	sc := projectScope()
 	lf, err := sc.loadLock()
 	if err != nil {
 		return err
@@ -162,6 +166,18 @@ func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 			work = append(work, it)
 		}
 	}
+	var names []string
+	for _, it := range items {
+		names = append(names, it.entry.Name)
+	}
+	for _, w := range sc.shadowWarnings(names) {
+		if !sc.global {
+			// The project lockfile comes from a clone, so the name alone could
+			// borrow trust you gave the global skill.
+			w += "; a project skill with this name could inherit permissions you granted the global one"
+		}
+		fmt.Fprintln(out, w)
+	}
 	upToDate := 0
 	for _, it := range items {
 		if it.state == syncOK {
@@ -173,7 +189,7 @@ func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 		return nil
 	}
 
-	fmt.Fprintf(out, "Skills recorded in .hikma/lock.json: %d\n", len(items))
+	fmt.Fprintf(out, "Skills recorded in %s: %d\n", sc.lockName(), len(items))
 	for _, it := range items {
 		fmt.Fprintf(out, "  %-9s %s  (%s%s)\n", planLabel(it, force), it.key, it.entry.Source, atCommit(it.entry))
 	}
@@ -183,7 +199,19 @@ func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 		return nil
 	}
 	if len(work) > 0 {
-		if err := confirmSync(out, work, yes); err != nil {
+		if sc.global {
+			keys := make([]string, len(work))
+			for i, it := range work {
+				keys[i] = it.key
+			}
+			if err := sc.guardWrite(keys...); err != nil {
+				return err
+			}
+			// The home-directory prompt already asks, so the fetch prompt is not repeated.
+			if err := sc.confirmWrite(cmd, yes, keys); err != nil {
+				return err
+			}
+		} else if err := confirmSync(out, work, yes); err != nil {
 			return err
 		}
 	}
@@ -307,6 +335,9 @@ func restoreItem(sc scope, out io.Writer, it syncItem, checkouts map[string]*ope
 	}
 	if added, modified, removed := source.DiffFiles(e.Files, incoming); len(added)+len(modified)+len(removed) > 0 {
 		return fmt.Errorf("files do not match .hikma/lock.json (%s); refusing to install", describeDrift(added, modified, removed))
+	}
+	if err := sc.guardWrite(it.key); err != nil {
+		return err
 	}
 	if err := requireSkillFolder(sc.path(it.key)); err != nil {
 		return err

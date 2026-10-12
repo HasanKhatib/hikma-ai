@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `--global` (`-g`) on `skill install`, `update`, `remove`, `adopt`, `verify`, `diff`, `list --installed`, and `sync` works in your home directory with its own lockfile at `~/.hikma/lock.json`. A global write prints the absolute paths and asks first (`--yes` skips it), and hikma refuses to write through a symlinked folder. `init` stays project-only.
+- A warning, never a block, when a skill name is installed at both project and global scope: on install, in `list --installed` (which now has a scope column), in `sync`, and in `doctor`.
+
+### Changed
+- `skill update` now rejects lockfile entries whose path is not a clean `<agent skills folder>/<name>`, as `sync` already did.
+
 ## [0.3.0] - 2026-10-12
 
 ### Changed
@@ -55,6 +62,7 @@ First public release.
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
 
-[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.3.0...HEAD
+[0.3.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/HasanKhatib/hikma-ai/releases/tag/v0.1.0

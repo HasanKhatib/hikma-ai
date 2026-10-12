@@ -3,7 +3,7 @@
 Track a skill that another tool installed, so Hikma can update, sync, and remove it.
 
 ```bash
-hikma skill adopt <name> [--source <owner/repo>] [--ref <ref>] [--agent <list>]
+hikma skill adopt <name> [--source <owner/repo>] [--ref <ref>] [--agent <list>] [--global]
 ```
 
 ## Skills installed by gh skill
@@ -38,6 +38,8 @@ hikma skill adopt my-skill --source owner/repo --ref v1.2.0
 | `--source <source>` | `owner/repo`, git URL, or path. Default: read from `gh skill` metadata. |
 | `--ref <ref>` | Branch, tag, or commit to update from |
 | `--agent <list>` | Which agents' folders to adopt from |
+| `-g`, `--global` | Adopt a skill from your home directory into `~/.hikma/lock.json` |
+| `-y`, `--yes` | Skip the confirmation before changing your home directory |
 
 ## Where Hikma points you here
 

@@ -20,16 +20,17 @@ release-notes              Draft release notes from merged pull requests       d
 ## What is installed here
 
 ```bash
-hikma skill list --installed [--json]
+hikma skill list --installed [--global] [--json]
 ```
 
-Shows the skills in this repository's agent folders and where each came from, using [`.hikma/lock.json`](/guides/lockfile):
+Shows the skills in this repository's agent folders and in your home directory, and where each came from, using [`.hikma/lock.json`](/guides/lockfile) and `~/.hikma/lock.json`. A name installed at both scopes is marked, because agents differ on which copy they use ([Global installs](/guides/global)). `--global` lists only your home directory's skills.
 
 ```text
-PATH                                        STATUS      SOURCE
-.agents/skills/deploy-helper                ok          owner/repo @ 4be7f0c
-.claude/skills/deploy-helper                modified    owner/repo @ 4be7f0c
-.agents/skills/manual                       untracked   (not recorded in .hikma/lock.json)
+SCOPE     PATH                                        STATUS      SOURCE
+project   .agents/skills/deploy-helper                ok          owner/repo @ 4be7f0c
+project   .claude/skills/deploy-helper                modified    owner/repo @ 4be7f0c
+project   .agents/skills/manual                       untracked   (not recorded in .hikma/lock.json)
+global    .claude/skills/deploy-helper                ok          owner/repo @ 4be7f0c  [also installed at project scope]
 ```
 
 | Status | Meaning |

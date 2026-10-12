@@ -12,6 +12,7 @@ import (
 
 func newSkillVerifyCmd() *cobra.Command {
 	var flagAgent string
+	var global bool
 	cmd := &cobra.Command{
 		Use:   "verify [<name>]",
 		Short: "Check installed skills against the hashes in .hikma/lock.json",
@@ -24,7 +25,10 @@ every skill in the lockfile is checked.`,
 		Args: cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
-			sc := projectScope()
+			sc, err := scopeFor(global)
+			if err != nil {
+				return err
+			}
 			lf, err := sc.loadLock()
 			if err != nil {
 				return err
@@ -99,6 +103,7 @@ every skill in the lockfile is checked.`,
 			return installedSkillCompletions(projectScope())
 		},
 	}
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "use your home directory instead of this project (~/.hikma/lock.json)")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp

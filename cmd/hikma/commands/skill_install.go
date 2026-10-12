@@ -155,17 +155,20 @@ func printSkillTable(w io.Writer, skills []source.Skill) {
 }
 
 func newSkillListCmd(flagRegistry *string) *cobra.Command {
-	var asJSON, installed bool
+	var asJSON, installed, global bool
 	cmd := &cobra.Command{
 		Use:   "list [<owner/repo>]",
 		Short: "List skills in the configured registry or in any repo, or what is installed",
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			if global && !installed {
+				return fmt.Errorf("--global applies to --installed")
+			}
 			if installed {
 				if len(args) > 0 {
 					return fmt.Errorf("--installed lists this repository's skills and takes no source")
 				}
-				return listInstalled(cmd, asJSON)
+				return listInstalled(cmd, asJSON, global)
 			}
 			status := cmd.OutOrStdout()
 			if asJSON {
@@ -192,7 +195,8 @@ func newSkillListCmd(flagRegistry *string) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&asJSON, "json", false, "output as JSON")
-	cmd.Flags().BoolVar(&installed, "installed", false, "list the skills installed in this repository instead")
+	cmd.Flags().BoolVar(&installed, "installed", false, "list the skills installed in this repository and in your home directory instead")
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "with --installed, list only your home directory's skills")
 	return cmd
 }
 
@@ -251,7 +255,7 @@ func nameFromPicker(w io.Writer, skills []source.Skill) (string, error) {
 }
 
 func newSkillInstallCmd(flagRegistry *string) *cobra.Command {
-	var force bool
+	var force, global, yes bool
 	var flagAgent, ref string
 
 	cmd := &cobra.Command{
@@ -265,10 +269,19 @@ func newSkillInstallCmd(flagRegistry *string) *cobra.Command {
   hikma skill install ./local/path my-skill  from a local checkout
 
 Sources can be GitHub owner/repo, any git URL, or a local path. Use --ref to pin
-a branch, tag, or commit. Skill names are not restricted on install.`,
+a branch, tag, or commit. Skill names are not restricted on install.
+
+With --global the skill goes into your home directory (for example
+~/.claude/skills) and is tracked in ~/.hikma/lock.json. hikma prints the
+absolute paths and asks first; --yes skips the question. It never writes
+through a symlinked folder.`,
 		Args: cobra.RangeArgs(1, 2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			sc, err := scopeFor(global)
+			if err != nil {
+				return err
+			}
 			targets, err := config.ResolveTargets(flagAgent)
 			if err != nil {
 				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
@@ -298,11 +311,26 @@ a branch, tag, or commit. Skill names are not restricted on install.`,
 					return fmt.Errorf("skill %q not found in %s", name, src.Display)
 				}
 			}
-			return installSkill(projectScope(), out, src, co, skill, targets, force, ref)
+			keys := make([]string, len(targets))
+			for i, t := range targets {
+				keys[i] = sc.key(t, skill.Name)
+			}
+			if err := sc.guardWrite(keys...); err != nil {
+				return err
+			}
+			for _, w := range sc.shadowWarnings([]string{skill.Name}) {
+				fmt.Fprintln(out, w)
+			}
+			if err := sc.confirmWrite(cmd, yes, keys); err != nil {
+				return err
+			}
+			return installSkill(sc, out, src, co, skill, targets, force, ref)
 		},
 	}
 
 	cmd.Flags().BoolVar(&force, "force", false, "reinstall even if already installed")
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "use your home directory instead of this project (~/.hikma/lock.json)")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "skip the confirmation before changing your home directory")
 	cmd.Flags().StringVar(&ref, "ref", "", "branch, tag, or commit to install from (--pin is an alias, as in gh skill)")
 	cmd.Flags().SetNormalizeFunc(func(_ *pflag.FlagSet, name string) pflag.NormalizedName {
 		if name == "pin" {
@@ -369,6 +397,9 @@ func installSkill(sc scope, out io.Writer, src source.Source, co source.Checkout
 			return fmt.Errorf("already installed")
 		}
 		if err := requireSkillFolder(dir); err != nil {
+			return err
+		}
+		if err := sc.guardWrite(sc.key(t, skill.Name)); err != nil {
 			return err
 		}
 	}
@@ -460,7 +491,7 @@ func replaceDir(targetDir string, fill func(dst string) ([]string, error)) ([]st
 }
 
 func newSkillUpdateCmd() *cobra.Command {
-	var all, force, yes bool
+	var all, force, yes, global bool
 	var flagAgent string
 
 	cmd := &cobra.Command{
@@ -486,7 +517,10 @@ Local edits are detected by file hash and block the update unless --force is use
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
-			sc := projectScope()
+			sc, err := scopeFor(global)
+			if err != nil {
+				return err
+			}
 			lf, err := sc.loadLock()
 			if err != nil {
 				return err
@@ -523,6 +557,9 @@ Local edits are detected by file hash and block the update unless --force is use
 				}
 			}
 
+			if err := sc.confirmWrite(cmd, yes, keys); err != nil {
+				return err
+			}
 			u := &updater{sc: sc, out: out, errOut: cmd.ErrOrStderr(), force: force, yes: yes, lf: lf, checkouts: map[string]*openCheckout{}}
 			defer u.close()
 			var updated, skipped int
@@ -558,7 +595,8 @@ Local edits are detected by file hash and block the update unless --force is use
 
 	cmd.Flags().BoolVar(&all, "all", false, "update every skill recorded in .hikma/lock.json")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite local changes")
-	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "apply updates that change scripts/ without asking")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "apply updates that change scripts/, and changes to your home directory, without asking")
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "use your home directory instead of this project (~/.hikma/lock.json)")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
@@ -607,6 +645,18 @@ func (u *updater) checkout(e lock.Entry) (*openCheckout, error) {
 
 func (u *updater) update(key string) error {
 	e, ok := u.lf.Skills[key]
+	if ok {
+		dirs, err := layoutSkillDirs()
+		if err != nil {
+			return err
+		}
+		if err := validateLockEntry(key, e, dirs); err != nil {
+			return err
+		}
+		if err := u.sc.guardWrite(key); err != nil {
+			return err
+		}
+	}
 	if !ok {
 		if _, gh := source.ReadProvenance(u.sc.path(key)); gh {
 			return fmt.Errorf("installed by gh skill and not tracked by hikma; run 'hikma skill adopt %s' to track it", path.Base(key))
