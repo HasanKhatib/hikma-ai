@@ -23,6 +23,7 @@ type Layout struct {
 	Description      string
 	SkillsDir        string   // slash-separated, relative to the project root
 	InstructionFiles []string // files written by hikma init, in templates/scaffold
+	AlsoReads        []string // other skills folders the agent loads from, which hikma writes for other agents
 }
 
 // ValidAgents lists all recognised agents in display order.
@@ -33,10 +34,10 @@ var ValidAgents = []Agent{AgentCopilot, AgentCodex, AgentOpenCode, AgentClaude}
 // the shared .agents/skills location. All four read AGENTS.md (Claude Code
 // v2.1.277+ when the repo has no CLAUDE.md).
 var layouts = map[Agent]Layout{
-	AgentCopilot:  {"GitHub Copilot using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}},
-	AgentCodex:    {"Codex CLI using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}},
-	AgentOpenCode: {"OpenCode using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}},
-	AgentClaude:   {"Claude Code using AGENTS.md and .claude/skills", ".claude/skills", []string{"AGENTS.md"}},
+	AgentCopilot:  {"GitHub Copilot using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}, []string{".claude/skills"}},
+	AgentCodex:    {"Codex CLI using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}, nil},
+	AgentOpenCode: {"OpenCode using AGENTS.md and .agents/skills", ".agents/skills", []string{"AGENTS.md"}, []string{".claude/skills"}},
+	AgentClaude:   {"Claude Code using AGENTS.md and .claude/skills", ".claude/skills", []string{"AGENTS.md"}, nil},
 }
 
 // LayoutFor returns the layout for a, which must be a valid agent.
@@ -46,6 +47,9 @@ func LayoutFor(a Agent) Layout { return layouts[a] }
 type Selection struct {
 	Agent  Agent
 	Layout Layout
+	// Reads lists other skills folders that any agent sharing this selection's
+	// folder also loads from.
+	Reads []string
 }
 
 // SelectionFor builds the selection for a valid agent.

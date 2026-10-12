@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"os"
 	"path"
 	"regexp"
 	"sort"
@@ -202,14 +203,147 @@ func (s LayoutSet) Parse(value string) ([]Agent, error) {
 // several agents share .agents/skills.
 func (s LayoutSet) UniqueByDir(agents []Agent) []Selection {
 	var out []Selection
-	seen := map[string]bool{}
+	index := map[string]int{}
 	for _, a := range agents {
 		sel := s.Selection(a)
-		if seen[sel.Layout.SkillsDir] {
+		sel.Reads = append([]string(nil), sel.Layout.AlsoReads...)
+		if i, seen := index[sel.Layout.SkillsDir]; seen {
+			out[i].Reads = append(out[i].Reads, sel.Reads...)
 			continue
 		}
-		seen[sel.Layout.SkillsDir] = true
+		index[sel.Layout.SkillsDir] = len(out)
 		out = append(out, sel)
 	}
 	return out
+}
+
+// ValidateCustomAgent checks one definition, with the same rules as on load.
+func ValidateCustomAgent(name string, a CustomAgent) error {
+	return ValidateCustomAgents(map[string]CustomAgent{name: a})
+}
+
+// ScopePath returns the config file a write for scope targets.
+func ScopePath(scope Scope) (string, error) { return scopePath(scope) }
+
+// CustomAgentEntry is a configured custom agent and where it is defined.
+type CustomAgentEntry struct {
+	Name   string
+	Agent  CustomAgent
+	Source Source
+}
+
+// ListCustomAgents returns the custom agents in effect, by name. A project
+// definition hides a user definition with the same name.
+func ListCustomAgents() ([]CustomAgentEntry, error) {
+	user, err := Load()
+	if err != nil {
+		return nil, err
+	}
+	proj, err := LoadProject()
+	if err != nil {
+		return nil, err
+	}
+	byName := map[string]CustomAgentEntry{}
+	for name, a := range user.CustomAgents {
+		byName[name] = CustomAgentEntry{name, a, SourceUser}
+	}
+	for name, a := range proj.CustomAgents {
+		byName[name] = CustomAgentEntry{name, a, SourceProject}
+	}
+	out := make([]CustomAgentEntry, 0, len(byName))
+	for _, e := range byName {
+		out = append(out, e)
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].Name < out[j].Name })
+	return out, nil
+}
+
+// CustomAgentIn returns the definition of name in the config file for scope.
+func CustomAgentIn(scope Scope, name string) (CustomAgent, bool, error) {
+	path, err := scopePath(scope)
+	if err != nil {
+		return CustomAgent{}, false, err
+	}
+	c, err := loadFile(path)
+	if err != nil {
+		return CustomAgent{}, false, err
+	}
+	a, ok := c.CustomAgents[name]
+	return a, ok, nil
+}
+
+// AddCustomAgent validates and writes a definition to the config file for
+// scope, and returns that file's path. It refuses to replace an existing
+// definition unless force is set. With use set it also adds name to the
+// `agents` list in the same file.
+func AddCustomAgent(scope Scope, name string, a CustomAgent, force, use bool) (string, error) {
+	if err := ValidateCustomAgent(name, a); err != nil {
+		return "", err
+	}
+	path, err := scopePath(scope)
+	if err != nil {
+		return "", err
+	}
+	c, err := loadFile(path)
+	if err != nil {
+		return "", err
+	}
+	if _, exists := c.CustomAgents[name]; exists && !force {
+		return "", fmt.Errorf("custom agent %q is already defined in %s; use --force to replace it", name, path)
+	}
+	if c.CustomAgents == nil {
+		c.CustomAgents = map[string]CustomAgent{}
+	}
+	c.CustomAgents[name] = a
+	if use {
+		present := false
+		for _, existing := range c.Agents {
+			if existing == name {
+				present = true
+			}
+		}
+		if !present {
+			c.Agents = append(c.Agents, name)
+		}
+	}
+	return path, saveFile(path, c)
+}
+
+// RemoveCustomAgent deletes a definition from the config file for scope. It
+// also drops name from the `agents` list and clears `agent` when it names it,
+// and returns what it removed. An emptied config file is deleted.
+func RemoveCustomAgent(scope Scope, name string) (path string, removed []string, err error) {
+	path, err = scopePath(scope)
+	if err != nil {
+		return "", nil, err
+	}
+	c, err := loadFile(path)
+	if err != nil {
+		return "", nil, err
+	}
+	if _, ok := c.CustomAgents[name]; !ok {
+		return path, nil, fmt.Errorf("custom agent %q is not defined in %s", name, path)
+	}
+	delete(c.CustomAgents, name)
+	removed = append(removed, "customAgents."+name)
+	var kept []string
+	for _, a := range c.Agents {
+		if a == name {
+			removed = append(removed, "agents entry "+name)
+			continue
+		}
+		kept = append(kept, a)
+	}
+	c.Agents = kept
+	if string(c.Agent) == name {
+		c.Agent = ""
+		removed = append(removed, "agent")
+	}
+	if c.isEmpty() {
+		if err := os.Remove(path); err != nil && !os.IsNotExist(err) {
+			return path, removed, fmt.Errorf("cannot remove empty config file: %w", err)
+		}
+		return path, removed, nil
+	}
+	return path, removed, saveFile(path, c)
 }
