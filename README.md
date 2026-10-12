@@ -37,7 +37,7 @@ gh api -H "Accept: application/vnd.github.raw+json" \
   repos/HasanKhatib/hikma-ai/contents/scripts/install.sh | bash
 
 # pin a version:
-curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash -s -- v0.3.0
+curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash -s -- v0.4.0
 ```
 
 Set `HIKMA_INSTALL_DIR` to install somewhere else.
