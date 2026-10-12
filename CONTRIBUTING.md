@@ -35,4 +35,4 @@ Hikma AI is the CLI repository only. Do not add a top-level `skills/` registry f
 
 ## Planning
 
-Roadmap and decisions live in `docs/board/`. See `CLAUDE.md` for the board rules and the project's non-goals.
+Roadmap and decisions live in `docs/board/`. See `AGENTS.md` for the board rules and the project's non-goals.

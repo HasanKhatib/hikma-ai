@@ -2,7 +2,7 @@
   "$schema": "./roadmap.schema.json",
   "version": 1,
   "project": "Hikma AI",
-  "updated": "2026-10-10",
+  "updated": "2026-10-12",
   "releases": [
     {
       "id": "v0.1",
@@ -18,15 +18,23 @@
       "emoji": "v0.2",
       "status": "done",
       "goal": "Make the registry workflow solid: restore from the lockfile, coexist with gh skill, and validate registries in CI.",
-      "exit": "hikma sync restores a repo from the lockfile, skills installed by gh skill are adopted cleanly, custom agent layouts work, and a GitHub Action validates registry pull requests."
+      "exit": "hikma sync restores a repo from the lockfile, skills installed by gh skill are adopted cleanly, and a GitHub Action validates registry pull requests."
     },
     {
       "id": "v0.3",
       "title": "Trust",
       "emoji": "v0.3",
       "status": "planned",
-      "goal": "Make installs verifiable and releases signed.",
-      "exit": "Frozen installs from the lockfile, skill verification, and signed release artifacts are available."
+      "goal": "Make installs verifiable, releases signed, and agent layouts user-defined.",
+      "exit": "Custom layouts in config, frozen installs and skill verification, and signed release artifacts are available."
+    },
+    {
+      "id": "v0.4",
+      "title": "Personal scope",
+      "emoji": "v0.4",
+      "status": "planned",
+      "goal": "Support user-scope (global) installs with the same lockfile, verify, and safety gates as project installs.",
+      "exit": "hikma skill install --global works for every supported agent with its own lockfile, a confirmation gate, and duplicate warnings."
     },
     {
       "id": "v1.0",
@@ -1073,62 +1081,133 @@
         },
         {
           "id": "E4.2",
-          "title": "Global installs (parked)",
+          "title": "User-scope installs",
           "emoji": "G",
           "status": "backlog",
           "assignee": "ai+verify",
           "labels": [
             "skills",
-            "config"
+            "config",
+            "global"
           ],
           "planned": null,
           "order": 2,
-          "goal": "Parked: gh skill already installs at user scope; hikma stays project-focused.",
-          "exit": "Revisit if users ask for user-scope installs in hikma.",
+          "goal": "Support --global installs into the user's home directory with a lockfile at ~/.hikma/lock.json, reusing the project layouts.",
+          "exit": "Install, update, remove, adopt, list, verify, diff, and sync accept --global, ask before writing, and warn when a skill exists at both scopes.",
           "body": "epics/E4.2.md",
           "tasks": [
             {
               "id": "E4.2-T1",
-              "title": "Add user-scope skills dirs to the agent layout table and verify each against the tool docs",
-              "status": "todo",
+              "title": "Verify each agent's user-scope skills folder against the tool docs (done 2026-10-12; the table is in E4.2.md)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "design",
-                "docs",
-                "parked"
+                "docs"
               ],
               "planned": null
             },
             {
               "id": "E4.2-T2",
-              "title": "Add --global to install, update, remove, and list with a lockfile under the user config dir",
+              "title": "Add --global to install, update, remove, and adopt: confirmation shows the absolute target, lockfile at ~/.hikma/lock.json, refuse symlinked targets",
               "status": "todo",
-              "assignee": "ai",
+              "assignee": "ai+verify",
               "labels": [
                 "feature",
-                "parked"
+                "security"
               ],
               "planned": null
             },
             {
               "id": "E4.2-T3",
-              "title": "Document precedence when a skill exists at both scopes",
+              "title": "Document project vs global: per-agent duplicate behavior (documented, reported, or unknown, with links) and the dotfiles recipe for a portable lockfile",
               "status": "todo",
               "assignee": "ai",
               "labels": [
-                "docs",
-                "parked"
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.2-T4",
+              "title": "Scope refactor first: pass a root (project . or $HOME) through every lockfile load and skill path; no behavior change",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "refactor"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.2-T5",
+              "title": "Add --global to list --installed, verify, diff, and sync; list shows a scope column and marks shadowed skills",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.2-T6",
+              "title": "Warn (never block) when a skill name exists at both scopes: on install, in list, and in doctor; Claude Code runs the global copy, other agents do not document a winner",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "ux",
+                "skills"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.2-T7",
+              "title": "hikma sync warns when a lockfile entry shares a name with an installed global skill (a project skill could inherit the permissions granted to the trusted one)",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "security"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.2-T8",
+              "title": "Tests set HOME (and USERPROFILE on Windows) to a temp dir so no test touches the real home; detect symlinked or shared global folders",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.2-T9",
+              "title": "Check precedence by hand: same skill name at both scopes on each agent you use, with the agent version, and record the result",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "test",
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.2-T10",
+              "title": "Update the guides that point to gh skill --scope user (agents.md, gh-skill.md) when global installs ship",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "docs"
               ],
               "planned": null
             }
           ],
-          "release": "later"
+          "release": "v0.4"
         },
         {
           "id": "E4.3",
           "title": "Custom agent layouts",
           "emoji": "A",
-          "status": "backlog",
+          "status": "next",
           "assignee": "ai+verify",
           "labels": [
             "templates"
@@ -1136,12 +1215,12 @@
           "planned": null,
           "order": 3,
           "goal": "Let users define their own agent layouts in config instead of hikma maintaining a long agent list.",
-          "exit": "A layout defined in config (name, skills folder, instruction file) works with init, install, update, and push.",
+          "exit": "A layout defined under layouts in config (name, skills folder, instruction file) works with init, install, update, sync, and push.",
           "body": "epics/E4.3.md",
           "tasks": [
             {
               "id": "E4.3-T1",
-              "title": "Parked (gh skill already supports many agents): Verify documented skill and instruction locations for Cursor and Gemini CLI",
+              "title": "Dropped (custom layouts replace it): verify skill and instruction locations for Cursor and Gemini CLI",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
@@ -1152,7 +1231,7 @@
             },
             {
               "id": "E4.3-T2",
-              "title": "Parked (gh skill already supports many agents): Add layout entries and templates for the verified agents",
+              "title": "Dropped (custom layouts replace it): add layout entries and templates for the verified agents",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -1173,7 +1252,7 @@
             },
             {
               "id": "E4.3-T4",
-              "title": "Config schema for custom layouts (agents.<name>.skillsDir and instructionFile), validated on load",
+              "title": "Config schema for custom layouts (layouts.<name>.skillsDir and instructionFile), validated on load: relative, no .., not under .git or .hikma, no built-in names",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
@@ -1184,7 +1263,7 @@
             },
             {
               "id": "E4.3-T5",
-              "title": "Resolve custom layouts in ResolveTargets, init, install, update, and doctor; dedupe shared folders",
+              "title": "Resolve custom layouts in ResolveTargets, init, install, update, sync, and doctor; dedupe shared folders; make sync's lock entry validation accept configured layouts, not only built-ins",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -1194,15 +1273,27 @@
             },
             {
               "id": "E4.3-T6",
-              "title": "Document custom layouts with an example (Cursor or Gemini CLI) and where to find the tool docs",
+              "title": "Document custom layouts with an example custom agent and where to find the tool docs",
               "status": "todo",
               "assignee": "ai",
               "labels": [
                 "docs"
               ],
               "planned": null
+            },
+            {
+              "id": "E4.3-T7",
+              "title": "Warn when a multi-agent install writes the same skill to two folders that one agent reads (for example claude with copilot or opencode); install still proceeds",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "ux",
+                "skills"
+              ],
+              "planned": null
             }
-          ]
+          ],
+          "release": "v0.3"
         },
         {
           "id": "E4.4",
@@ -1328,7 +1419,7 @@
           "id": "E5.1",
           "title": "Verifiable installs",
           "emoji": "V",
-          "status": "backlog",
+          "status": "active",
           "assignee": "ai+verify",
           "labels": [
             "security",
