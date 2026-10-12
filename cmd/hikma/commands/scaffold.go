@@ -11,6 +11,7 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
 	"github.com/hasankhatib/hikma-ai/internal/source"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -86,7 +87,7 @@ Examples:
 			if interactive {
 				reader = bufio.NewReader(os.Stdin)
 				if !isGitRepo {
-					fmt.Fprintf(os.Stderr, "warning: this directory is not a git repository\n")
+					fmt.Fprintf(os.Stderr, "%s this directory is not a git repository\n", ui.Warning(os.Stderr))
 					fmt.Fprintf(os.Stderr, "  Files written here will not be version-controlled.\n")
 					ans, err := prompt(reader, "Proceed anyway? [y/N]: ", "n")
 					if err != nil {

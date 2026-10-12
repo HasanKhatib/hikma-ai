@@ -2,11 +2,13 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"sort"
 	"strings"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/preflight"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -53,13 +55,13 @@ func runDoctor() error {
 
 	if src, origin, err := resolveSource(""); err != nil {
 		// A registry is optional: skills can always be installed from an explicit owner/repo.
-		fmt.Printf("  warn  registry not configured\n        fix: run 'hikma config set registry <owner/repo>' (needed for bare skill names and push)\n")
+		fmt.Printf("  %s  registry not configured\n        fix: run 'hikma config set registry <owner/repo>' (needed for bare skill names and push)\n", ui.Yellow(os.Stdout, "warn"))
 	} else {
 		fmt.Printf("  ok    registry: %s (%s)\n", src.Display, origin)
 	}
 
 	if gh := ghManagedUntracked(projectScope()); len(gh) > 0 {
-		fmt.Printf("  warn  skills installed by gh skill and not tracked by hikma: %s\n        fix: run 'hikma skill adopt <name>' so update, sync, and remove manage them\n", adoptHint(gh))
+		fmt.Printf("  %s  skills installed by gh skill and not tracked by hikma: %s\n        fix: run 'hikma skill adopt <name>' so update, sync, and remove manage them\n", ui.Yellow(os.Stdout, "warn"), adoptHint(gh))
 	}
 
 	if sc, err := globalScope(); err == nil && !sameDir(".", sc.root) {
@@ -69,7 +71,7 @@ func runDoctor() error {
 		}
 		sort.Strings(names)
 		for _, w := range projectScope().shadowWarnings(names) {
-			fmt.Printf("  warn  %s\n", strings.TrimPrefix(w, "warning: "))
+			fmt.Printf("  %s  %s\n", ui.Yellow(os.Stdout, "warn"), strings.TrimPrefix(w, "warning: "))
 		}
 	}
 

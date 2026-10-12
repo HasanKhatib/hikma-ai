@@ -16,7 +16,7 @@
 | [`hikma skill adopt`](/commands/skill-adopt) | Track a skill that `gh skill` or another tool installed |
 | [`hikma sync`](/commands/sync) | Restore every skill recorded in the lockfile |
 | [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
-| [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry as a pull request |
+| [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry |
 | [`hikma completion`](/commands/completion) | Generate shell completions |
 
 ## Sources

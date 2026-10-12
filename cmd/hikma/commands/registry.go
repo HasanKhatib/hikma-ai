@@ -11,6 +11,7 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
 	"github.com/hasankhatib/hikma-ai/internal/source"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -132,13 +133,17 @@ func printIssuesFor(w io.Writer, name string, issues []source.Issue) bool {
 		fmt.Fprintf(w, "  ok    %s\n", name)
 		return false
 	}
-	label := "warn"
+	label := ui.Yellow(w, "warn")
 	if bad {
-		label = "FAIL"
+		label = ui.Red(w, "FAIL")
 	}
 	fmt.Fprintf(w, "  %s  %s\n", label, name)
 	for _, i := range issues {
-		fmt.Fprintf(w, "          %s: %s\n", i.Severity, i.Message)
+		sev := ui.Yellow(w, i.Severity)
+		if i.Severity == source.SeverityError {
+			sev = ui.Red(w, i.Severity)
+		}
+		fmt.Fprintf(w, "          %s: %s\n", sev, i.Message)
 	}
 	return bad
 }

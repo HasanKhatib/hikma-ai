@@ -9,7 +9,7 @@ This repository contains the CLI only. It does not contain a bundled skill regis
 Agents read skills from folders in your repo, and tools such as [`gh skill`](https://cli.github.com/manual/gh_skill_install) (GitHub CLI) and `npx skills` already install skills from public GitHub repos. Hikma is built for a different job: **owning your source and moving skills between it, your projects, and your agents**.
 
 - **Works with your agent, built in or custom.** Claude, Codex, Copilot and OpenCode are built in; for anything else, `hikma config add-agent` tells Hikma where that tool reads skills from, and install, sync, and update work the same.
-- **Your registry is a setting, not an argument.** Bare names install from it (`hikma skill install my-skill`), and `hikma skill push` publishes to it as a pull request, through your fork when you lack write access, after showing and confirming the target.
+- **Your registry is a setting, not an argument.** Bare names install from it (`hikma skill install my-skill`), and `hikma skill push` publishes to it after showing and confirming the target: straight to its default branch when you have write access, or as a pull request (through your fork if you lack access, or with `--pr`).
 - **Set up a project in one command.** `hikma init` writes the agent instruction file (`AGENTS.md`), records the agents and registry in a committed `.hikma/config.json`, and installs skills into every agent's folder, and anyone who clones the repo gets the same setup.
 - **Installs are tracked outside the skill.** `.hikma/lock.json` holds source, commit, and file hashes without editing `SKILL.md`. Updates stop on local edits and flag changes to `scripts/`.
 - **Policy for your registry.** Choose a naming convention and run `hikma registry validate` in CI.
@@ -101,7 +101,7 @@ Agents that share a folder are written once. For one-off use, set a personal def
 ## How it works
 
 - **Install from anywhere.** A source is a GitHub `owner/repo`, any git URL, or a local path. Use `--ref` to pin a branch, tag, or commit. Installing does not enforce a naming convention.
-- **Push goes to your registry.** `hikma skill push` always targets your configured registry (a GitHub `owner/repo`), prints it with where the setting came from, and asks you to confirm (`--yes` in scripts). With write access it pushes a branch to the registry; without it, to your fork. It never force-pushes: an open PR for the skill gets a new commit, and a skill that was already merged gets a fresh branch.
+- **Push goes to your registry.** `hikma skill push` always targets your configured registry (a GitHub `owner/repo`), prints it with where the setting came from, and asks you to confirm (`--yes` in scripts). With write access it commits straight to the default branch (`--pr` opens a pull request instead); without it, it pushes to your fork and opens a pull request. It never force-pushes: with `--pr`, an open PR for the skill gets a new commit, and a skill that was already merged gets a fresh branch.
 - **Installs are tracked.** `.hikma/lock.json` records each skill's source, commit, and file hashes. `hikma skill update` pulls from the recorded source, refuses to overwrite local edits without `--force`, and warns when `scripts/` changed. `hikma sync` restores everything in the lockfile on a fresh clone, at the recorded commits and checked against the recorded hashes.
 
 ## Skill repositories

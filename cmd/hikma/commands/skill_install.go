@@ -319,7 +319,7 @@ through a symlinked folder.`,
 				return err
 			}
 			for _, w := range sc.shadowWarnings([]string{skill.Name}) {
-				fmt.Fprintln(out, w)
+				ui.PrintWarning(out, w)
 			}
 			if err := sc.confirmWrite(cmd, yes, keys); err != nil {
 				return err
@@ -378,7 +378,7 @@ func warnOverlappingTargets(w io.Writer, targets []config.Selection) {
 			pair := t.Layout.SkillsDir + "|" + other
 			if dirs[other] && other != t.Layout.SkillsDir && !warned[pair] {
 				warned[pair] = true
-				fmt.Fprintf(w, "warning: skills are written to both %s and %s, and an agent you selected reads both, so it may list each skill twice\n", t.Layout.SkillsDir, other)
+				fmt.Fprintf(w, "%s skills are written to both %s and %s, and an agent you selected reads both, so it may list each skill twice\n", ui.Warning(w), t.Layout.SkillsDir, other)
 			}
 		}
 	}
@@ -712,7 +712,7 @@ func (u *updater) update(key string) error {
 	printChanges(u.out, "modified", modified)
 	printChanges(u.out, "removed", removed)
 	if touchesScripts(added, modified, removed) {
-		fmt.Fprintln(u.out, "  warning: scripts/ changed - review before use")
+		fmt.Fprintf(u.out, "  %s scripts/ changed - review before use\n", ui.Warning(u.out))
 		if !u.yes {
 			if !isInteractive() {
 				return fmt.Errorf("scripts/ changed; review with 'hikma skill diff %s' and re-run with --yes to apply", e.Name)
