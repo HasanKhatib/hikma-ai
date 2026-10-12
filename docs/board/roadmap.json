@@ -1092,8 +1092,8 @@
           ],
           "planned": null,
           "order": 2,
-          "goal": "Support --global installs into the user's home directory with a lockfile at ~/.hikma/lock.json, reusing the project layouts.",
-          "exit": "Install, update, remove, adopt, list, verify, diff, and sync accept --global, ask before writing, and warn when a skill exists at both scopes.",
+          "goal": "Let users install skills for themselves, not just one repo, with the same lockfile and safety checks.",
+          "exit": "The skill commands accept --global, ask before writing to the home folder, and warn when a skill exists at both scopes.",
           "body": "epics/E4.2.md",
           "tasks": [
             {
@@ -1120,7 +1120,7 @@
             },
             {
               "id": "E4.2-T3",
-              "title": "Document project vs global: per-agent duplicate behavior (documented, reported, or unknown, with links) and the dotfiles recipe for a portable lockfile",
+              "title": "Document project vs global, stating up front that Claude personal skills do not load in cloud or Cowork sessions (so no help in a Codespace): per-agent duplicate behavior (documented, reported, or unknown, with links) and the dotfiles recipe for a portable lockfile",
               "status": "todo",
               "assignee": "ai",
               "labels": [
