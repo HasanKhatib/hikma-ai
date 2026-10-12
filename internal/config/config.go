@@ -15,8 +15,8 @@ type Config struct {
 	Naming   string `json:"naming,omitempty"`
 	// Agents lists every agent a project installs skills for.
 	Agents []string `json:"agents,omitempty"`
-	// Layouts defines custom agent layouts, keyed by name.
-	Layouts map[string]CustomLayout `json:"layouts,omitempty"`
+	// CustomAgents defines user-defined agents, keyed by name.
+	CustomAgents map[string]CustomAgent `json:"customAgents,omitempty"`
 }
 
 // Registry is the normalized GitHub registry identity.

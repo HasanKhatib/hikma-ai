@@ -105,7 +105,7 @@ func uniqueSelections(set config.LayoutSet, agents []config.Agent) []config.Sele
 }
 
 // instructionTemplate returns the embedded template for an instruction file.
-// A custom layout names a file with no template of its own, so it gets the
+// A custom agent names a file with no template of its own, so it gets the
 // shared AGENTS.md content.
 func instructionTemplate(name string) string {
 	if _, err := fs.Stat(FS, "templates/scaffold/"+name); err == nil {

@@ -386,7 +386,7 @@ func recordInstall(dir, name string, src source.Source, ref, commit string) erro
 }
 
 // requireSkillFolder refuses to replace an existing folder that holds no
-// SKILL.md. Layouts and the lockfile are committed, so a layout pointing at a
+// SKILL.md. Custom agents and the lockfile are committed, so a definition pointing at a
 // source folder must not let --force delete it as if it were a skill.
 func requireSkillFolder(dir string) error {
 	if !dirExists(dir) {

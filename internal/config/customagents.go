@@ -8,41 +8,41 @@ import (
 	"strings"
 )
 
-// CustomLayout is a user-defined agent layout from the `layouts` config key.
+// CustomAgent is a user-defined agent from the `customAgents` config key.
 // Both paths are slash-separated and relative to the project root.
-type CustomLayout struct {
+type CustomAgent struct {
 	SkillsDir       string `json:"skillsDir"`
 	InstructionFile string `json:"instructionFile,omitempty"`
 }
 
 var layoutNameRE = regexp.MustCompile(`^[a-z0-9][a-z0-9-]*$`)
 
-// ValidateLayouts checks every custom layout. Config files are committed, so
-// they are untrusted input: a layout must never point outside the project or
+// ValidateCustomAgents checks every custom agent. Config files are committed, so
+// they are untrusted input: a definition must never point outside the project or
 // into the repository's own metadata.
-func ValidateLayouts(layouts map[string]CustomLayout) error {
-	names := make([]string, 0, len(layouts))
-	for name := range layouts {
+func ValidateCustomAgents(agents map[string]CustomAgent) error {
+	names := make([]string, 0, len(agents))
+	for name := range agents {
 		names = append(names, name)
 	}
 	sort.Strings(names)
 	for _, name := range names {
-		l := layouts[name]
+		l := agents[name]
 		if !layoutNameRE.MatchString(name) {
-			return fmt.Errorf("layouts.%s: name must be lowercase letters, digits, and hyphens", name)
+			return fmt.Errorf("customAgents.%s: name must be lowercase letters, digits, and hyphens", name)
 		}
 		if ValidAgent(Agent(name)) {
-			return fmt.Errorf("layouts.%s: name is a built-in agent; choose another name", name)
+			return fmt.Errorf("customAgents.%s: name is a built-in agent; choose another name", name)
 		}
 		if l.SkillsDir == "" {
-			return fmt.Errorf("layouts.%s.skillsDir is required", name)
+			return fmt.Errorf("customAgents.%s.skillsDir is required", name)
 		}
 		if err := checkLayoutPath(l.SkillsDir); err != nil {
-			return fmt.Errorf("layouts.%s.skillsDir: %w", name, err)
+			return fmt.Errorf("customAgents.%s.skillsDir: %w", name, err)
 		}
 		if l.InstructionFile != "" {
 			if err := checkLayoutPath(l.InstructionFile); err != nil {
-				return fmt.Errorf("layouts.%s.instructionFile: %w", name, err)
+				return fmt.Errorf("customAgents.%s.instructionFile: %w", name, err)
 			}
 		}
 	}
@@ -79,14 +79,14 @@ func checkLayoutPath(p string) error {
 }
 
 // LayoutSet is every layout available to a command: the built-in agents plus
-// the custom layouts from user and project config.
+// the custom agents from user and project config.
 type LayoutSet struct {
 	custom map[Agent]Layout
 	names  []Agent // custom names, sorted
 }
 
-// Layouts resolves the layout set. A project layout overrides a user layout
-// with the same name. Invalid layouts in either file are an error.
+// Layouts resolves the layout set. A project definition overrides a user
+// definition with the same name. An invalid definition in either file is an error.
 func Layouts() (LayoutSet, error) {
 	user, err := Load()
 	if err != nil {
@@ -97,7 +97,7 @@ func Layouts() (LayoutSet, error) {
 		return LayoutSet{}, err
 	}
 	set := LayoutSet{custom: map[Agent]Layout{}}
-	for _, src := range []map[string]CustomLayout{user.Layouts, proj.Layouts} {
+	for _, src := range []map[string]CustomAgent{user.CustomAgents, proj.CustomAgents} {
 		for name, l := range src {
 			set.custom[Agent(name)] = customToLayout(l)
 		}
@@ -109,15 +109,15 @@ func Layouts() (LayoutSet, error) {
 	return set, nil
 }
 
-func customToLayout(l CustomLayout) Layout {
-	out := Layout{Description: "custom layout using " + l.SkillsDir, SkillsDir: l.SkillsDir}
+func customToLayout(l CustomAgent) Layout {
+	out := Layout{Description: "custom agent using " + l.SkillsDir, SkillsDir: l.SkillsDir}
 	if l.InstructionFile != "" {
 		out.InstructionFiles = []string{l.InstructionFile}
 	}
 	return out
 }
 
-// Valid reports whether a is a built-in agent or a configured layout.
+// Valid reports whether a is a built-in agent or a configured custom agent.
 func (s LayoutSet) Valid(a Agent) bool {
 	if ValidAgent(a) {
 		return true
@@ -137,7 +137,7 @@ func (s LayoutSet) Layout(a Agent) Layout {
 // Selection builds the selection for a valid agent.
 func (s LayoutSet) Selection(a Agent) Selection { return Selection{Agent: a, Layout: s.Layout(a)} }
 
-// Names lists built-in agents in display order, then custom layouts by name.
+// Names lists built-in agents in display order, then custom agents by name.
 func (s LayoutSet) Names() []Agent {
 	return append(append([]Agent{}, ValidAgents...), s.names...)
 }

@@ -7,12 +7,12 @@ import (
 	"testing"
 )
 
-const acmeLayout = `{"layouts":{"acme":{"skillsDir":".acme/skills","instructionFile":"ACME.md"}}}`
+const acmeAgent = `{"customAgents":{"acme":{"skillsDir":".acme/skills","instructionFile":"ACME.md"}}}`
 
-func TestInitAndInstallUseACustomLayout(t *testing.T) {
+func TestInitAndInstallUseACustomAgent(t *testing.T) {
 	reg := registryRepo(t)
 	proj := project(t)
-	write(t, filepath.Join(proj, ".hikma", "config.json"), acmeLayout)
+	write(t, filepath.Join(proj, ".hikma", "config.json"), acmeAgent)
 
 	out, err := run(t, "init", "--agent", "claude,acme", "--registry", reg, "--skill", "alpha",
 		"--project-name", "demo", "--owner", "me", "--technology", "Go")
@@ -29,14 +29,14 @@ func TestInitAndInstallUseACustomLayout(t *testing.T) {
 	}
 	cfg, _ := os.ReadFile(filepath.Join(proj, ".hikma", "config.json"))
 	if !strings.Contains(string(cfg), `"acme"`) || !strings.Contains(string(cfg), ".acme/skills") {
-		t.Errorf("init dropped the layouts key:\n%s", cfg)
+		t.Errorf("init dropped the customAgents key:\n%s", cfg)
 	}
 }
 
-func TestSyncRestoresACustomLayout(t *testing.T) {
+func TestSyncRestoresACustomAgent(t *testing.T) {
 	reg := registryRepo(t)
 	proj := project(t)
-	write(t, filepath.Join(proj, ".hikma", "config.json"), acmeLayout)
+	write(t, filepath.Join(proj, ".hikma", "config.json"), acmeAgent)
 	if out, err := run(t, "skill", "install", fileURL(reg), "alpha", "--agent", "acme"); err != nil {
 		t.Fatalf("install: %v\n%s", err, out)
 	}
@@ -52,15 +52,15 @@ func TestSyncRestoresACustomLayout(t *testing.T) {
 	}
 }
 
-func TestSyncRejectsACustomFolderWithoutItsLayout(t *testing.T) {
+func TestSyncRejectsACustomFolderWithoutItsDefinition(t *testing.T) {
 	reg := registryRepo(t)
 	proj := project(t)
 	cfgPath := filepath.Join(proj, ".hikma", "config.json")
-	write(t, cfgPath, acmeLayout)
+	write(t, cfgPath, acmeAgent)
 	if out, err := run(t, "skill", "install", fileURL(reg), "alpha", "--agent", "acme"); err != nil {
 		t.Fatalf("install: %v\n%s", err, out)
 	}
-	// The layout is gone, so the lock entry points outside every known skills folder.
+	// The definition is gone, so the lock entry points outside every known skills folder.
 	if err := os.Remove(cfgPath); err != nil {
 		t.Fatal(err)
 	}
@@ -72,28 +72,28 @@ func TestSyncRejectsACustomFolderWithoutItsLayout(t *testing.T) {
 		t.Fatalf("sync should reject the entry:\n%s", out)
 	}
 	if _, statErr := os.Stat(filepath.Join(proj, ".acme")); statErr == nil {
-		t.Fatal("sync wrote into a folder no layout declares")
+		t.Fatal("sync wrote into a folder no agent declares")
 	}
 }
 
-func TestUnknownAgentListsCustomLayouts(t *testing.T) {
+func TestUnknownAgentListsCustomAgents(t *testing.T) {
 	reg := registryRepo(t)
 	proj := project(t)
-	write(t, filepath.Join(proj, ".hikma", "config.json"), acmeLayout)
+	write(t, filepath.Join(proj, ".hikma", "config.json"), acmeAgent)
 	_, err := run(t, "skill", "install", fileURL(reg), "alpha", "--agent", "nope")
 	if err == nil || !strings.Contains(err.Error(), "acme") {
 		t.Fatalf("error should list acme, got %v", err)
 	}
 }
 
-func TestInvalidLayoutInConfigFailsLoudly(t *testing.T) {
+func TestInvalidCustomAgentInConfigFailsLoudly(t *testing.T) {
 	reg := registryRepo(t)
 	proj := project(t)
 	write(t, filepath.Join(proj, ".hikma", "config.json"),
-		`{"layouts":{"evil":{"skillsDir":"../outside"}}}`)
+		`{"customAgents":{"evil":{"skillsDir":"../outside"}}}`)
 	_, err := run(t, "skill", "install", fileURL(reg), "alpha", "--agent", "claude")
-	if err == nil || !strings.Contains(err.Error(), "layouts.evil.skillsDir") {
-		t.Fatalf("want a layout error, got %v", err)
+	if err == nil || !strings.Contains(err.Error(), "customAgents.evil.skillsDir") {
+		t.Fatalf("want a custom agent error, got %v", err)
 	}
 	if _, statErr := os.Stat(filepath.Join(proj, ".claude")); statErr == nil {
 		t.Fatal("nothing should be installed when the config is invalid")
@@ -104,7 +104,7 @@ func TestForcedSyncNeverReplacesAFolderThatIsNotASkill(t *testing.T) {
 	reg := registryRepo(t)
 	proj := project(t)
 	write(t, filepath.Join(proj, ".hikma", "config.json"),
-		`{"layouts":{"src":{"skillsDir":"src"}}}`)
+		`{"customAgents":{"src":{"skillsDir":"src"}}}`)
 	if out, err := run(t, "skill", "install", fileURL(reg), "alpha", "--agent", "src"); err != nil {
 		t.Fatalf("install: %v\n%s", err, out)
 	}

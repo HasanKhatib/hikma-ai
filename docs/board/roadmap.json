@@ -25,8 +25,8 @@
       "title": "Trust",
       "emoji": "v0.3",
       "status": "planned",
-      "goal": "Make installs verifiable, releases signed, and agent layouts user-defined.",
-      "exit": "Custom layouts in config, frozen installs and skill verification, and signed release artifacts are available."
+      "goal": "Make installs verifiable, releases signed, and agents user-defined.",
+      "exit": "Custom agents in config, frozen installs and skill verification, and signed release artifacts are available."
     },
     {
       "id": "v0.4",
@@ -1019,7 +1019,7 @@
       "status": "active",
       "release": "v0.2",
       "goal": "Harden the registry workflow and make hikma coexist with gh skill.",
-      "exit": "sync, interop, custom layouts, and registry CI are shipped and documented.",
+      "exit": "sync, interop, custom agents, and registry CI are shipped and documented.",
       "epics": [
         {
           "id": "E4.1",
@@ -1205,7 +1205,7 @@
         },
         {
           "id": "E4.3",
-          "title": "Custom agent layouts",
+          "title": "Custom agents",
           "emoji": "A",
           "status": "next",
           "assignee": "ai+verify",
@@ -1214,13 +1214,13 @@
           ],
           "planned": null,
           "order": 3,
-          "goal": "Let users define their own agent layouts in config instead of hikma maintaining a long agent list.",
-          "exit": "A layout defined under layouts in config (name, skills folder, instruction file) works with init, install, update, sync, and push.",
+          "goal": "Let users define their own agents in config instead of hikma maintaining a long agent list.",
+          "exit": "An agent defined under customAgents in config (name, skills folder, instruction file) works with init, install, update, sync, and push, and hikma config add-agent creates one.",
           "body": "epics/E4.3.md",
           "tasks": [
             {
               "id": "E4.3-T1",
-              "title": "Dropped (custom layouts replace it): verify skill and instruction locations for Cursor and Gemini CLI",
+              "title": "Dropped (custom agents replace it): verify skill and instruction locations for Cursor and Gemini CLI",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
@@ -1231,7 +1231,7 @@
             },
             {
               "id": "E4.3-T2",
-              "title": "Dropped (custom layouts replace it): add layout entries and templates for the verified agents",
+              "title": "Dropped (custom agents replace it): add layout entries and templates for the verified agents",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -1252,7 +1252,7 @@
             },
             {
               "id": "E4.3-T4",
-              "title": "Config schema for custom layouts (layouts.<name>.skillsDir and instructionFile), validated on load: relative, slash-separated, no .. or ., not under .git or .hikma (case-insensitive), no built-in names; JSON file only in v0.3",
+              "title": "Config schema for custom agents (customAgents.<name>.skillsDir and instructionFile), validated on load: relative, slash-separated, no .. or ., not under .git or .hikma (case-insensitive), no built-in names; JSON file only in v0.3",
               "status": "done",
               "assignee": "ai+verify",
               "labels": [
@@ -1273,7 +1273,7 @@
             },
             {
               "id": "E4.3-T6",
-              "title": "Document custom layouts with an example custom agent and where to find the tool docs",
+              "title": "Document custom agents (customAgents and hikma config add-agent) with an example and where to find the tool docs",
               "status": "done",
               "assignee": "ai",
               "labels": [
@@ -1309,6 +1309,38 @@
               "assignee": "ai",
               "labels": [
                 "templates"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T10",
+              "title": "hikma config add-agent: y/n prompts that show the file written, skills folder validated as typed, flags to skip prompts, refuses built-in names and existing definitions without --force, never creates the skills folder",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "ux"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T11",
+              "title": "hikma config remove-agent, custom agents shown in config list, and docs for add-agent",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E4.3-T12",
+              "title": "Rename the config key layouts to customAgents (code, errors, tests, docs, changelog) before it ships",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "refactor"
               ],
               "planned": null
             }
