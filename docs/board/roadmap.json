@@ -1546,8 +1546,8 @@
           "tasks": [
             {
               "id": "E5.2-T1",
-              "title": "Attest release archives and checksums.txt with actions/attest-build-provenance in the release workflow (written; proven by the rc in T5)",
-              "status": "doing",
+              "title": "Attest release archives and checksums.txt with actions/attest-build-provenance in the release workflow (proven by v0.3.0-rc.1)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release",
@@ -1557,8 +1557,8 @@
             },
             {
               "id": "E5.2-T2",
-              "title": "scripts/install.sh verifies the attestation with gh for v0.3.0 and later, and says when it skips (written and tested with a fake gh; proven by the rc in T5)",
-              "status": "doing",
+              "title": "scripts/install.sh verifies the attestation with gh for v0.3.0 and later, and says when it skips (proven by v0.3.0-rc.1)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "install",
@@ -1591,7 +1591,7 @@
             {
               "id": "E5.2-T5",
               "title": "Cut v0.3.0-rc.1: confirm attestations verify with gh attestation verify, install.sh verifies them, and the rendered formula installs on macOS (render from the rc checksums into a local tap)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release",
