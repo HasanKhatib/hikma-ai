@@ -423,14 +423,18 @@ pushed to your fork. Nothing is force-pushed.`,
 			}
 
 			fmt.Fprintf(out, "Validating %s...\n", name)
-			issues, err := validateSkillDir(skillDir, name)
+			issues, err := validateSkillDirSeverity(skillDir, name, false, source.SeverityWarning)
 			if err != nil {
 				return err
 			}
 			if printIssues(cmd.ErrOrStderr(), skillDir, issues) {
-				return fmt.Errorf("validation failed: fix the problems above before pushing")
+				return fmt.Errorf("validation failed: fix the errors above before pushing")
 			}
-			fmt.Fprintln(out, "Validating...  ok")
+			if len(issues) == 0 {
+				fmt.Fprintln(out, "Validating...  ok")
+			} else {
+				fmt.Fprintln(out, "Validating...  warnings only, continuing. 'hikma registry validate' in the registry's CI treats unfilled placeholders as errors.")
+			}
 
 			if err := confirmPush(cmd, name, skillDir, registry, origin, assumeYes); err != nil {
 				return err

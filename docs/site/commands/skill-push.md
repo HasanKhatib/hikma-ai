@@ -10,7 +10,7 @@ Requires the GitHub CLI (`gh`), signed in. The registry must be a GitHub `owner/
 
 ## What happens
 
-1. The skill is validated (the same checks as [`registry validate`](/commands/registry-validate)).
+1. The skill is validated with the same checks as [`registry validate`](/commands/registry-validate). Errors stop the push. Unfilled template placeholders (such as "Replace with clear steps for the agent.") are only warnings here, so you can push a draft for review; `registry validate` still fails them, so a registry's CI will ask you to fill them in before merge.
 2. **The target registry is shown with where the setting came from, and you confirm it.**
 
    ```text

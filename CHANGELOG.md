@@ -9,6 +9,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - The Homebrew formula installs shell completions.
 
 ### Changed
+- `hikma skill push` reports unfilled template placeholders as warnings and continues to its confirmation, so a draft can be pushed for review. `registry validate` still fails them.
+- `hikma skill adopt` on a skill with no `gh skill` metadata explains why and shows the commands to run, using your configured registry when there is one.
 - Mistyped arguments, commands, and flags now say what is wrong and what to type: the usage line, a "did you mean" suggestion, and the right help command. `hikma completion zshs` names the supported shells instead of "invalid argument".
 
 ## [0.4.0] - 2026-10-12
