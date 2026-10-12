@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Fixed
+- `hikma completion` writes to the command's output, and the zsh instructions no longer tell you to write to `${fpath[1]}`, which is often a folder you cannot write to or one zsh never reads. Use `source <(hikma completion zsh)` in `~/.zshrc`.
+- The Homebrew formula installs shell completions.
+
+### Changed
+- Mistyped arguments, commands, and flags now say what is wrong and what to type: the usage line, a "did you mean" suggestion, and the right help command. `hikma completion zshs` names the supported shells instead of "invalid argument".
+
 ## [0.4.0] - 2026-10-12
 
 ### Added
