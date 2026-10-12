@@ -24,18 +24,21 @@ Keys:
   agent     your default agent: copilot, codex, opencode, or claude
   agents    agents a project sets up, comma-separated (project config)
   registry  where bare skill names install from and where push publishes
-  naming    skill name rule for create and push: loose (default) or kebab-case`,
+  naming    skill name rule for create and push: loose (default) or kebab-case
+
+Custom agents (customAgents) hold the folders for a tool hikma does not know.
+Add one with 'hikma config add-agent', then select it by name like any agent.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) > 0 {
-				return fmt.Errorf("unknown config command %q - use 'hikma config list', 'get', 'set', 'unset' or 'path'", args[0])
+				return fmt.Errorf("unknown config command %q - use 'hikma config list', 'get', 'set', 'unset', 'path', 'add-agent' or 'remove-agent'", args[0])
 			}
 			return cmd.Help()
 		},
 	}
 	cmd.AddCommand(
 		newConfigListCmd(), newConfigGetCmd(), newConfigSetCmd(), newConfigUnsetCmd(), newConfigPathCmd(),
-		newConfigAgentCmd(), newConfigRegistryCmd(),
+		newConfigAgentCmd(), newConfigRegistryCmd(), newConfigAddAgentCmd(), newConfigRemoveAgentCmd(),
 	)
 	return cmd
 }
@@ -209,6 +212,10 @@ func newConfigListCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			custom, err := config.ListCustomAgents()
+			if err != nil {
+				return err
+			}
 			if asJSON {
 				type row struct {
 					Key    string `json:"key"`
@@ -219,6 +226,9 @@ func newConfigListCmd() *cobra.Command {
 				for i, e := range entries {
 					rows[i] = row{e.Key, e.Value, describeSource(e)}
 				}
+				for _, c := range custom {
+					rows = append(rows, row{"customAgents." + c.Name, c.Agent.SkillsDir, string(c.Source)})
+				}
 				return printJSON(rows)
 			}
 			for _, e := range entries {
@@ -227,6 +237,9 @@ func newConfigListCmd() *cobra.Command {
 					v = "(not set)"
 				}
 				fmt.Fprintf(cmd.OutOrStdout(), "%-9s %s  [%s]\n", e.Key, v, describeSource(e))
+			}
+			for _, c := range custom {
+				fmt.Fprintf(cmd.OutOrStdout(), "agent %s: %s  [%s]\n", c.Name, c.Agent.SkillsDir, c.Source)
 			}
 			return nil
 		},

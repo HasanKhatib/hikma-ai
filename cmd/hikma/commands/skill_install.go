@@ -334,6 +334,26 @@ func printTargets(w io.Writer, targets []config.Selection, override bool) {
 	}
 	fmt.Fprintf(w, "Agents: %s%s\n", strings.Join(agents, ", "), overrideSuffix(override))
 	fmt.Fprintf(w, "Skill paths: %s\n", strings.Join(dirs, ", "))
+	warnOverlappingTargets(w, targets)
+}
+
+// warnOverlappingTargets notes when one agent loads from two of the folders a
+// skill is written to, so it sees the skill twice. The install still proceeds.
+func warnOverlappingTargets(w io.Writer, targets []config.Selection) {
+	dirs := map[string]bool{}
+	for _, t := range targets {
+		dirs[t.Layout.SkillsDir] = true
+	}
+	warned := map[string]bool{}
+	for _, t := range targets {
+		for _, other := range t.Reads {
+			pair := t.Layout.SkillsDir + "|" + other
+			if dirs[other] && other != t.Layout.SkillsDir && !warned[pair] {
+				warned[pair] = true
+				fmt.Fprintf(w, "warning: skills are written to both %s and %s, and an agent you selected reads both, so it may list each skill twice\n", t.Layout.SkillsDir, other)
+			}
+		}
+	}
 }
 
 // installSkill copies one skill into every target's skills directory and records each install.
