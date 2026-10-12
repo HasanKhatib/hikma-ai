@@ -22,6 +22,11 @@ func (s scope) skillDir(t config.Selection, name string) string {
 	return filepath.Join(s.root, t.SkillDir(name))
 }
 
+// key returns the lockfile key for the named skill under agent t.
+func (s scope) key(t config.Selection, name string) string {
+	return lockKey(t.SkillDir(name))
+}
+
 func (s scope) loadLock() (lock.File, error) { return lock.Load(s.root) }
 func (s scope) saveLock(f lock.File) error   { return lock.Save(s.root, f) }
 func (s scope) lockPath() string             { return lock.Path(s.root) }

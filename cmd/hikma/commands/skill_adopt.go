@@ -50,7 +50,7 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 
 			var dirs []string
 			for _, t := range targets {
-				key := lockKey(t.SkillDir(name))
+				key := sc.key(t, name)
 				if _, err := os.Stat(filepath.Join(sc.path(key), "SKILL.md")); err != nil {
 					continue
 				}
@@ -66,7 +66,7 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 
 			srcArg, ref := flagSource, flagRef
 			if srcArg == "" {
-				p, ok := source.ReadProvenance(dirs[0])
+				p, ok := source.ReadProvenance(sc.path(dirs[0]))
 				if !ok {
 					return fmt.Errorf("%s has no gh skill metadata; pass --source <owner/repo>", dirs[0])
 				}

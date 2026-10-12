@@ -157,7 +157,7 @@ install'.`,
 			removed, blocked := 0, 0
 			for _, t := range targets {
 				dir := sc.skillDir(t, name)
-				key := lockKey(t.SkillDir(name))
+				key := sc.key(t, name)
 				entry, tracked := lf.Skills[key]
 				exists := pathExists(dir)
 				if !tracked && !exists {
@@ -234,8 +234,9 @@ func pathExists(p string) bool {
 // still has content or at the project root.
 func pruneEmptyParents(root, dir string) {
 	root = filepath.Clean(root)
-	for p := filepath.Dir(filepath.Clean(dir)); p != root; p = filepath.Dir(p) {
-		if rel, err := filepath.Rel(root, p); err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+	for p := filepath.Dir(filepath.Clean(dir)); ; p = filepath.Dir(p) {
+		rel, err := filepath.Rel(root, p)
+		if err != nil || rel == "." || rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
 			return
 		}
 		if os.Remove(p) != nil { // fails unless the directory is empty

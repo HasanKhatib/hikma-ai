@@ -1,8 +1,10 @@
 package commands
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/hasankhatib/hikma-ai/internal/lock"
@@ -53,5 +55,46 @@ func TestPruneEmptyParentsStopsAtRoot(t *testing.T) {
 	}
 	if _, err := os.Stat(root); err != nil {
 		t.Fatalf("root must survive: %v", err)
+	}
+}
+
+// installedElsewhere installs a skill into a project, then moves the cwd to an
+// unrelated directory so only the scope root can find the install.
+func installedElsewhere(t *testing.T) (scope, string) {
+	t.Helper()
+	reg := registryRepo(t)
+	proj := project(t)
+	if out, err := run(t, "skill", "install", reg, "alpha", "--agent", "claude"); err != nil {
+		t.Fatalf("install: %v\n%s", err, out)
+	}
+	t.Chdir(t.TempDir())
+	return scope{root: proj}, reg
+}
+
+func TestResolveSkillDirUsesScopeRoot(t *testing.T) {
+	sc, _ := installedElsewhere(t)
+	got, err := resolveSkillDirForAgent(sc, "alpha", "claude")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := filepath.Join(sc.root, ".claude", "skills", "alpha"); got != want {
+		t.Fatalf("dir = %q, want %q", got, want)
+	}
+}
+
+func TestDiffOneReadsFolderFromScopeRoot(t *testing.T) {
+	sc, _ := installedElsewhere(t)
+	lf, err := sc.loadLock()
+	if err != nil {
+		t.Fatal(err)
+	}
+	var out bytes.Buffer
+	u := &updater{sc: sc, out: &out, errOut: &out, lf: lf, checkouts: map[string]*openCheckout{}}
+	defer u.close()
+	if err := diffOne(u, ".claude/skills/alpha", false); err != nil {
+		t.Fatalf("diffOne: %v\n%s", err, out.String())
+	}
+	if strings.Contains(out.String(), "folder is missing") || !strings.Contains(out.String(), "Local edits:\n  none") {
+		t.Fatalf("diff should see the folder under the scope root:\n%s", out.String())
 	}
 }

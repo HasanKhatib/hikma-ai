@@ -49,7 +49,7 @@ Pass --patch to print the file contents that differ.`,
 			}
 			var keys []string
 			for _, t := range targets {
-				if k := lockKey(t.SkillDir(name)); hasEntry(lf, k) {
+				if k := sc.key(t, name); hasEntry(lf, k) {
 					keys = append(keys, k)
 				}
 			}
@@ -91,7 +91,7 @@ Pass --patch to print the file contents that differ.`,
 
 func diffOne(u *updater, key string, patch bool) error {
 	e := u.lf.Skills[key]
-	localDir := filepath.FromSlash(key)
+	localDir := u.sc.path(key)
 	fmt.Fprintf(u.out, "%s (%s%s)\n", key, e.Source, atCommit(e))
 
 	missing := false

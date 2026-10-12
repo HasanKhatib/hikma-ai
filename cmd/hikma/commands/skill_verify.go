@@ -41,7 +41,7 @@ every skill in the lockfile is checked.`,
 				}
 				keys = nil
 				for _, t := range targets {
-					if k := lockKey(t.SkillDir(name)); hasEntry(lf, k) {
+					if k := sc.key(t, name); hasEntry(lf, k) {
 						keys = append(keys, k)
 					}
 				}

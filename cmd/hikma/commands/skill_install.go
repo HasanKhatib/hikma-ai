@@ -381,7 +381,7 @@ func installSkill(sc scope, out io.Writer, src source.Source, co source.Checkout
 		if err != nil {
 			return fmt.Errorf("install %s: %w", skill.Name, err)
 		}
-		if err := recordInstall(sc, lockKey(t.SkillDir(skill.Name)), skill.Name, src, ref, co.Commit); err != nil {
+		if err := recordInstall(sc, sc.key(t, skill.Name), skill.Name, src, ref, co.Commit); err != nil {
 			return err
 		}
 		fmt.Fprintf(out, "  -> %s/ (%d files)\n", dir, len(written))
@@ -509,7 +509,7 @@ Local edits are detected by file hash and block the update unless --force is use
 					return err
 				}
 				for _, t := range targets {
-					if k := lockKey(t.SkillDir(name)); hasEntry(lf, k) {
+					if k := sc.key(t, name); hasEntry(lf, k) {
 						keys = append(keys, k)
 					}
 				}

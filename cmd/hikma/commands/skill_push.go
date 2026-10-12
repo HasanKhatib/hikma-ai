@@ -413,7 +413,7 @@ pushed to your fork. Nothing is force-pushed.`,
 				return preflightError(result)
 			}
 
-			skillDir, err := resolveSkillDirForAgent(name, flagAgent)
+			skillDir, err := resolveSkillDirForAgent(projectScope(), name, flagAgent)
 			if err != nil {
 				return err
 			}
