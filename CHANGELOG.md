@@ -10,6 +10,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ### Added
 - Custom agents: define an agent under `customAgents` in config (`skillsDir`, optional `instructionFile`) and use it with `init`, `skill install`, `update`, and `sync`. Paths are validated when the config loads.
+- `hikma config add-agent <name>` defines a custom agent with y/n prompts that show the config file, or with flags for scripts; `hikma config remove-agent <name>` removes it and its references. `hikma config list` shows custom agents.
+- A warning when an install writes a skill to two folders that one selected agent reads (Copilot or OpenCode together with Claude). The install proceeds.
 - `skill install --force` and `sync --force` refuse to replace an existing folder that is not a skill (no `SKILL.md`).
 - `hikma skill verify [<name>]` re-hashes installed skills against `.hikma/lock.json`, offline, and exits non-zero on any difference.
 - `hikma sync --frozen` fails, changing nothing, when the lockfile cannot be reproduced exactly: local changes, an entry without a pinned commit, or a source that cannot be fetched. For CI.

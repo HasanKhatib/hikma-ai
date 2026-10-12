@@ -1207,7 +1207,7 @@
           "id": "E4.3",
           "title": "Custom agents",
           "emoji": "A",
-          "status": "next",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "templates"
@@ -1221,7 +1221,7 @@
             {
               "id": "E4.3-T1",
               "title": "Dropped (custom agents replace it): verify skill and instruction locations for Cursor and Gemini CLI",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "docs",
@@ -1232,7 +1232,7 @@
             {
               "id": "E4.3-T2",
               "title": "Dropped (custom agents replace it): add layout entries and templates for the verified agents",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "parked",
@@ -1284,7 +1284,7 @@
             {
               "id": "E4.3-T7",
               "title": "Warn when a multi-agent install writes the same skill to two folders that one agent reads (for example claude with copilot or opencode); install still proceeds",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "ux",
@@ -1315,7 +1315,7 @@
             {
               "id": "E4.3-T10",
               "title": "hikma config add-agent: y/n prompts that show the file written, skills folder validated as typed, flags to skip prompts, refuses built-in names and existing definitions without --force, never creates the skills folder",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "feature",
@@ -1326,7 +1326,7 @@
             {
               "id": "E4.3-T11",
               "title": "hikma config remove-agent, custom agents shown in config list, and docs for add-agent",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature",

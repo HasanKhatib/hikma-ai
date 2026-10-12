@@ -25,11 +25,13 @@ Claude Code reads `AGENTS.md` (version 2.1.277 and later) when the repository ha
 
 Pick the agents your team uses. With one agent, skills go to that agent's folder. With several, `hikma skill install` writes to each distinct folder, so `claude,codex` gives you a copy in `.claude/skills` and one in `.agents/skills`. Hikma tracks both in `.hikma/lock.json` and updates them together.
 
+Copilot and OpenCode also load skills from `.claude/skills`. If you pick one of them together with `claude`, a skill is written to both `.claude/skills` and `.agents/skills`, and that agent may list it twice. Hikma prints a warning and installs anyway. `claude,codex` does not warn, because Codex reads only `.agents/skills`.
+
 If someone on a Claude project also tries Codex, run `hikma skill install` with `--agent codex` for that install; the skill lands in `.agents/skills`.
 
 ## Custom agents
 
-If your agent is not one of the four above, describe where it reads from. Add a `customAgents` entry to `.hikma/config.json` (or your user config), then use its name like any other agent:
+If your agent is not one of the four above, describe where it reads from. Run `hikma config add-agent acme` (see [`hikma config`](/commands/config#custom-agents)), or add a `customAgents` entry to `.hikma/config.json` (or your user config) yourself. Then use its name like any other agent:
 
 ```json
 {
@@ -53,7 +55,7 @@ Check your tool's own documentation for the right folder and instruction file. R
 - If a project and your user config define the same name, the project wins.
 - `hikma sync` restores skills in a custom folder only while the agent is defined in config. `hikma skill install --force` and `hikma sync --force` refuse to replace an existing folder that has no `SKILL.md`, so a custom agent can never make Hikma delete project code.
 
-Custom agents are set by editing the config file for now; `hikma config set` cannot edit them. You select one by name like any other agent: `hikma config set agent acme` or `hikma config set agents claude,acme`.
+`hikma config set` cannot edit definitions; use `add-agent` and `remove-agent`, or edit the file. You select one by name like any other agent: `hikma config set agent acme` or `hikma config set agents claude,acme`.
 
 ## The Agent Skills format
 
