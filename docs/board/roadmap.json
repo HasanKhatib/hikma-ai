@@ -1243,7 +1243,7 @@
             {
               "id": "E4.3-T3",
               "title": "Tests for init and install paths per layout, built-in and custom",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "test"
@@ -1264,7 +1264,7 @@
             {
               "id": "E4.3-T5",
               "title": "Use the resolved layout set in ResolveTargets, init, install, update, sync, and doctor; dedupe shared folders; sync's lock validation accepts configured layouts; refuse to replace an existing folder that is not a tracked or SKILL.md skill unless --force",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature"
@@ -1274,7 +1274,7 @@
             {
               "id": "E4.3-T6",
               "title": "Document custom layouts with an example custom agent and where to find the tool docs",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs"
@@ -1295,7 +1295,7 @@
             {
               "id": "E4.3-T8",
               "title": "Replace the static agent table lookups (ValidAgent, ParseAgents, SelectionFor, LayoutFor, config show/set, scaffold) with a resolved layout set of built-ins plus config layouts",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "refactor"
@@ -1305,7 +1305,7 @@
             {
               "id": "E4.3-T9",
               "title": "Custom instructionFile: init writes the shared AGENTS.md template under the custom filename and never overwrites an existing file",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "templates"

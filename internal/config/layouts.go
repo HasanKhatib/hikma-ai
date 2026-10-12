@@ -77,3 +77,139 @@ func checkLayoutPath(p string) error {
 	}
 	return nil
 }
+
+// LayoutSet is every layout available to a command: the built-in agents plus
+// the custom layouts from user and project config.
+type LayoutSet struct {
+	custom map[Agent]Layout
+	names  []Agent // custom names, sorted
+}
+
+// Layouts resolves the layout set. A project layout overrides a user layout
+// with the same name. Invalid layouts in either file are an error.
+func Layouts() (LayoutSet, error) {
+	user, err := Load()
+	if err != nil {
+		return LayoutSet{}, err
+	}
+	proj, err := LoadProject()
+	if err != nil {
+		return LayoutSet{}, err
+	}
+	set := LayoutSet{custom: map[Agent]Layout{}}
+	for _, src := range []map[string]CustomLayout{user.Layouts, proj.Layouts} {
+		for name, l := range src {
+			set.custom[Agent(name)] = customToLayout(l)
+		}
+	}
+	for a := range set.custom {
+		set.names = append(set.names, a)
+	}
+	sort.Slice(set.names, func(i, j int) bool { return set.names[i] < set.names[j] })
+	return set, nil
+}
+
+func customToLayout(l CustomLayout) Layout {
+	out := Layout{Description: "custom layout using " + l.SkillsDir, SkillsDir: l.SkillsDir}
+	if l.InstructionFile != "" {
+		out.InstructionFiles = []string{l.InstructionFile}
+	}
+	return out
+}
+
+// Valid reports whether a is a built-in agent or a configured layout.
+func (s LayoutSet) Valid(a Agent) bool {
+	if ValidAgent(a) {
+		return true
+	}
+	_, ok := s.custom[a]
+	return ok
+}
+
+// Layout returns the layout for a, which must be valid.
+func (s LayoutSet) Layout(a Agent) Layout {
+	if l, ok := s.custom[a]; ok {
+		return l
+	}
+	return LayoutFor(a)
+}
+
+// Selection builds the selection for a valid agent.
+func (s LayoutSet) Selection(a Agent) Selection { return Selection{Agent: a, Layout: s.Layout(a)} }
+
+// Names lists built-in agents in display order, then custom layouts by name.
+func (s LayoutSet) Names() []Agent {
+	return append(append([]Agent{}, ValidAgents...), s.names...)
+}
+
+// SkillsDirs returns every skills folder in the set.
+func (s LayoutSet) SkillsDirs() map[string]bool {
+	dirs := map[string]bool{}
+	for _, a := range s.Names() {
+		dirs[s.Layout(a).SkillsDir] = true
+	}
+	return dirs
+}
+
+// InstructionFiles returns the de-duplicated instruction files for the agents.
+func (s LayoutSet) InstructionFiles(agents []Agent) []string {
+	var files []string
+	seen := map[string]bool{}
+	for _, a := range agents {
+		for _, f := range s.Layout(a).InstructionFiles {
+			if !seen[f] {
+				seen[f] = true
+				files = append(files, f)
+			}
+		}
+	}
+	return files
+}
+
+func (s LayoutSet) list() string {
+	names := make([]string, 0, len(s.names)+len(ValidAgents))
+	for _, a := range s.Names() {
+		names = append(names, string(a))
+	}
+	return strings.Join(names, ", ")
+}
+
+// Parse splits a comma-separated agent list and validates every entry.
+func (s LayoutSet) Parse(value string) ([]Agent, error) {
+	var agents []Agent
+	seen := map[Agent]bool{}
+	for _, part := range strings.Split(value, ",") {
+		part = strings.TrimSpace(part)
+		if part == "" {
+			continue
+		}
+		a := Agent(part)
+		if !s.Valid(a) {
+			return nil, fmt.Errorf("unsupported agent %q - supported values: %s", part, s.list())
+		}
+		if !seen[a] {
+			seen[a] = true
+			agents = append(agents, a)
+		}
+	}
+	if len(agents) == 0 {
+		return nil, fmt.Errorf("no agents given - supported values: %s", s.list())
+	}
+	return agents, nil
+}
+
+// UniqueByDir keeps the first selection for each skills directory, since
+// several agents share .agents/skills.
+func (s LayoutSet) UniqueByDir(agents []Agent) []Selection {
+	var out []Selection
+	seen := map[string]bool{}
+	for _, a := range agents {
+		sel := s.Selection(a)
+		if seen[sel.Layout.SkillsDir] {
+			continue
+		}
+		seen[sel.Layout.SkillsDir] = true
+		out = append(out, sel)
+	}
+	return out
+}

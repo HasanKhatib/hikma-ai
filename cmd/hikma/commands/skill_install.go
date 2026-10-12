@@ -348,6 +348,9 @@ func installSkill(out io.Writer, src source.Source, co source.Checkout, skill so
 			ui.UserError("%s is already installed at %s/\n  use --force to reinstall", skill.Name, dir)
 			return fmt.Errorf("already installed")
 		}
+		if err := requireSkillFolder(dir); err != nil {
+			return err
+		}
 	}
 	fmt.Fprintf(out, "Installing %s from %s...\n", skill.Name, src.Display)
 	for _, t := range targets {
@@ -380,6 +383,19 @@ func recordInstall(dir, name string, src source.Source, ref, commit string) erro
 	}
 	lf.Skills[lockKey(dir)] = lock.Entry{Name: name, Source: src.Raw, Ref: ref, Commit: commit, Files: files}
 	return lock.Save(".", lf)
+}
+
+// requireSkillFolder refuses to replace an existing folder that holds no
+// SKILL.md. Layouts and the lockfile are committed, so a layout pointing at a
+// source folder must not let --force delete it as if it were a skill.
+func requireSkillFolder(dir string) error {
+	if !dirExists(dir) {
+		return nil
+	}
+	if _, err := os.Stat(filepath.Join(dir, "SKILL.md")); err != nil {
+		return fmt.Errorf("refusing to replace %s/: it is not a skill folder (no SKILL.md); move or delete it first", filepath.ToSlash(dir))
+	}
+	return nil
 }
 
 // replaceDir fills a staging directory next to targetDir, then swaps it in.

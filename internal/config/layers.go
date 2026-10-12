@@ -189,8 +189,12 @@ func validateKey(key string) error {
 func validateValue(key, value string) error {
 	switch key {
 	case KeyAgent:
-		if !ValidAgent(Agent(value)) {
-			return fmt.Errorf("unsupported agent %q - supported values: %s", value, agentList())
+		set, err := Layouts()
+		if err != nil {
+			return err
+		}
+		if !set.Valid(Agent(value)) {
+			return fmt.Errorf("unsupported agent %q - supported values: %s", value, set.list())
 		}
 	case KeyAgents:
 		if _, err := ParseAgents(value); err != nil {

@@ -70,44 +70,14 @@ func agentList() string {
 	return strings.Join(names, ", ")
 }
 
-// ParseAgents splits a comma-separated agent list and validates every entry.
+// ParseAgents splits a comma-separated agent list and validates every entry
+// against the built-in agents and the configured layouts.
 func ParseAgents(value string) ([]Agent, error) {
-	var agents []Agent
-	seen := map[Agent]bool{}
-	for _, part := range strings.Split(value, ",") {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-		a := Agent(part)
-		if !ValidAgent(a) {
-			return nil, fmt.Errorf("unsupported agent %q - supported values: %s", part, agentList())
-		}
-		if !seen[a] {
-			seen[a] = true
-			agents = append(agents, a)
-		}
+	set, err := Layouts()
+	if err != nil {
+		return nil, err
 	}
-	if len(agents) == 0 {
-		return nil, fmt.Errorf("no agents given - supported values: %s", agentList())
-	}
-	return agents, nil
-}
-
-// uniqueByDir keeps the first selection for each skills directory, since
-// several agents share .agents/skills.
-func uniqueByDir(agents []Agent) []Selection {
-	var out []Selection
-	seen := map[string]bool{}
-	for _, a := range agents {
-		sel := SelectionFor(a)
-		if seen[sel.Layout.SkillsDir] {
-			continue
-		}
-		seen[sel.Layout.SkillsDir] = true
-		out = append(out, sel)
-	}
-	return out
+	return set.Parse(value)
 }
 
 // ResolveTargets returns every agent selection a command should act on, one
@@ -115,49 +85,38 @@ func uniqueByDir(agents []Agent) []Selection {
 // comma-separated list), HIKMA_AGENT, the `agents` list from project or user
 // config, then the single `agent` setting.
 func ResolveTargets(flagAgent string) ([]Selection, error) {
+	set, err := Layouts()
+	if err != nil {
+		return nil, err
+	}
 	if flagAgent != "" {
-		agents, err := ParseAgents(flagAgent)
+		agents, err := set.Parse(flagAgent)
 		if err != nil {
 			return nil, err
 		}
-		return uniqueByDir(agents), nil
+		return set.UniqueByDir(agents), nil
 	}
 	if env := envValue(KeyAgent); env != "" {
-		agents, err := ParseAgents(env)
+		agents, err := set.Parse(env)
 		if err != nil {
 			return nil, err
 		}
-		return uniqueByDir(agents), nil
+		return set.UniqueByDir(agents), nil
 	}
 	list, err := Lookup(KeyAgents)
 	if err != nil {
 		return nil, err
 	}
 	if list.Value != "" {
-		agents, err := ParseAgents(list.Value)
+		agents, err := set.Parse(list.Value)
 		if err != nil {
 			return nil, fmt.Errorf("%w (from %s config; run 'hikma config set agents <list>')", err, list.Source)
 		}
-		return uniqueByDir(agents), nil
+		return set.UniqueByDir(agents), nil
 	}
 	sel, err := ResolveSelection("")
 	if err != nil {
 		return nil, err
 	}
 	return []Selection{sel}, nil
-}
-
-// InstructionFiles returns the de-duplicated instruction files for the given agents.
-func InstructionFiles(agents []Agent) []string {
-	var files []string
-	seen := map[string]bool{}
-	for _, a := range agents {
-		for _, f := range LayoutFor(a).InstructionFiles {
-			if !seen[f] {
-				seen[f] = true
-				files = append(files, f)
-			}
-		}
-	}
-	return files
 }

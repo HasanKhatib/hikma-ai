@@ -125,6 +125,10 @@ or set for CI via the HIKMA_AGENT environment variable.`,
 // runConfigAgentSet handles: hikma config agent <value>
 func runConfigAgentSet(cmd *cobra.Command, val string) error {
 	a := config.Agent(val)
+	set, err := config.Layouts()
+	if err != nil {
+		return err
+	}
 	c, err := config.ConfigForAgent(a)
 	if err != nil {
 		return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
@@ -133,25 +137,29 @@ func runConfigAgentSet(cmd *cobra.Command, val string) error {
 		return err
 	}
 	fmt.Fprintf(cmd.OutOrStdout(), "Active agent set to: %s\n", a)
-	fmt.Fprintf(cmd.OutOrStdout(), "Skill path: %s\n", config.LayoutFor(a).SkillsDir)
-	fmt.Fprintf(cmd.OutOrStdout(), "Scaffold output: %s\n", strings.Join(config.LayoutFor(a).InstructionFiles, ", "))
+	fmt.Fprintf(cmd.OutOrStdout(), "Skill path: %s\n", set.Layout(a).SkillsDir)
+	fmt.Fprintf(cmd.OutOrStdout(), "Scaffold output: %s\n", strings.Join(set.Layout(a).InstructionFiles, ", "))
 	return nil
 }
 
 // runConfigAgentInteractive handles: hikma config agent (no argument)
 func runConfigAgentInteractive(cmd *cobra.Command) error {
+	set, err := config.Layouts()
+	if err != nil {
+		return err
+	}
 	selection, err := config.ResolveSelection("")
 	if err != nil {
 		selection = config.SelectionFor(config.AgentCopilot)
 	}
 
 	labelFor := func(a config.Agent) string {
-		return fmt.Sprintf("%s - %s", a, config.LayoutFor(a).Description)
+		return fmt.Sprintf("%s - %s", a, set.Layout(a).Description)
 	}
 	var options []string
 	labelToAgent := map[string]config.Agent{}
 	defaultLabel := labelFor(config.AgentCopilot)
-	for _, a := range config.ValidAgents {
+	for _, a := range set.Names() {
 		options = append(options, labelFor(a))
 		labelToAgent[labelFor(a)] = a
 		if a == selection.Agent {
@@ -178,8 +186,8 @@ func runConfigAgentInteractive(cmd *cobra.Command) error {
 		return err
 	}
 	fmt.Fprintf(cmd.OutOrStdout(), "Active agent set to: %s\n", chosen)
-	fmt.Fprintf(cmd.OutOrStdout(), "Skill path: %s\n", config.LayoutFor(chosen).SkillsDir)
-	fmt.Fprintf(cmd.OutOrStdout(), "Scaffold output: %s\n", strings.Join(config.LayoutFor(chosen).InstructionFiles, ", "))
+	fmt.Fprintf(cmd.OutOrStdout(), "Skill path: %s\n", set.Layout(chosen).SkillsDir)
+	fmt.Fprintf(cmd.OutOrStdout(), "Scaffold output: %s\n", strings.Join(set.Layout(chosen).InstructionFiles, ", "))
 	return nil
 }
 
