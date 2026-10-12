@@ -1150,7 +1150,7 @@
             },
             {
               "id": "E4.2-T6",
-              "title": "Warn (never block) when a skill name exists at both scopes: on install, in list, and in doctor; Claude Code runs the global copy, other agents do not document a winner",
+              "title": "Warn (never block) when a skill name exists at both scopes: on install, in list, and in doctor; the Claude Code slash command runs the global copy, other agents do not document a winner",
               "status": "done",
               "assignee": "ai+verify",
               "labels": [

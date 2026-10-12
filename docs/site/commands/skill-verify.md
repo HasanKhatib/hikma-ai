@@ -21,6 +21,13 @@ $ hikma skill verify
 
 A skill whose folder is missing is reported too; [`hikma sync`](/commands/sync) restores it.
 
+## Options
+
+| Flag | Description |
+|---|---|
+| `--agent <list>` | Limit to these agents' folders |
+| `-g`, `--global` | Check your home directory against `~/.hikma/lock.json`. See [Global installs](/guides/global) |
+
 ## Verify, diff, or sync
 
 | You want to | Use |

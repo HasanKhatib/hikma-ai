@@ -186,7 +186,7 @@ func installedNames(s scope) map[string]string {
 
 // shadowWarnings returns one warning per name that is installed at both scopes.
 // It never blocks: which copy an agent loads differs by agent and is mostly
-// undocumented (Claude Code runs the global copy).
+// undocumented (the Claude Code slash command runs the global copy).
 func (s scope) shadowWarnings(names []string) []string {
 	o, ok := s.otherScope()
 	if !ok {
@@ -201,7 +201,7 @@ func (s scope) shadowWarnings(names []string) []string {
 			continue
 		}
 		seen[n] = true
-		out = append(out, fmt.Sprintf("warning: %q is also installed at %s scope (%s). Claude Code runs the global copy; other agents do not document which copy wins", n, o.label(), o.path(p)))
+		out = append(out, fmt.Sprintf("warning: %q is also installed at %s scope (%s). the Claude Code slash command runs the global copy; other agents differ or do not document which copy wins", n, o.label(), o.path(p)))
 	}
 	return out
 }

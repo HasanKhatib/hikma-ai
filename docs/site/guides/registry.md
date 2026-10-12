@@ -66,9 +66,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: HasanKhatib/hikma-ai@v0.2.0
+      - uses: HasanKhatib/hikma-ai@v0.3.0
         with:
-          version: v0.2.0
+          version: v0.3.0
 ```
 
 | Input | Default | Description |
