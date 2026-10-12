@@ -57,6 +57,9 @@ jobs:
         run: shellcheck scripts/*.sh
       - name: install script against a fake release
         run: bash scripts/test-install.sh
+      - name: Homebrew formula rendering
+        if: runner.os != 'Windows'
+        run: bash scripts/test-formula.sh
 
   release-dry-run:
     runs-on: ubuntu-latest
@@ -70,7 +73,7 @@ jobs:
       - uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
-          version: latest
+          version: "~> v2"
           args: release --snapshot --clean
 
   docs-build:

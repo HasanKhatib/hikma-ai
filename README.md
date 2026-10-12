@@ -168,7 +168,7 @@ npx agentkan validate docs/board
 
 ## Release
 
-Releases are tag-based. Pushing a `v*` tag runs GoReleaser, publishes binaries to GitHub Releases, and updates the Homebrew cask in `HasanKhatib/homebrew-tap` (using the `HOMEBREW_TAP_DEPLOY_KEY` repo secret, a write-enabled deploy key on the tap). Pre-release tags such as `v0.2.0-rc.1` do not update the tap.
+Releases are tag-based. Pushing a `v*` tag runs GoReleaser, publishes binaries to GitHub Releases, attests the archives and `checksums.txt`, and writes the Homebrew formula (`scripts/render-formula.sh`) into `HasanKhatib/homebrew-tap` (using the `HOMEBREW_TAP_DEPLOY_KEY` repo secret, a write-enabled deploy key on the tap). Pre-release tags such as `v0.3.0-rc.1` build and attest but do not update the tap.
 
 ```bash
 git tag v0.2.0

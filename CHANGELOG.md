@@ -9,6 +9,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - `hikma skill update` asks before applying an update that changes `scripts/`. Without a terminal it refuses until you pass `--yes`.
 
 ### Added
+- Release archives and `checksums.txt` carry GitHub build attestations. `scripts/install.sh` verifies them with `gh` for v0.3.0 and later (it says when it skips, and `HIKMA_REQUIRE_ATTESTATION=1` makes a skip a failure).
+- Homebrew is published as a formula written by the release workflow, so installs need no quarantine workaround. Existing cask users run `brew uninstall --cask hikma && brew install HasanKhatib/tap/hikma`.
 - Custom agents: define an agent under `customAgents` in config (`skillsDir`, optional `instructionFile`) and use it with `init`, `skill install`, `update`, and `sync`. Paths are validated when the config loads.
 - `hikma config add-agent <name>` defines a custom agent with y/n prompts that show the config file, or with flags for scripts; `hikma config remove-agent <name>` removes it and its references. `hikma config list` shows custom agents.
 - A warning when an install writes a skill to two folders that one selected agent reads (Copilot or OpenCode together with Claude). The install proceeds.

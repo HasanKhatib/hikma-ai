@@ -46,6 +46,51 @@ echo "$out" | grep -q "Checksum verified" || { echo "FAIL: checksum was not veri
 [ -x "$DEST/$BIN" ] || { echo "FAIL: binary not installed"; exit 1; }
 "$DEST/$BIN" --version | grep -q "9.9.9" || { echo "FAIL: wrong version"; exit 1; }
 
+echo "== attestation: skipped for a custom download base"
+echo "$out" | grep -q "Skipped the attestation check (custom download base)" || { echo "FAIL: expected the custom-base note"; exit 1; }
+
+# A fake gh: GH_MODE=ok verifies, bad fails verification, out is signed out.
+mkdir -p "$WORK/fakebin"
+cat > "$WORK/fakebin/gh" <<'GH'
+#!/usr/bin/env bash
+case "$1" in
+  auth) [ "${GH_MODE:-ok}" != out ] ;;
+  attestation) [ "${GH_MODE:-ok}" = ok ] ;;
+  *) exit 1 ;;
+esac
+GH
+chmod +x "$WORK/fakebin/gh"
+attest() { # mode version dest [extra env...]
+  mode="$1"; ver="$2"; dest="$3"; shift 3
+  env GH_MODE="$mode" PATH="$WORK/fakebin:$PATH" HIKMA_DOWNLOAD_BASE="$BASE" HIKMA_VERIFY_ATTESTATION=1 \
+    HIKMA_VERSION="$ver" HIKMA_INSTALL_DIR="$dest" "$@" bash "$ROOT/scripts/install.sh" 2>&1
+}
+
+echo "== attestation: releases before v0.3.0 are checksum only"
+o="$(attest bad v0.2.0 "$WORK/bin-old")"
+echo "$o" | grep -q "predates build attestations" || { echo "FAIL: old release should skip"; echo "$o"; exit 1; }
+[ -x "$WORK/bin-old/$BIN" ] || { echo "FAIL: old release was not installed"; exit 1; }
+
+echo "== attestation: verified"
+o="$(attest ok v0.3.0 "$WORK/bin-ok")"
+echo "$o" | grep -q "Attestation verified" || { echo "FAIL: expected a verified attestation"; echo "$o"; exit 1; }
+[ -x "$WORK/bin-ok/$BIN" ] || { echo "FAIL: not installed after a good attestation"; exit 1; }
+
+echo "== attestation: a pre-release of v0.3.0 is checked too"
+o="$(attest ok v0.3.0-rc.1 "$WORK/bin-rc")"
+echo "$o" | grep -q "Attestation verified" || { echo "FAIL: rc should be verified"; echo "$o"; exit 1; }
+
+echo "== attestation: a failed check installs nothing"
+if o="$(attest bad v0.3.0 "$WORK/bin-bad")"; then echo "FAIL: accepted a bad attestation"; echo "$o"; exit 1; fi
+echo "$o" | grep -q "could not be verified" || { echo "FAIL: no failure message"; echo "$o"; exit 1; }
+[ ! -e "$WORK/bin-bad/$BIN" ] || { echo "FAIL: installed after a failed attestation"; exit 1; }
+
+echo "== attestation: signed-out gh skips, unless required"
+o="$(attest out v0.3.0 "$WORK/bin-out")"
+echo "$o" | grep -q "Skipped the attestation check (needs the gh CLI" || { echo "FAIL: expected a skip note"; echo "$o"; exit 1; }
+if o="$(attest out v0.3.0 "$WORK/bin-req" HIKMA_REQUIRE_ATTESTATION=1)"; then echo "FAIL: REQUIRE did not fail"; echo "$o"; exit 1; fi
+[ ! -e "$WORK/bin-req/$BIN" ] || { echo "FAIL: installed although attestation was required"; exit 1; }
+
 echo "== a tampered download is rejected"
 printf 'tampered' >> "$WORK/release/$ARCHIVE"
 if HIKMA_DOWNLOAD_BASE="$BASE" HIKMA_INSTALL_DIR="$WORK/bin2" bash "$ROOT/scripts/install.sh" >"$WORK/tamper.log" 2>&1; then
