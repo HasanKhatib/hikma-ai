@@ -7,7 +7,7 @@ export default defineConfig({
   lang: "en-US",
   title: "Hikma",
   description:
-    "Set up repositories for AI agents and manage reusable skills through a registry you own.",
+    "Skills follow you. Define your source, publish to a registry repo you own, and install into any agent with one CLI.",
   base,
   cleanUrls: true,
   lastUpdated: true,

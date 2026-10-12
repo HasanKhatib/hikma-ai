@@ -122,7 +122,7 @@ func TestListInstalledShowsStatusesAndUntrackedSkills(t *testing.T) {
 	}
 	write(t, filepath.Join(proj, ".agents", "skills", "manual", "SKILL.md"), "---\nname: manual\ndescription: d\n---\n")
 
-	rows, err := listInstalledSkills()
+	rows, err := listInstalledSkills(projectScope())
 	if err != nil {
 		t.Fatal(err)
 	}

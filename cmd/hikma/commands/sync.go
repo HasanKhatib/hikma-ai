@@ -103,7 +103,8 @@ func sameFiles(a, b map[string]string) bool {
 
 func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 	out := cmd.OutOrStdout()
-	lf, err := lock.Load(".")
+	sc := projectScope()
+	lf, err := sc.loadLock()
 	if err != nil {
 		return err
 	}
@@ -126,8 +127,8 @@ func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 			continue
 		}
 		it := syncItem{key: key, entry: e, state: syncRestore}
-		if dirExists(filepath.FromSlash(key)) {
-			current, err := source.HashDir(filepath.FromSlash(key))
+		if dirExists(sc.path(key)) {
+			current, err := source.HashDir(sc.path(key))
 			if err != nil {
 				return err
 			}
@@ -195,7 +196,7 @@ func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 		}
 	}()
 	for _, it := range work {
-		if err := restoreItem(out, it, checkouts); err != nil {
+		if err := restoreItem(sc, out, it, checkouts); err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "  failed   %s: %v\n", it.key, err)
 			failures++
 			continue
@@ -267,7 +268,7 @@ func confirmSync(out io.Writer, work []syncItem, yes bool) error {
 
 // restoreItem installs one lockfile entry from its recorded source and commit,
 // refusing content that does not match the recorded hashes.
-func restoreItem(out io.Writer, it syncItem, checkouts map[string]*openCheckout) error {
+func restoreItem(sc scope, out io.Writer, it syncItem, checkouts map[string]*openCheckout) error {
 	e := it.entry
 	src, err := source.Parse(e.Source)
 	if err != nil {
@@ -307,22 +308,22 @@ func restoreItem(out io.Writer, it syncItem, checkouts map[string]*openCheckout)
 	if added, modified, removed := source.DiffFiles(e.Files, incoming); len(added)+len(modified)+len(removed) > 0 {
 		return fmt.Errorf("files do not match .hikma/lock.json (%s); refusing to install", describeDrift(added, modified, removed))
 	}
-	if err := requireSkillFolder(filepath.FromSlash(it.key)); err != nil {
+	if err := requireSkillFolder(sc.path(it.key)); err != nil {
 		return err
 	}
-	_, err = replaceDir(filepath.FromSlash(it.key), func(dst string) ([]string, error) {
+	_, err = replaceDir(sc.path(it.key), func(dst string) ([]string, error) {
 		return source.CopyDir(srcDir, dst)
 	})
 	if err != nil {
 		return err
 	}
 	// Make sure the installed files really are what the lockfile says.
-	installed, err := source.HashDir(filepath.FromSlash(it.key))
+	installed, err := source.HashDir(sc.path(it.key))
 	if err != nil {
 		return err
 	}
 	if !sameFiles(e.Files, installed) {
-		_ = os.RemoveAll(filepath.FromSlash(it.key))
+		_ = os.RemoveAll(sc.path(it.key))
 		return fmt.Errorf("installed files do not match .hikma/lock.json")
 	}
 	return nil

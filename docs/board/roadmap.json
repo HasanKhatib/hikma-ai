@@ -1131,7 +1131,7 @@
             {
               "id": "E4.2-T4",
               "title": "Scope refactor first: pass a root (project . or $HOME) through every lockfile load and skill path; no behavior change",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "refactor"
