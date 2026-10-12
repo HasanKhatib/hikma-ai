@@ -106,7 +106,7 @@ docs/
 docs/board/
 .github/workflows/
 README.md
-CLAUDE.md
+AGENTS.md
 go.mod
 ```
 
