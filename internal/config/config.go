@@ -15,6 +15,8 @@ type Config struct {
 	Naming   string `json:"naming,omitempty"`
 	// Agents lists every agent a project installs skills for.
 	Agents []string `json:"agents,omitempty"`
+	// CustomAgents defines user-defined agents, keyed by name.
+	CustomAgents map[string]CustomAgent `json:"customAgents,omitempty"`
 }
 
 // Registry is the normalized GitHub registry identity.
@@ -68,8 +70,12 @@ func Save(c Config) error {
 }
 
 func ConfigForAgent(a Agent) (Config, error) {
-	if !ValidAgent(a) {
-		return Config{}, fmt.Errorf("unsupported agent %q - supported values: %s", a, agentList())
+	set, err := Layouts()
+	if err != nil {
+		return Config{}, err
+	}
+	if !set.Valid(a) {
+		return Config{}, fmt.Errorf("unsupported agent %q - supported values: %s", a, set.list())
 	}
 	c, err := Load()
 	if err != nil {
@@ -103,11 +109,15 @@ func ResolveSelection(flagAgent string) (Selection, error) {
 	if e.Source == SourceEnv {
 		return selectionFromAgent(e.Value)
 	}
-	a := Agent(e.Value)
-	if !ValidAgent(a) {
-		return Selection{}, fmt.Errorf("unsupported agent %q in %s config - supported values: %s\nrun 'hikma config set agent <value>' to reconfigure", a, e.Source, agentList())
+	set, err := Layouts()
+	if err != nil {
+		return Selection{}, err
 	}
-	return SelectionFor(a), nil
+	a := Agent(e.Value)
+	if !set.Valid(a) {
+		return Selection{}, fmt.Errorf("unsupported agent %q in %s config - supported values: %s\nrun 'hikma config set agent <value>' to reconfigure", a, e.Source, set.list())
+	}
+	return set.Selection(a), nil
 }
 
 // ResolveRegistry returns the effective registry using flag, env, project config, then user config.
@@ -143,9 +153,13 @@ func ParseRegistry(value string) (Registry, error) {
 }
 
 func selectionFromAgent(val string) (Selection, error) {
-	a := Agent(val)
-	if !ValidAgent(a) {
-		return Selection{}, fmt.Errorf("unsupported agent %q - supported values: %s", val, agentList())
+	set, err := Layouts()
+	if err != nil {
+		return Selection{}, err
 	}
-	return SelectionFor(a), nil
+	a := Agent(val)
+	if !set.Valid(a) {
+		return Selection{}, fmt.Errorf("unsupported agent %q - supported values: %s", val, set.list())
+	}
+	return set.Selection(a), nil
 }

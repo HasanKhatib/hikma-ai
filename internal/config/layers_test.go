@@ -228,7 +228,12 @@ func TestResolveTargetsFallsBackToSingleAgent(t *testing.T) {
 }
 
 func TestInstructionFilesAreDeduplicated(t *testing.T) {
-	got := config.InstructionFiles([]config.Agent{config.AgentClaude, config.AgentCodex})
+	isolate(t)
+	set, err := config.Layouts()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := set.InstructionFiles([]config.Agent{config.AgentClaude, config.AgentCodex})
 	if len(got) != 1 || got[0] != "AGENTS.md" {
 		t.Fatalf("files = %v", got)
 	}

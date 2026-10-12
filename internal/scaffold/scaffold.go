@@ -50,15 +50,19 @@ func Scaffold(opts Options) (Result, error) {
 	if len(opts.Agents) == 0 {
 		return result, fmt.Errorf("no agent selected")
 	}
+	set, err := config.Layouts()
+	if err != nil {
+		return result, err
+	}
 	for _, a := range opts.Agents {
-		if !config.ValidAgent(a) {
+		if !set.Valid(a) {
 			return result, fmt.Errorf("unsupported agent %q", a)
 		}
 	}
 
 	var skillPaths []string
 	seen := map[string]bool{}
-	for _, sel := range uniqueSelections(opts.Agents) {
+	for _, sel := range uniqueSelections(set, opts.Agents) {
 		if !seen[sel.Layout.SkillsDir] {
 			seen[sel.Layout.SkillsDir] = true
 			skillPaths = append(skillPaths, sel.Layout.SkillsDir)
@@ -79,25 +83,35 @@ func Scaffold(opts Options) (Result, error) {
 		SkillPaths:  "`" + strings.Join(skillPaths, "`, `") + "`",
 	}
 
-	for _, name := range config.InstructionFiles(opts.Agents) {
+	for _, name := range set.InstructionFiles(opts.Agents) {
 		dst := filepath.Join(opts.Path, name)
 		if opts.DryRun {
 			result.Created = append(result.Created, dst)
 			continue
 		}
-		if err := writeTemplateFile("templates/scaffold/"+name, dst, data, opts.Force, &result); err != nil {
+		if err := writeTemplateFile(instructionTemplate(name), dst, data, opts.Force, &result); err != nil {
 			return result, err
 		}
 	}
 	return result, nil
 }
 
-func uniqueSelections(agents []config.Agent) []config.Selection {
+func uniqueSelections(set config.LayoutSet, agents []config.Agent) []config.Selection {
 	sels := make([]config.Selection, len(agents))
 	for i, a := range agents {
-		sels[i] = config.SelectionFor(a)
+		sels[i] = set.Selection(a)
 	}
 	return sels
+}
+
+// instructionTemplate returns the embedded template for an instruction file.
+// A custom agent names a file with no template of its own, so it gets the
+// shared AGENTS.md content.
+func instructionTemplate(name string) string {
+	if _, err := fs.Stat(FS, "templates/scaffold/"+name); err == nil {
+		return "templates/scaffold/" + name
+	}
+	return "templates/scaffold/AGENTS.md"
 }
 
 // walkAndWrite recursively writes all files from srcRoot (in embed.FS) into dstRoot.
