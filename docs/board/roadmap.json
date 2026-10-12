@@ -1532,7 +1532,7 @@
           "id": "E5.2",
           "title": "Signed releases",
           "emoji": "S",
-          "status": "backlog",
+          "status": "active",
           "assignee": "ai+verify",
           "labels": [
             "release",
@@ -1540,14 +1540,14 @@
           ],
           "planned": null,
           "order": 2,
-          "goal": "Sign release artifacts so downloads can be verified.",
-          "exit": "Release archives carry signatures or attestations and the install script verifies them.",
+          "goal": "Sign release artifacts so downloads can be verified, and ship Homebrew as a formula so no notarization is needed.",
+          "exit": "Release archives carry build attestations, install.sh verifies them, and the Homebrew formula installs without a quarantine workaround.",
           "body": "epics/E5.2.md",
           "tasks": [
             {
               "id": "E5.2-T1",
-              "title": "Add GitHub artifact attestations or cosign signatures to the GoReleaser workflow",
-              "status": "todo",
+              "title": "Attest release archives and checksums.txt with actions/attest-build-provenance in the release workflow (written; proven by the rc in T5)",
+              "status": "doing",
               "assignee": "ai+verify",
               "labels": [
                 "release",
@@ -1557,8 +1557,8 @@
             },
             {
               "id": "E5.2-T2",
-              "title": "Have scripts/install.sh verify the checksum and signature",
-              "status": "todo",
+              "title": "scripts/install.sh verifies the attestation with gh for v0.3.0 and later, and says when it skips (written and tested with a fake gh; proven by the rc in T5)",
+              "status": "doing",
               "assignee": "ai+verify",
               "labels": [
                 "install",
@@ -1568,12 +1568,45 @@
             },
             {
               "id": "E5.2-T3",
-              "title": "Decide on macOS notarization and obtain an Apple developer account if yes",
+              "title": "Optional: notarize the macOS binaries so browser downloads run without clearing quarantine (Apple account is available; secrets and conditional GoReleaser notarize step)",
               "status": "todo",
               "assignee": "me",
               "labels": [
                 "release",
-                "decision"
+                "optional"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E5.2-T4",
+              "title": "Publish Homebrew as a formula: scripts/render-formula.sh and a workflow step that replaces Casks/hikma.rb in the tap; drop the GoReleaser cask; pin GoReleaser to v2",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "release",
+                "homebrew"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E5.2-T5",
+              "title": "Cut v0.3.0-rc.1: confirm attestations verify with gh attestation verify, install.sh verifies them, and the rendered formula installs on macOS (render from the rc checksums into a local tap)",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "release",
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E5.2-T6",
+              "title": "At the v0.3.0 tag: document verification (README, getting-started), the formula switch for existing cask users, and remove the cask from the tap after the first formula release",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "docs",
+                "release"
               ],
               "planned": null
             }

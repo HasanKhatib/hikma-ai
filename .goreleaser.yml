@@ -44,31 +44,8 @@ release:
   draft: false
   prerelease: auto
 
-homebrew_casks:
-  - name: hikma
-    repository:
-      owner: HasanKhatib
-      name: homebrew-tap
-      branch: main
-      # A write-enabled deploy key on the tap repo; the workflow writes the key to a file.
-      git:
-        url: git@github.com:HasanKhatib/homebrew-tap.git
-        private_key: '{{ index .Env "HOMEBREW_TAP_KEY_PATH" }}'
-    directory: Casks
-    homepage: https://github.com/HasanKhatib/hikma-ai
-    description: Install, create, and publish reusable AI-agent skills from any repo
-    license: MIT
-    binaries:
-      - hikma
-    # The binary is not notarized yet; clear the download quarantine flag after install.
-    hooks:
-      post:
-        install: |
-          if OS.mac?
-            system_command "/usr/bin/xattr", args: ["-dr", "com.apple.quarantine", "#{staged_path}/hikma"], must_succeed: false
-          end
-    # Pre-releases (for example v0.1.0-rc.1) must not update the tap.
-    skip_upload: auto
+# The Homebrew formula is written by the release workflow (scripts/render-formula.sh),
+# because GoReleaser's formula publisher is deprecated and its cask needs a notarized binary.
 
 changelog:
   use: github

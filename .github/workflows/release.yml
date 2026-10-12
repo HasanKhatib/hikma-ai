@@ -7,6 +7,8 @@ on:
 
 permissions:
   contents: write
+  id-token: write      # sign build attestations
+  attestations: write
 
 jobs:
   goreleaser:
@@ -34,9 +36,36 @@ jobs:
       - uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
-          version: latest
+          version: "~> v2"
           args: release --clean --release-notes=${{ runner.temp }}/notes.md
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Build the pushed tag even when another tag (such as an rc) points at the same commit.
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
+      - name: Attest the release artifacts
+        uses: actions/attest-build-provenance@v4
+        with:
+          subject-path: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/checksums.txt
+      - name: Publish the Homebrew formula
+        # Pre-releases (for example v0.3.0-rc.1) must not update the tap.
+        if: ${{ !contains(github.ref_name, '-') }}
+        run: |
+          export GIT_SSH_COMMAND="ssh -i $HOMEBREW_TAP_KEY_PATH -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
+          git clone --depth 1 git@github.com:HasanKhatib/homebrew-tap.git "$RUNNER_TEMP/tap"
+          cd "$RUNNER_TEMP/tap"
+          mkdir -p Formula
+          "$GITHUB_WORKSPACE/scripts/render-formula.sh" "$GITHUB_REF_NAME" "$GITHUB_WORKSPACE/dist/checksums.txt" > Formula/hikma.rb
+          # A cask and a formula with one name make 'brew install hikma' ambiguous.
+          git rm -q --ignore-unmatch Casks/hikma.rb
+          git add Formula/hikma.rb
+          if git diff --cached --quiet; then
+            echo "Tap is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -q -m "hikma ${GITHUB_REF_NAME#v}"
+          git push
