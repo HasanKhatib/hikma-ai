@@ -1,11 +1,11 @@
 {
   "updated": "2026-10-12",
-  "next": "E5.2-T5",
-  "note": "Skill diff (E4.1) is built. Verifiable installs (E5.1) are built but the epic stays active until the parked checksum manifest (E5.1-T3) is decided. Custom agents (E4.3) are built, including hikma config add-agent and the duplicate-folder warning; the epic is closed (not archived) at the human's request on 2026-10-12. Order now: E5.2 (release workflow written; next is the v0.3.0-rc.1 check), tag v0.3, then the scope refactor (E4.2-T4) and E4.2. Decided 2026-10-12: customAgents key for custom agents (E4.3), then user-scope installs via --global (E4.2, v0.4) with a lockfile at ~/.hikma/lock.json; duplicates warn and never block. Human decision pending: E1.3-T4 (history; the 2026-10-09 scan found nothing, so keep history) and E5.2-T3 (notarization).",
+  "next": "E5.2-T6",
+  "note": "Skill diff (E4.1) is built. Verifiable installs (E5.1) are built but the epic stays active until the parked checksum manifest (E5.1-T3) is decided. Custom agents (E4.3) are built, including hikma config add-agent and the duplicate-folder warning; the epic is closed (not archived) at the human's request on 2026-10-12. v0.3.0-rc.1 (2026-10-12) proved the attestations, install.sh verification, and the rendered formula; the tap push is the only step an rc cannot test. Order now: E5.2-T6 user docs, tag v0.3.0, then the scope refactor (E4.2-T4) and E4.2. Decided 2026-10-12: customAgents key for custom agents (E4.3), then user-scope installs via --global (E4.2, v0.4) with a lockfile at ~/.hikma/lock.json; duplicates warn and never block. Human decision pending: E1.3-T4 (history; the 2026-10-09 scan found nothing, so keep history) and E5.2-T3 (notarization).",
   "criticalPath": [],
   "risks": [
     "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries.",
-    "The release workflow changes (attestations, signer-workflow pin, tap push) are unproven until a real tag runs; cut v0.3.0-rc.1 first (E5.2-T5). The first stable formula release must delete Casks/hikma.rb from the tap.",
+    "The tap push in the release workflow is unproven until the first stable tag (the rc skips it); that release must delete Casks/hikma.rb from the tap and then be checked with brew install from the tap.",
     "Agents disagree on a skill that exists at both scopes and mostly do not document it (Claude Code: global wins; OpenCode: non-deterministic; Codex and Copilot: undefined). Docs must say documented, reported, or unknown, and never state a winner as fact beyond Claude Code.",
     "Tests for global installs must never touch the real home directory (E4.2-T8).",
     "Claude personal skills do not load in cloud or Cowork sessions, so global installs do not help in a Codespace; the global-install docs must say so up front (E4.2-T3)."
