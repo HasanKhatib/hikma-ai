@@ -26,6 +26,8 @@ With a source but no name, a terminal shows a picker. Without a terminal the ski
 | `--ref <ref>` | Branch, tag, or commit to install from. `--pin` is an alias, matching `gh skill` |
 | `--agent <list>` | Agents, comma-separated, overriding your configuration |
 | `--force` | Reinstall even if already installed |
+| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/global) |
+| `-y`, `--yes` | Skip the confirmation before changing your home directory |
 | `--registry <source>` | Registry for bare names, for this command |
 
 ## What happens

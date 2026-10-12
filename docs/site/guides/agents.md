@@ -63,7 +63,10 @@ All of these tools use the open [Agent Skills](https://agentskills.io/specificat
 
 Some agents add their own files next to `SKILL.md`, such as Codex's optional `agents/openai.yaml` for UI and invocation settings. Hikma copies and tracks these like any other file.
 
+## Your home directory
+
+`--global` installs into the same folders under your home directory (`~/.claude/skills`, `~/.agents/skills`). See [Global installs](/guides/global).
+
 ## Not covered
 
-- **User-level installs** (`~/.claude/skills`, `~/.agents/skills`). Use [`gh skill`](/guides/gh-skill) with `--scope user`.
 - **More built-in agents.** `gh skill` supports many more. Hikma has the four above built in; add others with a [custom agent](#custom-agents).

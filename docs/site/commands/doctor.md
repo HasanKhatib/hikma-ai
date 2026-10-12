@@ -24,5 +24,6 @@ All required checks passed.
 | `gh` is installed, signed in, and version 2 or newer | warning only. Needed for `skill push` and some private repositories. |
 | The agent configuration is valid | required |
 | A registry is configured | warning only. Not needed when you name a repository explicitly. |
+| A skill name is installed in both the project and your home directory | warning only. Agents differ on which copy they use; see [Global installs](/guides/global). |
 
 `doctor` exits non-zero when a required check fails.

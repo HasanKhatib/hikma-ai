@@ -1,7 +1,7 @@
 {
   "updated": "2026-10-12",
-  "next": "E4.2-T2",
-  "note": "v0.3.0 (Trust) is tagged: custom agents, attested releases, install verification, and the Homebrew formula. Next is v0.4 (user-scope installs, E4.2): the scope refactor (T4) is done, so --global (T2) is next. Decided 2026-10-12: keep git history, no notarization, no checksum manifest. Epics E1.3, E4.3, E5.1, E5.2 have all tasks done and wait for the human to close or archive them.",
+  "next": "E4.2-T9",
+  "note": "v0.3.0 (Trust) is tagged. v0.4 (user-scope installs, E4.2) is built: --global on install, update, remove, adopt, list, verify, diff, and sync, with the confirmation gate, symlink refusal, duplicate warnings, tests, and docs. Only E4.2-T9 is left: check by hand which copy wins when a name exists at both scopes on each agent you use, record it in docs/site/guides/global.md and E4.2.md, then the epic can close. Then v1.0 (E6.1, E6.2). Decided 2026-10-12: keep git history, no notarization, no checksum manifest.",
   "criticalPath": [],
   "risks": [
     "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries.",

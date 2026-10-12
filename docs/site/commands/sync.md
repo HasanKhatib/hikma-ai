@@ -3,7 +3,7 @@
 Restore every skill recorded in `.hikma/lock.json`.
 
 ```bash
-hikma sync [--yes] [--force] [--dry-run] [--frozen]
+hikma sync [--yes] [--force] [--dry-run] [--frozen] [--global]
 ```
 
 Use it on a fresh clone to get exactly the skills the repository was committed with, the way `npm ci` restores dependencies from a lockfile.
@@ -41,6 +41,7 @@ The lockfile comes from the repository you cloned, so `sync` treats it as untrus
 | Flag | Description |
 |---|---|
 | `-y`, `--yes` | Skip the confirmation prompt |
+| `-g`, `--global` | Restore your home directory's skills from `~/.hikma/lock.json`. See [Global installs](/guides/global) |
 | `--force` | Overwrite skills that have local changes |
 | `--dry-run` | Show the plan without changing anything |
 | `--frozen` | Fail on any drift instead of skipping it. For CI |
