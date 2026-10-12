@@ -3,7 +3,7 @@
 See what differs for an installed skill, without changing anything.
 
 ```bash
-hikma skill diff <name> [--patch] [--agent <list>]
+hikma skill diff <name> [--patch] [--agent <list>] [--global]
 ```
 
 The skill must be recorded in [`.hikma/lock.json`](/guides/lockfile). If `gh skill` installed it, run [`hikma skill adopt`](/commands/skill-adopt) first.
@@ -31,5 +31,6 @@ Upstream changes (owner/repo @ a91c2d7):
 |---|---|
 | `--patch` | Print the contents that differ (installed against upstream). Needs `git`. |
 | `--agent <list>` | Limit to these agents' folders |
+| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/global) |
 
 Nothing is written to your skill folders or the lockfile. Use it to review a script change before you run `hikma skill update`.

@@ -24,6 +24,8 @@ const (
 )
 
 type installedSkill struct {
+	Scope  string `json:"scope"`            // "project" or "global"
+	AlsoAt string `json:"alsoAt,omitempty"` // the other scope, when the same name is installed there too
 	Name   string `json:"name"`
 	Path   string `json:"path"`
 	Status string `json:"status"`
@@ -40,10 +42,14 @@ func listInstalledSkills(sc scope) ([]installedSkill, error) {
 	if err != nil {
 		return nil, err
 	}
+	scopeName := "project"
+	if sc.global {
+		scopeName = "global"
+	}
 	var rows []installedSkill
 	for _, key := range lf.Keys() {
 		e := lf.Skills[key]
-		row := installedSkill{Name: e.Name, Path: key, Source: e.Source, Ref: e.Ref, Commit: e.Commit, Status: stateMissing}
+		row := installedSkill{Scope: scopeName, Name: e.Name, Path: key, Source: e.Source, Ref: e.Ref, Commit: e.Commit, Status: stateMissing}
 		dir := sc.path(key)
 		if dirExists(dir) {
 			current, err := source.HashDir(dir)
@@ -79,7 +85,7 @@ func listInstalledSkills(sc scope) ([]installedSkill, error) {
 			if _, err := os.Stat(filepath.Join(sc.path(key), "SKILL.md")); err != nil {
 				continue
 			}
-			row := installedSkill{Name: e.Name(), Path: key, Status: stateUntracked}
+			row := installedSkill{Scope: scopeName, Name: e.Name(), Path: key, Status: stateUntracked}
 			if prov, ok := source.ReadProvenance(sc.path(key)); ok {
 				row.Origin = "gh skill"
 				row.Source = prov.Repo
@@ -91,10 +97,28 @@ func listInstalledSkills(sc scope) ([]installedSkill, error) {
 	return rows, nil
 }
 
-func listInstalled(cmd *cobra.Command, asJSON bool) error {
-	rows, err := listInstalledSkills(projectScope())
-	if err != nil {
-		return err
+func listInstalled(cmd *cobra.Command, asJSON, global bool) error {
+	var rows []installedSkill
+	if global {
+		gsc, err := globalScope()
+		if err != nil {
+			return err
+		}
+		if rows, err = listInstalledSkills(gsc); err != nil {
+			return err
+		}
+	} else {
+		var err error
+		if rows, err = listInstalledSkills(projectScope()); err != nil {
+			return err
+		}
+		// Global skills are shown beside the project's so a duplicate is visible.
+		// Reading them is harmless, so a missing or unreadable home is skipped.
+		if gsc, err := globalScope(); err == nil && !sameDir(".", gsc.root) {
+			if g, err := listInstalledSkills(gsc); err == nil {
+				rows = markDuplicates(append(rows, g...))
+			}
+		}
 	}
 	if asJSON {
 		if rows == nil {
@@ -106,27 +130,69 @@ func listInstalled(cmd *cobra.Command, asJSON bool) error {
 	return nil
 }
 
+// sameDir reports whether two paths are the same directory.
+func sameDir(a, b string) bool {
+	ai, err := os.Stat(a)
+	if err != nil {
+		return false
+	}
+	bi, err := os.Stat(b)
+	return err == nil && os.SameFile(ai, bi)
+}
+
+// markDuplicates sets AlsoAt on every row whose name is installed at both scopes.
+func markDuplicates(rows []installedSkill) []installedSkill {
+	scopes := map[string]map[string]bool{}
+	for _, r := range rows {
+		if scopes[r.Name] == nil {
+			scopes[r.Name] = map[string]bool{}
+		}
+		scopes[r.Name][r.Scope] = true
+	}
+	for i, r := range rows {
+		if len(scopes[r.Name]) < 2 {
+			continue
+		}
+		if r.Scope == "global" {
+			rows[i].AlsoAt = "project"
+		} else {
+			rows[i].AlsoAt = "global"
+		}
+	}
+	return rows
+}
+
 func printInstalledTable(w io.Writer, rows []installedSkill) {
 	if len(rows) == 0 {
-		fmt.Fprintln(w, "No skills installed in this repository.")
+		fmt.Fprintln(w, "No skills installed.")
 		return
 	}
-	fmt.Fprintf(w, "%-42s  %-10s  %s\n", "PATH", "STATUS", "SOURCE")
+	fmt.Fprintf(w, "%-8s  %-42s  %-10s  %s\n", "SCOPE", "PATH", "STATUS", "SOURCE")
 	for _, r := range rows {
 		src := r.Source
+		lockName := ".hikma/lock.json"
+		if r.Scope == "global" {
+			lockName = "~/.hikma/lock.json"
+		}
 		if r.Status == stateUntracked && r.Origin != "" {
 			src = fmt.Sprintf("installed by %s from %s; run: hikma skill adopt %s", r.Origin, r.Source, r.Name)
+			if r.Scope == "global" {
+				src += " --global"
+			}
 		} else if src != "" {
 			src += atCommit(lock.Entry{Commit: r.Commit, Ref: r.Ref})
 		} else {
-			src = "(not recorded in .hikma/lock.json)"
+			src = "(not recorded in " + lockName + ")"
 		}
-		fmt.Fprintf(w, "%-42s  %-10s  %s\n", r.Path, r.Status, src)
+		if r.AlsoAt != "" {
+			src += "  [also installed at " + r.AlsoAt + " scope]"
+		}
+		fmt.Fprintf(w, "%-8s  %-42s  %-10s  %s\n", r.Scope, r.Path, r.Status, src)
 	}
 }
 
 func newSkillRemoveCmd() *cobra.Command {
-	var force bool
+	var force, global, yes bool
 	var flagAgent string
 	cmd := &cobra.Command{
 		Use:   "remove <name>",
@@ -148,10 +214,28 @@ install'.`,
 			if err != nil {
 				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
 			}
-			sc := projectScope()
+			sc, err := scopeFor(global)
+			if err != nil {
+				return err
+			}
 			lf, err := sc.loadLock()
 			if err != nil {
 				return err
+			}
+
+			var cands []string
+			for _, t := range targets {
+				if k := sc.key(t, name); hasEntry(lf, k) || pathExists(sc.skillDir(t, name)) {
+					cands = append(cands, k)
+				}
+			}
+			if len(cands) > 0 {
+				if err := sc.guardWrite(cands...); err != nil {
+					return err
+				}
+				if err := sc.confirmWrite(cmd, yes, cands); err != nil {
+					return err
+				}
 			}
 
 			removed, blocked := 0, 0
@@ -217,6 +301,8 @@ install'.`,
 		},
 	}
 	cmd.Flags().BoolVar(&force, "force", false, "also remove untracked skills and skills with local changes")
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "use your home directory instead of this project (~/.hikma/lock.json)")
+	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "skip the confirmation before changing your home directory")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp

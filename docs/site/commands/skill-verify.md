@@ -3,7 +3,7 @@
 Check that installed skills still match the hashes in `.hikma/lock.json`.
 
 ```bash
-hikma skill verify [<name>] [--agent <list>]
+hikma skill verify [<name>] [--agent <list>] [--global]
 ```
 
 It re-hashes the installed files and compares them with the [lockfile](/guides/lockfile). It works offline, changes nothing, and exits non-zero when any skill differs, so it fits a CI check or a pre-commit hook. Without a name it checks every skill in the lockfile.

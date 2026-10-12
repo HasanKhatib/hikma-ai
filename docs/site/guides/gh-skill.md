@@ -30,4 +30,4 @@ Going the other way, a skill installed by Hikma carries no tracking in `SKILL.md
 
 ## What gh skill does that Hikma does not
 
-Search and preview, user-level installs (`--scope user`), and installs for many more agents. Use `gh skill` for those, and `hikma skill adopt` if you then want a lockfile.
+Search and preview, and installs for many more agents. Use `gh skill` for those, and `hikma skill adopt` if you then want a lockfile. For user-level installs, either tool works: `gh skill --scope user`, or `hikma skill install --global` for a lockfile, `verify`, and `sync` ([Global installs](/guides/global)).

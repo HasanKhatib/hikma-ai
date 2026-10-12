@@ -4,6 +4,13 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `--global` (`-g`) on `skill install`, `update`, `remove`, `adopt`, `verify`, `diff`, `list --installed`, and `sync` works in your home directory with its own lockfile at `~/.hikma/lock.json`. A global write prints the absolute paths and asks first (`--yes` skips it), and hikma refuses to write through a symlinked folder. `init` stays project-only.
+- A warning, never a block, when a skill name is installed at both project and global scope: on install, in `list --installed` (which now has a scope column), in `sync`, and in `doctor`.
+
+### Changed
+- `skill update` now rejects lockfile entries whose path is not a clean `<agent skills folder>/<name>`, as `sync` already did.
+
 ## [0.3.0] - 2026-10-12
 
 ### Changed

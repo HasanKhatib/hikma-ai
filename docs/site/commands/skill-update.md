@@ -24,8 +24,9 @@ Updates use [`.hikma/lock.json`](/guides/lockfile): each skill is fetched from i
 |---|---|
 | `--all` | Update every skill in the lockfile |
 | `--force` | Overwrite local changes |
-| `-y`, `--yes` | Apply updates that change `scripts/` without asking |
+| `-y`, `--yes` | Apply updates that change `scripts/`, and changes to your home directory, without asking |
 | `--agent <list>` | Limit to these agents' folders (not with `--all`) |
+| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/global) |
 
 ```text
 $ hikma skill update deploy-helper

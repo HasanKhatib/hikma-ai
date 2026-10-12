@@ -16,6 +16,7 @@ import (
 
 func newSkillDiffCmd() *cobra.Command {
 	var flagAgent string
+	var global bool
 	var patch bool
 	cmd := &cobra.Command{
 		Use:   "diff <name>",
@@ -42,7 +43,10 @@ Pass --patch to print the file contents that differ.`,
 			if err != nil {
 				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
 			}
-			sc := projectScope()
+			sc, err := scopeFor(global)
+			if err != nil {
+				return err
+			}
 			lf, err := sc.loadLock()
 			if err != nil {
 				return err
@@ -81,6 +85,7 @@ Pass --patch to print the file contents that differ.`,
 			return installedSkillCompletions(projectScope())
 		},
 	}
+	cmd.Flags().BoolVarP(&global, "global", "g", false, "use your home directory instead of this project (~/.hikma/lock.json)")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	cmd.Flags().BoolVar(&patch, "patch", false, "print the contents that differ")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {

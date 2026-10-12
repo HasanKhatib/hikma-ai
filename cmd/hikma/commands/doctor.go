@@ -2,6 +2,7 @@ package commands
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
@@ -59,6 +60,17 @@ func runDoctor() error {
 
 	if gh := ghManagedUntracked(projectScope()); len(gh) > 0 {
 		fmt.Printf("  warn  skills installed by gh skill and not tracked by hikma: %s\n        fix: run 'hikma skill adopt <name>' so update, sync, and remove manage them\n", adoptHint(gh))
+	}
+
+	if sc, err := globalScope(); err == nil && !sameDir(".", sc.root) {
+		var names []string
+		for n := range installedNames(projectScope()) {
+			names = append(names, n)
+		}
+		sort.Strings(names)
+		for _, w := range projectScope().shadowWarnings(names) {
+			fmt.Printf("  warn  %s\n", strings.TrimPrefix(w, "warning: "))
+		}
 	}
 
 	if failed > 0 {

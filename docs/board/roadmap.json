@@ -24,7 +24,7 @@
       "id": "v0.3",
       "title": "Trust",
       "emoji": "v0.3",
-      "status": "planned",
+      "status": "done",
       "goal": "Make installs verifiable, releases signed, and agents user-defined.",
       "exit": "Custom agents in config, frozen installs and skill verification, and signed release artifacts are available."
     },
@@ -163,7 +163,7 @@
           "id": "E1.3",
           "title": "Source import audit",
           "emoji": "A",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "migration",
@@ -1110,7 +1110,7 @@
             {
               "id": "E4.2-T2",
               "title": "Add --global to install, update, remove, and adopt: confirmation shows the absolute target, lockfile at ~/.hikma/lock.json, refuse symlinked targets",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "feature",
@@ -1121,7 +1121,7 @@
             {
               "id": "E4.2-T3",
               "title": "Document project vs global, stating up front that Claude personal skills do not load in cloud or Cowork sessions (so no help in a Codespace): per-agent duplicate behavior (documented, reported, or unknown, with links) and the dotfiles recipe for a portable lockfile",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs"
@@ -1141,7 +1141,7 @@
             {
               "id": "E4.2-T5",
               "title": "Add --global to list --installed, verify, diff, and sync; list shows a scope column and marks shadowed skills",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature"
@@ -1151,7 +1151,7 @@
             {
               "id": "E4.2-T6",
               "title": "Warn (never block) when a skill name exists at both scopes: on install, in list, and in doctor; Claude Code runs the global copy, other agents do not document a winner",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "ux",
@@ -1162,7 +1162,7 @@
             {
               "id": "E4.2-T7",
               "title": "hikma sync warns when a lockfile entry shares a name with an installed global skill (a project skill could inherit the permissions granted to the trusted one)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "security"
@@ -1172,7 +1172,7 @@
             {
               "id": "E4.2-T8",
               "title": "Tests set HOME (and USERPROFILE on Windows) to a temp dir so no test touches the real home; detect symlinked or shared global folders",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "test"
@@ -1193,7 +1193,7 @@
             {
               "id": "E4.2-T10",
               "title": "Update the guides that point to gh skill --scope user (agents.md, gh-skill.md) when global installs ship",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs"
@@ -1471,7 +1471,7 @@
           "id": "E5.1",
           "title": "Verifiable installs",
           "emoji": "V",
-          "status": "active",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "security",
@@ -1532,7 +1532,7 @@
           "id": "E5.2",
           "title": "Signed releases",
           "emoji": "S",
-          "status": "active",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "release",
