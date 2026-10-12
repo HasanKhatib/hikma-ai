@@ -125,6 +125,9 @@ func loadFile(path string) (Config, error) {
 	if err := json.Unmarshal(data, &c); err != nil {
 		return Config{}, fmt.Errorf("cannot parse config file %s: %w", path, err)
 	}
+	if err := ValidateCustomAgents(c.CustomAgents); err != nil {
+		return Config{}, fmt.Errorf("invalid config file %s: %w", path, err)
+	}
 	return c, nil
 }
 
@@ -186,8 +189,12 @@ func validateKey(key string) error {
 func validateValue(key, value string) error {
 	switch key {
 	case KeyAgent:
-		if !ValidAgent(Agent(value)) {
-			return fmt.Errorf("unsupported agent %q - supported values: %s", value, agentList())
+		set, err := Layouts()
+		if err != nil {
+			return err
+		}
+		if !set.Valid(Agent(value)) {
+			return fmt.Errorf("unsupported agent %q - supported values: %s", value, set.list())
 		}
 	case KeyAgents:
 		if _, err := ParseAgents(value); err != nil {
@@ -352,5 +359,5 @@ func NamingConvention() (string, error) {
 }
 
 func (c Config) isEmpty() bool {
-	return c.Agent == "" && c.Registry == "" && c.Naming == "" && len(c.Agents) == 0
+	return c.Agent == "" && c.Registry == "" && c.Naming == "" && len(c.Agents) == 0 && len(c.CustomAgents) == 0
 }

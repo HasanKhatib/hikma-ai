@@ -27,6 +27,34 @@ Pick the agents your team uses. With one agent, skills go to that agent's folder
 
 If someone on a Claude project also tries Codex, run `hikma skill install` with `--agent codex` for that install; the skill lands in `.agents/skills`.
 
+## Custom agents
+
+If your agent is not one of the four above, describe where it reads from. Add a `customAgents` entry to `.hikma/config.json` (or your user config), then use its name like any other agent:
+
+```json
+{
+  "agents": ["claude", "acme"],
+  "customAgents": {
+    "acme": { "skillsDir": ".acme/skills", "instructionFile": "ACME.md" }
+  }
+}
+```
+
+```bash
+hikma init --agent claude,acme
+hikma skill install code-review --agent acme
+```
+
+Check your tool's own documentation for the right folder and instruction file. Rules, enforced when the config loads:
+
+- `skillsDir` is required. `instructionFile` is optional; `hikma init` writes the same starter instructions as `AGENTS.md` under that name, and never overwrites an existing file unless you pass `--force`.
+- Both are relative, forward-slash paths inside the project. No `..`, no absolute paths or drive letters, and nothing under `.git` or `.hikma`.
+- A name is lowercase letters, digits, and hyphens, and cannot reuse a built-in agent name.
+- If a project and your user config define the same name, the project wins.
+- `hikma sync` restores skills in a custom folder only while the agent is defined in config. `hikma skill install --force` and `hikma sync --force` refuse to replace an existing folder that has no `SKILL.md`, so a custom agent can never make Hikma delete project code.
+
+Custom agents are set by editing the config file for now; `hikma config set` cannot edit them. You select one by name like any other agent: `hikma config set agent acme` or `hikma config set agents claude,acme`.
+
 ## The Agent Skills format
 
 All of these tools use the open [Agent Skills](https://agentskills.io/specification) format: a folder with a `SKILL.md`, plus optional `scripts/`, `references/`, and `assets/`. See [Skill format](/guides/skill-format) for the rules Hikma checks.
@@ -36,4 +64,4 @@ Some agents add their own files next to `SKILL.md`, such as Codex's optional `ag
 ## Not covered
 
 - **User-level installs** (`~/.claude/skills`, `~/.agents/skills`). Use [`gh skill`](/guides/gh-skill) with `--scope user`.
-- **More agents.** `gh skill` supports many more. Hikma supports the four above.
+- **More built-in agents.** `gh skill` supports many more. Hikma has the four above built in; add others with a [custom agent](#custom-agents).

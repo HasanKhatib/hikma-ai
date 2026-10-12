@@ -62,18 +62,18 @@ type syncItem struct {
 	state syncState
 }
 
-// layoutSkillDirs returns every skills folder a built-in agent layout uses.
-func layoutSkillDirs() map[string]bool {
-	dirs := map[string]bool{}
-	for _, a := range config.ValidAgents {
-		dirs[config.LayoutFor(a).SkillsDir] = true
+// layoutSkillDirs returns every skills folder a built-in or configured layout uses.
+func layoutSkillDirs() (map[string]bool, error) {
+	set, err := config.Layouts()
+	if err != nil {
+		return nil, err
 	}
-	return dirs
+	return set.SkillsDirs(), nil
 }
 
 // validateLockEntry rejects lockfile entries that would write outside the
 // skills folders. The lockfile is committed to the repository, so it is untrusted input.
-func validateLockEntry(key string, e lock.Entry) error {
+func validateLockEntry(key string, e lock.Entry, dirs map[string]bool) error {
 	if e.Name == "" {
 		return fmt.Errorf("%s: entry has no name", key)
 	}
@@ -84,7 +84,7 @@ func validateLockEntry(key string, e lock.Entry) error {
 	if clean != key || path.IsAbs(key) || strings.Contains(key, `\`) || strings.HasPrefix(key, "../") || key == ".." {
 		return fmt.Errorf("%s: install path must be a clean relative path", key)
 	}
-	if path.Base(key) != e.Name || !layoutSkillDirs()[path.Dir(key)] {
+	if path.Base(key) != e.Name || !dirs[path.Dir(key)] {
 		return fmt.Errorf("%s: install path must be <agent skills folder>/%s", key, e.Name)
 	}
 	if e.Source == "" {
@@ -113,11 +113,15 @@ func runSync(cmd *cobra.Command, force, yes, dryRun, frozen bool) error {
 		return nil
 	}
 
+	dirs, err := layoutSkillDirs()
+	if err != nil {
+		return err
+	}
 	var items []syncItem
 	var invalid []string
 	for _, key := range keys {
 		e := lf.Skills[key]
-		if err := validateLockEntry(key, e); err != nil {
+		if err := validateLockEntry(key, e, dirs); err != nil {
 			invalid = append(invalid, err.Error())
 			continue
 		}
@@ -302,6 +306,9 @@ func restoreItem(out io.Writer, it syncItem, checkouts map[string]*openCheckout)
 	}
 	if added, modified, removed := source.DiffFiles(e.Files, incoming); len(added)+len(modified)+len(removed) > 0 {
 		return fmt.Errorf("files do not match .hikma/lock.json (%s); refusing to install", describeDrift(added, modified, removed))
+	}
+	if err := requireSkillFolder(filepath.FromSlash(it.key)); err != nil {
+		return err
 	}
 	_, err = replaceDir(filepath.FromSlash(it.key), func(dst string) ([]string, error) {
 		return source.CopyDir(srcDir, dst)

@@ -117,7 +117,11 @@ Examples:
 				return err
 			}
 			printTargets(out, targets, flagAgent != "")
-			fmt.Fprintf(out, "Instruction files: %s\n", strings.Join(config.InstructionFiles(agents), ", "))
+			set, err := config.Layouts()
+			if err != nil {
+				return err
+			}
+			fmt.Fprintf(out, "Instruction files: %s\n", strings.Join(set.InstructionFiles(agents), ", "))
 
 			// Resolve the registry up front so a bad --skill request fails before any file is written.
 			registryValue := flagRegistry
@@ -239,9 +243,13 @@ func chooseAgents(flagAgent string, interactive bool) ([]config.Agent, error) {
 	if err != nil {
 		return nil, err
 	}
+	labels, err := config.Layouts()
+	if err != nil {
+		return nil, err
+	}
 	var defaults []string
 	for _, t := range current {
-		defaults = append(defaults, labelForAgent(t.Agent))
+		defaults = append(defaults, labelForAgent(labels, t.Agent))
 	}
 	if !interactive {
 		agents := make([]config.Agent, len(current))
@@ -251,11 +259,15 @@ func chooseAgents(flagAgent string, interactive bool) ([]config.Agent, error) {
 		return agents, nil
 	}
 
+	set, err := config.Layouts()
+	if err != nil {
+		return nil, err
+	}
 	var options []string
 	byLabel := map[string]config.Agent{}
-	for _, a := range config.ValidAgents {
-		options = append(options, labelForAgent(a))
-		byLabel[labelForAgent(a)] = a
+	for _, a := range set.Names() {
+		options = append(options, labelForAgent(set, a))
+		byLabel[labelForAgent(set, a)] = a
 	}
 	var selected []string
 	if err := survey.AskOne(&survey.MultiSelect{
@@ -272,8 +284,8 @@ func chooseAgents(flagAgent string, interactive bool) ([]config.Agent, error) {
 	return agents, nil
 }
 
-func labelForAgent(a config.Agent) string {
-	return fmt.Sprintf("%s - %s", a, config.LayoutFor(a).Description)
+func labelForAgent(set config.LayoutSet, a config.Agent) string {
+	return fmt.Sprintf("%s - %s", a, set.Layout(a).Description)
 }
 
 // installInitSkills installs the named skills from the registry into every target.

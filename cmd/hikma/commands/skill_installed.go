@@ -59,7 +59,11 @@ func listInstalledSkills() ([]installedSkill, error) {
 		rows = append(rows, row)
 	}
 
-	for base := range layoutSkillDirs() {
+	dirs, err := layoutSkillDirs()
+	if err != nil {
+		return nil, err
+	}
+	for base := range dirs {
 		entries, err := os.ReadDir(filepath.FromSlash(base))
 		if err != nil {
 			continue
