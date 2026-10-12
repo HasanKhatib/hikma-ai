@@ -12,14 +12,21 @@
 #   HIKMA_INSTALL_DIR   where to put the binary (default: ~/.local/bin)
 #   HIKMA_REPO          GitHub repo to download from (default: HasanKhatib/hikma-ai)
 #   HIKMA_DOWNLOAD_BASE base URL holding the archive and checksums.txt (testing)
+#   HIKMA_VERIFY_ATTESTATION  set to 1 to also check the attestation when
+#                       HIKMA_DOWNLOAD_BASE is set (testing)
+#   HIKMA_REQUIRE_ATTESTATION set to 1 to fail instead of skipping the
+#                       attestation check when gh is missing or signed out
 #
 # Works on macOS, Linux, and Windows (Git Bash). Uses curl, or gh when it is
-# installed and signed in. The download is checked against checksums.txt.
+# installed and signed in. The download is checked against checksums.txt, and,
+# for releases that publish one (v0.3.0 and later), its build attestation when
+# gh is available.
 set -euo pipefail
 
 REPO="${HIKMA_REPO:-HasanKhatib/hikma-ai}"
 VERSION="${1:-${HIKMA_VERSION:-latest}}"
 INSTALL_DIR="${HIKMA_INSTALL_DIR:-$HOME/.local/bin}"
+FIRST_ATTESTED="0.3.0" # earlier releases have no build attestation
 
 say() { printf '%s\n' "$*"; }
 die() { printf 'error: %s\n' "$*" >&2; exit 1; }
@@ -93,6 +100,45 @@ want="$(awk -v f="$ARCHIVE" '$2 == f || $2 == "*" f { print $1 }' "$TMP/checksum
 got="$(sha256_of "$TMP/$ARCHIVE")"
 [ "$want" = "$got" ] || die "checksum mismatch for $ARCHIVE (expected $want, got $got)"
 say "Checksum verified."
+
+# --- attestation ----------------------------------------------------------
+# A checksum only proves the download matches checksums.txt, which comes from
+# the same place. The attestation proves the archive was built by this repo's
+# release workflow.
+resolve_tag() { # prints the release tag, or nothing when it cannot be found
+  if [ -n "$TAG" ]; then printf '%s' "$TAG"; return; fi
+  have curl || return 0
+  curl -fsSLI -o /dev/null -w '%{url_effective}' "https://github.com/$REPO/releases/latest" 2>/dev/null | sed -n 's#.*/tag/##p'
+}
+older_than_attested() { # version without v or suffix
+  v="${1%%-*}"
+  [ "$(printf '%s\n%s\n' "$v" "$FIRST_ATTESTED" | sort -V | head -n 1)" != "$FIRST_ATTESTED" ]
+}
+verify_attestation() {
+  if [ -n "${HIKMA_DOWNLOAD_BASE:-}" ] && [ "${HIKMA_VERIFY_ATTESTATION:-}" != 1 ]; then
+    say "Skipped the attestation check (custom download base)."
+    return
+  fi
+  resolved="$(resolve_tag)"
+  if [ -n "$resolved" ] && older_than_attested "${resolved#v}"; then
+    say "Release $resolved predates build attestations; checksum only."
+    return
+  fi
+  if have gh && gh auth status >/dev/null 2>&1; then
+    if gh attestation verify "$TMP/$ARCHIVE" -R "$REPO" --signer-workflow "$REPO/.github/workflows/release.yml" >"$TMP/attest.log" 2>&1; then
+      say "Attestation verified."
+    else
+      cat "$TMP/attest.log" >&2
+      die "the build attestation for $ARCHIVE could not be verified; nothing was installed"
+    fi
+  elif [ "${HIKMA_REQUIRE_ATTESTATION:-}" = 1 ]; then
+    die "HIKMA_REQUIRE_ATTESTATION=1 but the gh CLI is missing or not signed in"
+  else
+    say "Skipped the attestation check (needs the gh CLI, signed in). To check it yourself:"
+    say "  gh attestation verify <archive> -R $REPO"
+  fi
+}
+verify_attestation
 
 # --- extract and install --------------------------------------------------
 mkdir -p "$TMP/out"
