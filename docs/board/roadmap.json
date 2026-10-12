@@ -208,8 +208,8 @@
             },
             {
               "id": "E1.3-T4",
-              "title": "Decide import strategy: history copy, clean copy, or rewrite",
-              "status": "todo",
+              "title": "Decided 2026-10-12: keep the history (the 2026-10-09 scan found nothing)",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "migration"
@@ -1505,8 +1505,8 @@
             },
             {
               "id": "E5.1-T3",
-              "title": "Parked (low demand): Optional registry checksum manifest checked on install",
-              "status": "todo",
+              "title": "Closed (not needed): optional registry checksum manifest; the lockfile hashes and attestations cover it",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "parked",
@@ -1568,8 +1568,8 @@
             },
             {
               "id": "E5.2-T3",
-              "title": "Optional: notarize the macOS binaries so browser downloads run without clearing quarantine (Apple account is available; secrets and conditional GoReleaser notarize step)",
-              "status": "todo",
+              "title": "Closed (not needed): macOS notarization; Homebrew ships a formula, so nothing needs it",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "release",
@@ -1602,7 +1602,7 @@
             {
               "id": "E5.2-T6",
               "title": "At the v0.3.0 tag: document verification (README, getting-started), the formula switch for existing cask users, and remove the cask from the tap after the first formula release",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs",

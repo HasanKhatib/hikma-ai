@@ -24,6 +24,8 @@ If you only want to browse and install public skills for many different agents, 
 brew install HasanKhatib/tap/hikma
 ```
 
+If you installed the old cask, switch once: `brew uninstall --cask hikma`, then run the command above.
+
 **Windows (Git Bash) and anywhere else:** run the install script. It downloads the matching release, verifies its checksum, and installs to `~/.local/bin`.
 
 ```bash
@@ -37,7 +39,15 @@ gh api -H "Accept: application/vnd.github.raw+json" \
 curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash -s -- v0.2.0
 ```
 
-Set `HIKMA_INSTALL_DIR` to install somewhere else. On Windows the script needs Git Bash (included with Git for Windows); make sure the install directory is on your `PATH`.
+Set `HIKMA_INSTALL_DIR` to install somewhere else.
+
+**Verify a download.** From v0.3.0, release archives and `checksums.txt` carry a build attestation that proves they were built by this repository's release workflow. The install script checks it when the GitHub CLI is installed and signed in, and prints what it did. To check by hand:
+
+```bash
+gh attestation verify hikma_darwin_arm64.tar.gz -R HasanKhatib/hikma-ai
+```
+
+Set `HIKMA_REQUIRE_ATTESTATION=1` to make the script fail instead of skipping the check when `gh` is missing. Releases before v0.3.0 have no attestation and are checked against `checksums.txt` only. On Windows the script needs Git Bash (included with Git for Windows); make sure the install directory is on your `PATH`.
 
 **From source:**
 
