@@ -28,7 +28,14 @@ type Prompter interface {
 }
 
 // prompter is what commands ask through. Tests replace it with a fake.
-var prompter Prompter = surveyPrompter{}
+var prompter = defaultPrompter()
+
+func defaultPrompter() Prompter {
+	if useHuh() {
+		return huhPrompter{}
+	}
+	return surveyPrompter{}
+}
 
 type surveyPrompter struct{}
 

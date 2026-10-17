@@ -2145,8 +2145,8 @@
             },
             {
               "id": "E7.3-T9",
-              "title": "Replace survey with charm.land/huh/v2 behind the Prompter: gate on a Windows hand check, map ErrUserAborted to errCancelled, use accessible mode for TERM=dumb, keep survey until it passes",
-              "status": "todo",
+              "title": "Add a huh prompter behind the Prompter, opt-in with HIKMA_PROMPTS=huh (built 2026-10-17; survey stays the default until T12)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "refactor",
@@ -2172,6 +2172,17 @@
               "assignee": "ai",
               "labels": [
                 "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T12",
+              "title": "Walk the huh prompter by hand on Windows PowerShell and the legacy console (also a light theme); if it holds, make it the default, drop survey and the HIKMA_PROMPTS switch, and update the changelog",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "verify",
                 "cli"
               ],
               "planned": null
