@@ -2,6 +2,7 @@ package ui
 
 import (
 	"bytes"
+	"os"
 	"strings"
 	"testing"
 )
@@ -36,5 +37,13 @@ func TestColorHelpersArePlainOffATerminal(t *testing.T) {
 		if s != "a" {
 			t.Errorf("got %q, want plain text", s)
 		}
+	}
+}
+
+func TestNoColorFlagTurnsColorOff(t *testing.T) {
+	t.Cleanup(func() { NoColor = false })
+	NoColor = true
+	if colorOK(os.Stdout) {
+		t.Fatal("colorOK must be false when --no-color is set")
 	}
 }

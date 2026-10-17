@@ -11,17 +11,44 @@ import (
 )
 
 type fakePrompter struct {
-	pick    int
-	inputs  []string
-	err     error
-	asked   []string
-	options []string
+	pick     int
+	inputs   []string
+	confirms []bool
+	multi    []int
+	err      error
+	asked    []string
+	options  []string
+	gotDef   int
+	gotDefs  []int
+	gotMin   int
+	gotConf  bool
 }
 
-func (f *fakePrompter) Select(message string, options []string) (int, error) {
+func (f *fakePrompter) Select(message string, options []string, def int) (int, error) {
 	f.asked = append(f.asked, message)
 	f.options = options
+	f.gotDef = def
 	return f.pick, f.err
+}
+
+func (f *fakePrompter) MultiSelect(message string, options []string, defaults []int, min int) ([]int, error) {
+	f.asked = append(f.asked, message)
+	f.options, f.gotDefs, f.gotMin = options, defaults, min
+	return f.multi, f.err
+}
+
+func (f *fakePrompter) Confirm(message string, def bool) (bool, error) {
+	f.asked = append(f.asked, message)
+	f.gotConf = def
+	if f.err != nil {
+		return false, f.err
+	}
+	if len(f.confirms) == 0 {
+		return def, nil
+	}
+	ok := f.confirms[0]
+	f.confirms = f.confirms[1:]
+	return ok, nil
 }
 
 func (f *fakePrompter) Input(message string, validate func(string) error) (string, error) {

@@ -18,11 +18,14 @@ const (
 	reset  = "\x1b[0m"
 )
 
+// NoColor is the global --no-color flag. It turns color off like NO_COLOR does.
+var NoColor bool
+
 // colorOK reports whether w is a terminal that should get color. NO_COLOR
-// (https://no-color.org) and TERM=dumb turn it off; output that is piped or
+// (https://no-color.org), --no-color, and TERM=dumb turn it off; output that is piped or
 // captured never gets escape codes.
 func colorOK(w io.Writer) bool {
-	if os.Getenv("NO_COLOR") != "" || os.Getenv("TERM") == "dumb" {
+	if NoColor || os.Getenv("NO_COLOR") != "" || os.Getenv("TERM") == "dumb" {
 		return false
 	}
 	f, ok := w.(*os.File)

@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/lock"
 	"github.com/hasankhatib/hikma-ai/internal/source"
@@ -282,11 +281,8 @@ func confirmSync(out io.Writer, work []syncItem, yes bool) error {
 	if !isInteractive() {
 		return fmt.Errorf("confirmation required: re-run with --yes to fetch %d skill(s) from %d source(s)", len(work), len(sources))
 	}
-	var ok bool
-	if err := survey.AskOne(&survey.Confirm{
-		Message: fmt.Sprintf("Fetch %d skill(s) from %d source(s) listed above?", len(work), len(sources)),
-		Default: false,
-	}, &ok); err != nil {
+	ok, err := prompter.Confirm(fmt.Sprintf("Fetch %d skill(s) from %d source(s) listed above?", len(work), len(sources)), false)
+	if err != nil {
 		return err
 	}
 	if !ok {

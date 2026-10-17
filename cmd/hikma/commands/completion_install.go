@@ -10,7 +10,6 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 )
 
@@ -157,8 +156,8 @@ func installCompletion(cmd *cobra.Command, shell string, assumeYes bool) error {
 		if !isInteractive() {
 			return fmt.Errorf("confirmation required: re-run with --yes to install completion for %s", shell)
 		}
-		var ok bool
-		if err := survey.AskOne(&survey.Confirm{Message: "Install completion for " + shell + "?", Default: !(t.create && len(existing) > 0)}, &ok); err != nil {
+		ok, err := prompter.Confirm("Install completion for "+shell+"?", !(t.create && len(existing) > 0))
+		if err != nil {
 			return err
 		}
 		if !ok {
@@ -203,9 +202,9 @@ func chooseShell(shells []string) (string, error) {
 	if !isInteractive() {
 		return "", fmt.Errorf("could not detect your shell; run: hikma completion --install <%s>", strings.Join(shells, "|"))
 	}
-	var s string
-	if err := survey.AskOne(&survey.Select{Message: "Which shell?", Options: shells}, &s); err != nil {
+	idx, err := prompter.Select("Which shell?", shells, 0)
+	if err != nil {
 		return "", err
 	}
-	return s, nil
+	return shells[idx], nil
 }

@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/lock"
 	"github.com/hasankhatib/hikma-ai/internal/source"
@@ -109,7 +108,19 @@ func discoverSkills(src source.Source, co source.Checkout) ([]source.Skill, erro
 	return source.Discover(co.Dir, fallback)
 }
 
+// noInput is the global --no-input flag. It is bound at parse time, so it is
+// already set when argument validation runs.
+var noInput bool
+
+// isInteractive reports whether a command may prompt: stdin is a terminal and
+// --no-input was not passed. Every prompt site gates on it, so --no-input makes
+// each one fail with the flag to pass instead of asking.
 func isInteractive() bool {
+	return !noInput && stdinIsTerminal()
+}
+
+// stdinIsTerminal is a variable so tests can pretend to be on a terminal.
+var stdinIsTerminal = func() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 
@@ -128,8 +139,8 @@ func pickSkill(w io.Writer, skills []source.Skill) (source.Skill, error) {
 			labels[i] += " - " + truncate(s.Description, 70)
 		}
 	}
-	var idx int
-	if err := survey.AskOne(&survey.Select{Message: "Skill:", Options: labels}, &idx); err != nil {
+	idx, err := prompter.Select("Skill:", labels, 0)
+	if err != nil {
 		return source.Skill{}, err
 	}
 	return skills[idx], nil
@@ -717,8 +728,8 @@ func (u *updater) update(key string) error {
 			if !isInteractive() {
 				return fmt.Errorf("scripts/ changed; review with 'hikma skill diff %s' and re-run with --yes to apply", e.Name)
 			}
-			var ok bool
-			if err := survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("Apply this update to %s, including the scripts/ changes?", e.Name), Default: false}, &ok); err != nil {
+			ok, err := prompter.Confirm(fmt.Sprintf("Apply this update to %s, including the scripts/ changes?", e.Name), false)
+			if err != nil {
 				return err
 			}
 			if !ok {

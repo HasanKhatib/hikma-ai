@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
 	"github.com/hasankhatib/hikma-ai/internal/source"
@@ -270,17 +270,19 @@ func chooseAgents(flagAgent string, interactive bool) ([]config.Agent, error) {
 		options = append(options, labelForAgent(set, a))
 		byLabel[labelForAgent(set, a)] = a
 	}
-	var selected []string
-	if err := survey.AskOne(&survey.MultiSelect{
-		Message: "AI agents (space to select):",
-		Options: options,
-		Default: defaults,
-	}, &selected, survey.WithValidator(survey.MinItems(1))); err != nil {
+	var defIdx []int
+	for i, o := range options {
+		if slices.Contains(defaults, o) {
+			defIdx = append(defIdx, i)
+		}
+	}
+	picked, err := prompter.MultiSelect("AI agents (space to select):", options, defIdx, 1)
+	if err != nil {
 		return nil, err
 	}
-	agents := make([]config.Agent, len(selected))
-	for i, label := range selected {
-		agents[i] = byLabel[label]
+	agents := make([]config.Agent, len(picked))
+	for i, idx := range picked {
+		agents[i] = byLabel[options[idx]]
 	}
 	return agents, nil
 }
