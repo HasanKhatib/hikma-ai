@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/spf13/cobra"
 )
@@ -56,10 +55,11 @@ func runConfigAddAgent(cmd *cobra.Command, name, skillsDir, instructionFile stri
 		if !interactive {
 			return fmt.Errorf("--skills-dir is required when there is no terminal to ask or --no-input is set")
 		}
-		validate := func(ans interface{}) error {
-			return config.ValidateCustomAgent(name, config.CustomAgent{SkillsDir: ans.(string)})
-		}
-		if err := survey.AskOne(&survey.Input{Message: "Skills folder (relative to the project):", Help: "For example .acme/skills"}, &skillsDir, survey.WithValidator(survey.Required), survey.WithValidator(validate)); err != nil {
+		var err error
+		skillsDir, err = prompter.Input("Skills folder (relative to the project, for example .acme/skills):", func(s string) error {
+			return config.ValidateCustomAgent(name, config.CustomAgent{SkillsDir: s})
+		})
+		if err != nil {
 			return err
 		}
 	}
@@ -83,10 +83,9 @@ func runConfigAddAgent(cmd *cobra.Command, name, skillsDir, instructionFile stri
 
 	if !use && interactive {
 		// A user-level agents list affects every repository, so it defaults to no there.
-		if err := survey.AskOne(&survey.Confirm{
-			Message: fmt.Sprintf("Use %q in this config now (add it to agents)?", name),
-			Default: scope == config.ScopeProject,
-		}, &use); err != nil {
+		var err error
+		use, err = prompter.Confirm(fmt.Sprintf("Use %q in this config now (add it to agents)?", name), scope == config.ScopeProject)
+		if err != nil {
 			return err
 		}
 	}
@@ -136,8 +135,8 @@ func chooseAgentScope(cmd *cobra.Command, project, user, interactive, yes bool) 
 		if err != nil {
 			return "", err
 		}
-		ok := true
-		if err := survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("Save to %s (%s)?", s.label, path), Default: true}, &ok); err != nil {
+		ok, err := prompter.Confirm(fmt.Sprintf("Save to %s (%s)?", s.label, path), true)
+		if err != nil {
 			return "", err
 		}
 		if ok {
@@ -210,8 +209,8 @@ func runConfigRemoveAgent(cmd *cobra.Command, name string, project, user, yes bo
 		if !isInteractive() {
 			return fmt.Errorf("confirmation required: re-run with --yes to remove %q from %s", name, path)
 		}
-		var ok bool
-		if err := survey.AskOne(&survey.Confirm{Message: fmt.Sprintf("Remove %q from %s?", name, path), Default: false}, &ok); err != nil {
+		ok, err := prompter.Confirm(fmt.Sprintf("Remove %q from %s?", name, path), false)
+		if err != nil {
 			return err
 		}
 		if !ok {

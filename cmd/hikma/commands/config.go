@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"strings"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 	"github.com/spf13/cobra"
@@ -170,17 +169,18 @@ func runConfigAgentInteractive(cmd *cobra.Command) error {
 		}
 	}
 
-	var selected string
-	prompt := &survey.Select{
-		Message: "AI agent:",
-		Options: options,
-		Default: defaultLabel,
+	def := 0
+	for i, o := range options {
+		if o == defaultLabel {
+			def = i
+		}
 	}
-	if err := survey.AskOne(prompt, &selected); err != nil {
+	idx, err := prompter.Select("AI agent:", options, def)
+	if err != nil {
 		return err
 	}
 
-	chosen := labelToAgent[selected]
+	chosen := labelToAgent[options[idx]]
 	c, err := config.ConfigForAgent(chosen)
 	if err != nil {
 		return err

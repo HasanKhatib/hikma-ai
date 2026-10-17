@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/spf13/cobra"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
@@ -116,8 +115,8 @@ func askGlobal(_ io.Writer) error {
 	if !isInteractive() {
 		return fmt.Errorf("confirmation required: re-run with --yes to change your home directory")
 	}
-	var ok bool
-	if err := survey.AskOne(&survey.Confirm{Message: "Continue?", Default: false}, &ok); err != nil {
+	ok, err := prompter.Confirm("Continue?", false)
+	if err != nil {
 		return err
 	}
 	if !ok {

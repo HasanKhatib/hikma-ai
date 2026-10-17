@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	survey "github.com/AlecAivazis/survey/v2"
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/preflight"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
@@ -218,8 +217,8 @@ func confirmPush(cmd *cobra.Command, name, skillDir string, r config.Registry, o
 	if !isInteractive() {
 		return fmt.Errorf("confirmation required: re-run with --yes to push to %s", r.FullName())
 	}
-	var ok bool
-	if err := survey.AskOne(&survey.Confirm{Message: "Push to " + r.FullName() + "?", Default: false}, &ok); err != nil {
+	ok, err := prompter.Confirm("Push to "+r.FullName()+"?", false)
+	if err != nil {
 		return err
 	}
 	if !ok {

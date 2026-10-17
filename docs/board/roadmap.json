@@ -2085,7 +2085,7 @@
             {
               "id": "E7.3-T5",
               "title": "Move the existing survey call sites (config agent, scaffold, install picker, push and sync confirmations, completion) behind the Prompter",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "refactor"
@@ -2147,7 +2147,7 @@
             {
               "id": "E7.3-T11",
               "title": "Add Confirm and MultiSelect to the Prompter so T5 can move every survey call site, with fake and tests",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature",

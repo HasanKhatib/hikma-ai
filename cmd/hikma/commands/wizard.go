@@ -75,7 +75,7 @@ func runWizard(p Prompter, out io.Writer, run func(args []string) error) error {
 	}
 	labels = append(labels, wizardQuit)
 
-	idx, err := p.Select("What do you want to do?", labels)
+	idx, err := p.Select("What do you want to do?", labels, 0)
 	if err != nil {
 		return quietCancel(err)
 	}
@@ -127,7 +127,7 @@ func rootRun(cmd *cobra.Command, _ []string) error {
 	if !isInteractive() || !isTerminalWriter(out) {
 		return cmd.Help()
 	}
-	return runWizard(surveyPrompter{}, out, func(args []string) error {
+	return runWizard(prompter, out, func(args []string) error {
 		inner := Root()
 		inner.SetArgs(args)
 		return inner.Execute()
