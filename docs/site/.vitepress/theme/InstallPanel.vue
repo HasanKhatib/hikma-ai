@@ -82,8 +82,8 @@ async function copyCommand() {
           {{ tab.label }}
         </button>
       </div>
-      <button class="hk-copy-button" type="button" @click="copyCommand">
-        {{ copied ? "Copied" : "Copy" }}
+      <button class="hk-copy-button" type="button" aria-live="polite" @click="copyCommand">
+        {{ copied ? "Copied ✓" : "Copy" }}
       </button>
     </div>
 
@@ -95,7 +95,18 @@ async function copyCommand() {
     >
       <div class="hk-install-heading">
         <p class="hk-install-label">Install hikma</p>
-        <p class="hk-install-hint">{{ hints[method] }}</p>
+        <p class="hk-install-hint">
+          {{ hints[method] }}
+          <template v-if="method === 'script'">
+            ·
+            <a
+              href="https://github.com/HasanKhatib/hikma-ai/blob/main/scripts/install.sh"
+              target="_blank"
+              rel="noopener"
+              >read the script first</a
+            >
+          </template>
+        </p>
       </div>
       <div class="hk-install-lines">
         <div

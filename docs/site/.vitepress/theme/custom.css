@@ -4,7 +4,7 @@
   --paper: #f6f2e8;
   --paper-2: #ece6d6;
   --ink: #14201e;
-  --muted: #646b63;
+  --muted: #5a615a;
   --line: #d3ccb8;
   --panel: #fcfaf4;
   --forest: #0b4f4a;
@@ -660,4 +660,132 @@ kbd,
   .hk-credit {
     display: none;
   }
+}
+
+/* Home page demo: three moments, one terminal. */
+.hk-demo {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 32px;
+  align-items: center;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 24px 24px 72px;
+}
+.hk-demo-index {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.hk-demo-index li {
+  margin: 0;
+  list-style: none;
+}
+.hk-demo-index li::marker {
+  content: "";
+}
+.hk-demo-index button {
+  display: block;
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  border-left: 3px solid var(--line);
+  border-radius: 6px;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+  color: var(--muted);
+  transition: background 0.2s, border-color 0.2s;
+}
+.hk-demo-index strong {
+  display: block;
+  font-size: 20px;
+  line-height: 1.25;
+  color: var(--ink);
+}
+.hk-demo-index span {
+  display: block;
+  margin-top: 2px;
+  font-size: 15px;
+}
+.hk-demo-index li.on button {
+  background: var(--panel);
+  border-color: var(--line);
+  border-left-color: var(--vp-c-brand-1);
+}
+.hk-demo-index button:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
+}
+.hk-demo-term {
+  min-width: 0;
+  border: 1px solid var(--code-line);
+  border-radius: 10px;
+  background: var(--code);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.hk-demo-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--code-line);
+}
+.hk-demo-dots i {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: var(--code-line);
+}
+.hk-demo-toggle {
+  padding: 2px 10px;
+  border: 1px solid var(--code-line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--code-text-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.hk-demo-toggle:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.hk-demo-screen {
+  height: 300px;
+  margin: 0;
+  padding: 18px 20px;
+  overflow: auto;
+  font-family: var(--vp-font-family-mono);
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--code-text-2);
+  background: transparent;
+  white-space: pre;
+}
+.hk-demo-screen .cmd {
+  color: var(--code-text);
+}
+.hk-demo-screen .cmd b {
+  color: var(--signal);
+  font-weight: 600;
+}
+@media (max-width: 860px) {
+  .hk-demo {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 8px 16px 56px;
+  }
+  .hk-demo-screen {
+    height: 280px;
+    font-size: 12.5px;
+  }
+}
+
+.hk-install-hint a {
+  color: var(--signal);
+  text-decoration: underline;
 }
