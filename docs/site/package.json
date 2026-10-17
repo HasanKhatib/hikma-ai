@@ -8,6 +8,8 @@
     "docs:preview": "vitepress preview ."
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
+    "@playwright/test": "^1.49.1",
     "vitepress": "^1.6.4"
   }
 }

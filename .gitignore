@@ -6,3 +6,5 @@ docs/site/.vitepress/cache/
 coverage.out
 coverage.html
 .task/
+docs/site/test-results/
+docs/site/playwright-report/

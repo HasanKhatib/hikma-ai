@@ -741,3 +741,14 @@ kbd,
     margin-top: 10px;
   }
 }
+
+/* Grid items default to min-width:auto, so one long unbroken line (the install command) can make
+   a phone-width page scroll sideways. Let them shrink and scroll inside their own box. */
+.hk-hero-copy,
+.hk-hero-image,
+.hk-scene-wrap {
+  min-width: 0;
+}
+.hk-install-line {
+  max-width: 100%;
+}

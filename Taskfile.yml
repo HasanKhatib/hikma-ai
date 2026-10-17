@@ -131,6 +131,13 @@ tasks:
       - echo "Serving the production build at http://localhost:{{.DOCS_PREVIEW_PORT}}{{.DOCS_BASE}}"
       - npm run docs:preview --prefix {{.DOCS_DIR}} -- --port {{.DOCS_PREVIEW_PORT}} --strictPort
 
+  docs:e2e:
+    desc: Run the docs site in real browsers (Chromium, Firefox, WebKit, phones); first run needs `npx playwright install`
+    deps: [docs:deps]
+    dir: "{{.DOCS_DIR}}"
+    cmds:
+      - npx playwright test
+
   docs:pages:
     desc: Rehearse the Pages deploy from a clean install (npm ci, build, serve)
     cmds:
