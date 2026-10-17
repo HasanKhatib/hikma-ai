@@ -2145,7 +2145,7 @@
             },
             {
               "id": "E7.3-T9",
-              "title": "Add a huh prompter behind the Prompter, opt-in with HIKMA_PROMPTS=huh (built 2026-10-17; survey stays the default until T12)",
+              "title": "Replace survey with charm.land/huh/v2 behind the Prompter (code done in PR #45: huh is the default, survey and HIKMA_PROMPTS are gone; merge waits on T12)",
               "status": "done",
               "assignee": "ai+verify",
               "labels": [
@@ -2178,7 +2178,7 @@
             },
             {
               "id": "E7.3-T12",
-              "title": "Walk the huh prompter by hand on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries; if it holds, merge one PR that makes huh the default and deletes survey and HIKMA_PROMPTS",
+              "title": "Walk PR #45 by hand on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries; if it holds, mark the PR ready and merge it",
               "status": "todo",
               "assignee": "me",
               "labels": [

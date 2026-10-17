@@ -89,7 +89,7 @@ func runWizard(p Prompter, out io.Writer, run func(args []string) error) error {
 	fmt.Fprintln(out)
 
 	// Ctrl-C inside the command's own prompt is a cancel, like Ctrl-C in ours.
-	runErr := quietCancel(cancelled(run(args)))
+	runErr := quietCancel(run(args))
 
 	fmt.Fprintf(out, "\n%s\n  %s\n", ui.Dim(out, "Equivalent command:"), ui.Cyan(out, equivalent(args)))
 	return runErr

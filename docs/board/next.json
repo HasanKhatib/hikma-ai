@@ -20,6 +20,6 @@
     "Agents disagree on a skill that exists at both scopes and mostly do not document it. Checked 2026-10-17: OpenCode 1.19.0 is unstable (project or global), Codex 0.133.0 lists both with project first, Copilot untested. Docs say documented, reported, or checked, never a winner beyond Claude Code.",
     "E6.1 adds public promises (exit codes, JSON schemas, config version) that cannot change before 2.0; the council run (E6.1-T5) must come before any of it is built.",
     "gh skill was a public preview and may change; E6.2-T4 adds a canary so interop breakage shows up before users report it.",
-    "huh is built but opt-in (HIKMA_PROMPTS=huh, PR #45, not merged by council decision). macOS (tmux) checked: select, multi-select, confirm, input, Ctrl-C, TERM=dumb, and --no-color. Not checked: Windows, and a terminal that never answers capability queries (a test terminal that answered none showed no prompt in 25 seconds). The default flips only after E7.3-T12."
+    "PR #45 makes huh the default and removes survey; it is a draft until the Windows walk (E7.3-T12). macOS (tmux) checked: menu, select, multi-select, confirm, input, Ctrl-C, TERM=dumb, --no-color, --no-input. Not checked: Windows, and a terminal that answers no capability queries (such a test terminal showed no prompt in 25 seconds)."
   ]
 }

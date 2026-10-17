@@ -9,14 +9,8 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/ui"
 )
 
-// huhPrompter asks through charm.land/huh, which survey's archived upstream no
-// longer matches. It is opt-in with HIKMA_PROMPTS=huh until it has been walked
-// on Windows PowerShell and the legacy console (E7.3-T9); after that it becomes
-// the default and survey goes.
+// huhPrompter asks through charm.land/huh.
 type huhPrompter struct{}
-
-// useHuh reports whether the opt-in huh prompter was asked for.
-func useHuh() bool { return strings.EqualFold(os.Getenv("HIKMA_PROMPTS"), "huh") }
 
 // accessible turns the full-screen widgets into plain line prompts, which suits
 // a dumb terminal and screen readers.

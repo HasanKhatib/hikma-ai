@@ -6,8 +6,6 @@ import (
 	"reflect"
 	"strings"
 	"testing"
-
-	"github.com/AlecAivazis/survey/v2/terminal"
 )
 
 type fakePrompter struct {
@@ -168,7 +166,7 @@ func TestWizardRejectsBadNames(t *testing.T) {
 func TestWizardCtrlCInsideTheCommandIsQuiet(t *testing.T) {
 	p := &fakePrompter{pick: indexOf(t, "Install shell completion")}
 	var out bytes.Buffer
-	err := runWizard(p, &out, func([]string) error { return terminal.InterruptErr })
+	err := runWizard(p, &out, func([]string) error { return errCancelled })
 	if err != nil {
 		t.Fatalf("got %v, want a quiet exit", err)
 	}

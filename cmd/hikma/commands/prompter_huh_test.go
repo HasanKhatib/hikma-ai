@@ -7,14 +7,9 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/ui"
 )
 
-func TestHuhIsOptIn(t *testing.T) {
-	t.Setenv("HIKMA_PROMPTS", "")
-	if _, ok := defaultPrompter().(surveyPrompter); !ok {
-		t.Fatal("survey must stay the default until the Windows check passes")
-	}
-	t.Setenv("HIKMA_PROMPTS", "HUH")
-	if _, ok := defaultPrompter().(huhPrompter); !ok {
-		t.Fatal("HIKMA_PROMPTS=huh must select the huh prompter")
+func TestHuhIsTheDefaultPrompter(t *testing.T) {
+	if _, ok := prompter.(huhPrompter); !ok {
+		t.Fatalf("default prompter is %T, want huhPrompter", prompter)
 	}
 }
 

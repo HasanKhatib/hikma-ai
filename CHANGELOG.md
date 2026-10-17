@@ -11,6 +11,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 - Global `--no-input` and `--no-color` flags. `--no-input` stops every prompt, even in a terminal: a command that would have asked fails and names the flag to pass (usually `--yes`), and bare `hikma` prints help instead of the menu. `--no-color` does the same as `NO_COLOR`.
 
+- Prompts (menu, confirmations, pickers) now use Charm's `huh` instead of the archived `survey`. They look slightly different, honor `--no-color`, `NO_COLOR`, and `--no-input`, and fall back to plain line prompts under `TERM=dumb` or when `ACCESSIBLE` is set.
+
 ### Fixed
 - `hikma completion` writes to the command's output, and the zsh instructions no longer tell you to write to `${fpath[1]}`, which is often a folder you cannot write to or one zsh never reads. Use `source <(hikma completion zsh)` in `~/.zshrc`.
 - The Homebrew formula installs shell completions.
