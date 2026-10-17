@@ -156,6 +156,12 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 	// the point of a registry you own is to save the round trip. --pr opts into
 	// a reviewed pull request instead. Without write access it is always a PR
 	// from your fork.
+	// A default branch whose rules require pull requests would reject the commit,
+	// so go straight to a pull request and say why.
+	if canPush == "true" && !plan.viaPR && requiresPullRequest(upstream, baseBranch) {
+		fmt.Fprintf(w, "%s requires pull requests on %s; opening one.\n", upstream, baseBranch)
+		plan.viaPR = true
+	}
 	direct := canPush == "true" && !plan.viaPR
 
 	branch := "skill/" + plan.name
@@ -420,6 +426,23 @@ func readSkillOwner(skillDir string) (string, error) {
 // describePush says what this push will do, so the confirmation is never
 // vague about skipping review. It asks GitHub whether you can write to the
 // registry; if that check fails, the later push reports the real error.
+// requiresPullRequest reports whether the branch has an active rule that
+// requires pull requests. It reads the rules endpoint, which needs only read
+// access; classic branch protection is not visible there, and a rejected direct
+// commit still suggests --pr. Any lookup error means "no".
+func requiresPullRequest(repo, branch string) bool {
+	types, err := ghGet(fmt.Sprintf("repos/%s/rules/branches/%s", repo, branch), `[.[].type] | join(",")`)
+	if err != nil {
+		return false
+	}
+	for _, t := range strings.Split(types, ",") {
+		if strings.TrimSpace(t) == "pull_request" {
+			return true
+		}
+	}
+	return false
+}
+
 func describePush(r config.Registry, viaPR bool) string {
 	if viaPR {
 		return "as a pull request (--pr)"
@@ -429,6 +452,9 @@ func describePush(r config.Registry, viaPR bool) string {
 	case err != nil:
 		return "committed to the default branch if you have write access (no review), otherwise a pull request from your fork; add --pr to always open one"
 	case canPush == "true":
+		if branch, berr := ghGet("repos/"+r.FullName(), ".default_branch"); berr == nil && requiresPullRequest(r.FullName(), branch) {
+			return "as a pull request (the default branch requires one)"
+		}
 		return "committed straight to the default branch, with no review (add --pr for a pull request)"
 	}
 	return "as a pull request from your fork (you have no write access)"

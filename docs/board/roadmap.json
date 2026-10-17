@@ -2278,8 +2278,8 @@
             },
             {
               "id": "E7.4-T8",
-              "title": "Run the council on the direct-push default: it changes behavior for everyone with write access, and no council run was recorded",
-              "status": "todo",
+              "title": "Run the council on the direct-push default (done 2026-10-18: keep the default; push now opens a pull request on its own when the default branch's rules require one; recorded in E7.4.md)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "process"

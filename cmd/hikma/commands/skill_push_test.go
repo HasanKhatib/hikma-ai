@@ -23,7 +23,8 @@ type fakeGH struct {
 	calls     []string
 	bodies    map[string]map[string]any // "METHOD endpoint" -> last body
 	blobCount int
-	protected bool // the default branch rejects direct updates
+	protected bool   // the default branch rejects direct updates
+	rules     string // comma-separated rule types on the default branch, from the rules endpoint
 }
 
 func newFakeGH() *fakeGH {
@@ -62,6 +63,8 @@ func (f *fakeGH) run(stdin string, args ...string) (string, error) {
 			return "main", nil
 		}
 		return f.canPush, nil
+	case method == "GET" && endpoint == "repos/org/reg/rules/branches/main":
+		return f.rules, nil
 	case method == "POST" && endpoint == "repos/org/reg/forks":
 		return "me/reg", nil
 	case endpoint == "repos/me/reg" && method == "GET":
@@ -345,5 +348,48 @@ func TestPushCodeownersRequiresPR(t *testing.T) {
 func TestDescribePushWithPRFlagNeedsNoNetwork(t *testing.T) {
 	if got := describePush(config.Registry{}, true); !strings.Contains(got, "pull request") {
 		t.Errorf("got %q", got)
+	}
+}
+
+func TestPushSwitchesToPRWhenTheDefaultBranchRequiresOne(t *testing.T) {
+	f := newFakeGH()
+	f.rules = "deletion,pull_request"
+	usePushFake(t, f)
+	var out bytes.Buffer
+	pr, err := pushSkill(&out, testPlan())
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out.String())
+	}
+	if pr != "https://github.com/org/reg/pull/7" {
+		t.Fatalf("pr = %q, want a pull request", pr)
+	}
+	if f.has("PATCH repos/org/reg/git/refs/heads/main") {
+		t.Fatal("must not update the protected default branch")
+	}
+	if !strings.Contains(out.String(), "requires pull requests") {
+		t.Fatalf("output does not say why:\n%s", out.String())
+	}
+}
+
+func TestPushIgnoresRulesThatDoNotRequireAPullRequest(t *testing.T) {
+	f := newFakeGH()
+	f.rules = "deletion,non_fast_forward"
+	usePushFake(t, f)
+	var out bytes.Buffer
+	if _, err := pushSkill(&out, testPlan()); err != nil {
+		t.Fatalf("%v\n%s", err, out.String())
+	}
+	if !f.has("PATCH repos/org/reg/git/refs/heads/main") {
+		t.Fatal("expected a direct commit to the default branch")
+	}
+}
+
+func TestDescribePushSaysWhenAPullRequestIsRequired(t *testing.T) {
+	f := newFakeGH()
+	f.rules = "pull_request"
+	usePushFake(t, f)
+	got := describePush(config.Registry{Owner: "org", Repo: "reg"}, false)
+	if !strings.Contains(got, "requires one") {
+		t.Fatalf("describePush = %q", got)
 	}
 }

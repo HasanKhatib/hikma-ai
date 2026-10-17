@@ -19,7 +19,7 @@ Requires the GitHub CLI (`gh`), signed in. The registry must be a GitHub `owner/
    ? Push to owner/repo? (y/N)
    ```
 
-3. **With write access, the skill is committed straight to the registry's default branch.** No branch, no pull request: the registry is yours, so publishing is one step. The confirmation says so plainly ("committed straight to the default branch, with no review") before anything is written. If the branch is protected and rejects the commit, Hikma says so and suggests `--pr`.
+3. **With write access, the skill is committed straight to the registry's default branch.** No branch, no pull request: the registry is yours, so publishing is one step. The confirmation says so plainly ("committed straight to the default branch, with no review") before anything is written. If the branch is protected and rejects the commit, Hikma says so and suggests `--pr`. If the repository's rules require pull requests, Hikma sees that first, says so, and opens a pull request instead of trying the commit.
 4. **Without write access**, Hikma forks the registry, pushes a `skill/<name>` branch to your fork, and opens a pull request against the registry.
 5. **With `--pr`**, you get the pull request flow even with write access, for a registry where changes are reviewed. A `skill/<name>` branch is pushed to the registry and a pull request is opened.
 
@@ -40,3 +40,7 @@ Nothing is force-pushed:
 | `--agent <list>` | Which agent's folder to read the skill from |
 
 Executable files keep their executable bit, and binary files are preserved.
+
+## In scripts and CI
+
+With write access and `--yes`, a push commits straight to the default branch and nothing waits for a review. If a script should publish through review, pass `--pr`. The confirmation line always says which of the two will happen, so it shows up in the job log.
