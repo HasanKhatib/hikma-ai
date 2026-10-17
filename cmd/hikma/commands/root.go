@@ -51,11 +51,16 @@ Set a registry with: hikma config registry owner/registry`,
 
 func newCompletionCmd() *cobra.Command {
 	shells := []string{"bash", "zsh", "fish", "powershell"}
-	return &cobra.Command{
+	var install, assumeYes bool
+	cmd := &cobra.Command{
 		Annotations: map[string]string{ownArgErrors: "true"},
 		Use:         "completion [bash|zsh|fish|powershell]",
-		Short:       "Generate shell completion script",
-		Long: `Generate shell completion script for hikma.
+		Short:       "Install or print shell completion",
+		Long: `Install shell completion for hikma, or print the script.
+
+With no shell, hikma detects yours, shows exactly what it would change, and
+asks before installing (--yes skips the question). With a shell name it prints
+the script, or installs it with --install.
 
 Bash:
   source <(hikma completion bash)
@@ -74,7 +79,10 @@ PowerShell:
 		Args: func(cmd *cobra.Command, args []string) error {
 			switch {
 			case len(args) == 0:
-				return fmt.Errorf("which shell? Run one of: hikma completion %s\nSee 'hikma completion --help' for how to install it", strings.Join(shells, "|"))
+				if install || assumeYes || isInteractive() {
+					return nil
+				}
+				return fmt.Errorf("which shell? Run one of: hikma completion %s\nOr install it for your shell: hikma completion --install\nSee 'hikma completion --help' for details", strings.Join(shells, "|"))
 			case len(args) > 1:
 				return fmt.Errorf("completion takes one shell name, got %d: %s", len(args), strings.Join(args, " "))
 			case !slices.Contains(shells, args[0]):
@@ -87,18 +95,20 @@ PowerShell:
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			out := cmd.OutOrStdout()
-			switch args[0] {
-			case "bash":
-				return cmd.Root().GenBashCompletion(out)
-			case "zsh":
-				return cmd.Root().GenZshCompletion(out)
-			case "fish":
-				return cmd.Root().GenFishCompletion(out, true)
-			case "powershell":
-				return cmd.Root().GenPowerShellCompletionWithDesc(out)
+			if len(args) == 0 {
+				shell, err := chooseShell(shells)
+				if err != nil {
+					return err
+				}
+				return installCompletion(cmd, shell, assumeYes)
 			}
-			return nil
+			if install {
+				return installCompletion(cmd, args[0], assumeYes)
+			}
+			return generateCompletion(cmd, args[0], cmd.OutOrStdout())
 		},
 	}
+	cmd.Flags().BoolVar(&install, "install", false, "install completion for the shell instead of printing it")
+	cmd.Flags().BoolVarP(&assumeYes, "yes", "y", false, "skip the confirmation question")
+	return cmd
 }

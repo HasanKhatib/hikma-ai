@@ -1,10 +1,16 @@
 # hikma completion
 
-Generate a shell completion script.
+Install shell completion, or print the script.
 
 ```bash
-hikma completion [bash|zsh|fish|powershell]
+hikma completion                 # detect your shell, show what changes, ask, install
+hikma completion --install zsh   # same, for a shell you name
+hikma completion zsh             # only print the script
 ```
+
+The installer shows the file it will change and asks before writing (`--yes` skips the question). zsh and bash get a marked `source` line appended to `~/.zshrc` or `~/.bashrc`; fish gets `~/.config/fish/completions/hikma.fish`; PowerShell gets a line in your `$PROFILE`. Running it twice changes nothing.
+
+To do it by hand, follow the steps below.
 
 Installed with Homebrew (v0.4.1 and later)? Completions are set up for you. For bash and zsh, Homebrew's completion folders must be on your shell's path: see [Homebrew shell completion](https://docs.brew.sh/Shell-Completion). Otherwise follow the steps for your shell.
 

@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `hikma completion` with no shell detects yours, shows the file it would change, and asks before installing. `--install` does the same for a named shell; `--yes` skips the question. `hikma completion <shell>` still only prints the script.
+
 ### Fixed
 - `hikma completion` writes to the command's output, and the zsh instructions no longer tell you to write to `${fpath[1]}`, which is often a folder you cannot write to or one zsh never reads. Use `source <(hikma completion zsh)` in `~/.zshrc`.
 - The Homebrew formula installs shell completions.
