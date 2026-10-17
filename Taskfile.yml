@@ -1,0 +1,192 @@
+# yaml-language-server: $schema=https://taskfile.dev/schema.json
+version: "3"
+
+vars:
+  BINARY: hikma
+  CMD: ./cmd/hikma
+  PKG: github.com/hasankhatib/hikma-ai
+  DOCS_DIR: docs/site
+  DOCS_BASE: /hikma-ai/
+  DOCS_DEV_PORT: 5173
+  DOCS_PREVIEW_PORT: 4180
+
+tasks:
+  default:
+    desc: List the available tasks
+    silent: true
+    cmds:
+      - task --list
+
+  # ── Setup ──────────────────────────────────────────────────────────────────
+
+  setup:
+    desc: Download Go modules and install the docs dependencies
+    cmds:
+      - go mod download
+      - npm ci --prefix {{.DOCS_DIR}} --silent
+
+  # ── Build and run ──────────────────────────────────────────────────────────
+
+  build:
+    desc: Compile the hikma binary to ./hikma
+    cmds:
+      - go build -ldflags="-X {{.PKG}}/cmd/hikma/commands.version=dev" -o {{.BINARY}} {{.CMD}}
+    sources:
+      - "**/*.go"
+      - go.mod
+      - go.sum
+    generates:
+      - "{{.BINARY}}"
+
+  run:
+    desc: "Build and run hikma (pass arguments after --, for example: task run -- skill list)"
+    deps: [build]
+    cmds:
+      - ./{{.BINARY}} {{.CLI_ARGS}}
+
+  install:
+    desc: Install hikma to $GOPATH/bin
+    cmds:
+      - go install {{.CMD}}
+
+  # ── Quality ────────────────────────────────────────────────────────────────
+
+  test:
+    desc: Run all Go tests
+    cmds:
+      - go test ./...
+
+  test:cover:
+    desc: Run tests with a coverage report in coverage.html
+    cmds:
+      - go test -coverprofile=coverage.out ./...
+      - go tool cover -html=coverage.out -o coverage.html
+      - echo "Coverage report written to coverage.html"
+
+  test:scripts:
+    desc: Test the install script
+    cmds:
+      - bash scripts/test-install.sh
+
+  fmt:
+    desc: Format Go sources with gofmt
+    cmds:
+      - gofmt -w cmd internal
+
+  lint:
+    desc: Check gofmt and go vet (what CI hygiene runs)
+    cmds:
+      - |
+        unformatted=$(gofmt -l cmd internal)
+        if [ -n "$unformatted" ]; then
+          echo "Unformatted files (run 'task fmt'):"
+          echo "$unformatted"
+          exit 1
+        fi
+      - go vet ./...
+
+  tidy:check:
+    desc: Fail if go mod tidy would change go.mod or go.sum
+    cmds:
+      - go mod tidy
+      - git diff --exit-code go.mod go.sum
+
+  board:validate:
+    desc: Validate the roadmap board
+    cmds:
+      - npx --yes agentkan validate docs/board
+
+  # ── Docs site ──────────────────────────────────────────────────────────────
+
+  docs:deps:
+    internal: true
+    cmds:
+      - |
+        command -v node >/dev/null 2>&1 || { echo "node is not installed. Install Node.js and try again."; exit 1; }
+        if [ ! -d "{{.DOCS_DIR}}/node_modules" ]; then
+          echo "Installing docs dependencies..."
+          npm ci --prefix {{.DOCS_DIR}} --silent
+        fi
+
+  docs:dev:
+    desc: "Run the docs site with live reload at http://localhost:5173/hikma-ai/"
+    deps: [docs:deps]
+    cmds:
+      - task: docs:free
+        vars: {PORT: "{{.DOCS_DEV_PORT}}"}
+      - npm run docs:dev --prefix {{.DOCS_DIR}} -- --port {{.DOCS_DEV_PORT}}
+
+  docs:build:
+    desc: Build the docs site (fails on dead links, same as CI)
+    deps: [docs:deps]
+    cmds:
+      - npm run docs:build --prefix {{.DOCS_DIR}}
+
+  docs:preview:
+    desc: "Build the docs site and serve it as GitHub Pages does, at http://localhost:4180/hikma-ai/"
+    cmds:
+      - task: docs:build
+      - task: docs:free
+        vars: {PORT: "{{.DOCS_PREVIEW_PORT}}"}
+      - echo "Serving the production build at http://localhost:{{.DOCS_PREVIEW_PORT}}{{.DOCS_BASE}}"
+      - npm run docs:preview --prefix {{.DOCS_DIR}} -- --port {{.DOCS_PREVIEW_PORT}} --strictPort
+
+  docs:pages:
+    desc: Rehearse the Pages deploy from a clean install (npm ci, build, serve)
+    cmds:
+      - rm -rf {{.DOCS_DIR}}/node_modules {{.DOCS_DIR}}/.vitepress/dist {{.DOCS_DIR}}/.vitepress/cache
+      - npm ci --prefix {{.DOCS_DIR}} --silent
+      - task: docs:preview
+
+  docs:free:
+    internal: true
+    silent: true
+    cmds:
+      - |
+        # Stop only a vitepress server on this port; leave any other program alone.
+        for pid in $(lsof -ti tcp:{{.PORT}} -sTCP:LISTEN 2>/dev/null || true); do
+          if ps -p "$pid" -o command= 2>/dev/null | grep -q vitepress; then
+            # task's built-in shell has no kill, so call the real one through env
+            env kill "$pid" 2>/dev/null || true
+            sleep 1
+            env kill -0 "$pid" 2>/dev/null && env kill -9 "$pid" 2>/dev/null || true
+            echo "Stopped docs server on port {{.PORT}} (pid $pid)"
+          else
+            echo "Port {{.PORT}} is used by another program (pid $pid); leaving it alone."
+          fi
+        done
+        exit 0
+
+  docs:stop:
+    desc: Stop a docs server started by these tasks (never touches other programs)
+    silent: true
+    cmds:
+      - task: docs:free
+        vars: {PORT: "{{.DOCS_DEV_PORT}}"}
+      - task: docs:free
+        vars: {PORT: "{{.DOCS_PREVIEW_PORT}}"}
+
+  # ── Release ────────────────────────────────────────────────────────────────
+
+  release:snapshot:
+    desc: Try a release locally without publishing (needs goreleaser)
+    cmds:
+      - goreleaser release --snapshot --clean
+
+  # ── Housekeeping ───────────────────────────────────────────────────────────
+
+  clean:
+    desc: Remove build artifacts and the docs build output
+    cmds:
+      - rm -rf {{.BINARY}} coverage.out coverage.html dist {{.DOCS_DIR}}/.vitepress/dist {{.DOCS_DIR}}/.vitepress/cache
+
+  ci:
+    desc: Run what CI runs (lint, tidy check, test, build, board and docs checks)
+    cmds:
+      - task: lint
+      - task: tidy:check
+      - task: test
+      - task: build
+      - task: board:validate
+      - task: docs:build
+      - echo "CI checks passed"

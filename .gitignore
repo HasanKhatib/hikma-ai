@@ -2,3 +2,7 @@ dist/
 node_modules/
 docs/site/.vitepress/dist/
 docs/site/.vitepress/cache/
+/hikma
+coverage.out
+coverage.html
+.task/
