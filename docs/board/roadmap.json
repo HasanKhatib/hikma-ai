@@ -1924,6 +1924,16 @@
                 "docs"
               ],
               "planned": null
+            },
+            {
+              "id": "E7.1-T6",
+              "title": "Add a Taskfile for build, test, CI checks, and local docs preview (#42, merged 2026-10-17)",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "process"
+              ],
+              "planned": null
             }
           ]
         },
@@ -2022,6 +2032,17 @@
               "labels": [
                 "docs",
                 "design"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.2-T9",
+              "title": "Home-page terminal demo, version label read from CHANGELOG, and a developer credit; guides cut from eight to three (#40, #41, merged 2026-10-17)",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "brand",
+                "docs"
               ],
               "planned": null
             }
@@ -2272,8 +2293,8 @@
           "tasks": [
             {
               "id": "E7.5-T1",
-              "title": "Decide whether PR #40 (docs site footer, guides cut to three) ships in v0.5 and merge it; rebase the global.md precedence edit on it",
-              "status": "todo",
+              "title": "Merge PR #40 (docs site credit, guides cut to three) and the PRs stacked on it (done 2026-10-17: #40, #41, #42, #43 are merged)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release",
