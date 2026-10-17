@@ -4,7 +4,7 @@ Hikma AI is a public, neutral CLI (`hikma`) for scaffolding, sharing, and instal
 
 ## Commands
 
-Run before every pull request. CI runs the same checks on Linux, macOS, and Windows. `CONTRIBUTING.md` is the single list of checks; if the two differ, it wins.
+Run before every pull request. CI runs the same checks on Linux, macOS, and Windows. `CONTRIBUTING.md` is the single list of checks; if the two differ, it wins. `task ci` runs them all, and `task docs:preview` serves the docs site as GitHub Pages does.
 
 ```bash
 gofmt -w cmd internal

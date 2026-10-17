@@ -16,6 +16,20 @@ npx agentkan validate docs/board   # if you touched docs/board
 (cd docs/site && npm ci && npm run docs:build)   # if you touched docs/site
 ```
 
+## Tasks
+
+[Task](https://taskfile.dev) wraps the common commands. Run `task` to list them.
+
+```bash
+task ci               # everything CI runs: lint, tidy check, tests, build, board, docs
+task test             # Go tests
+task run -- skill list   # build and run hikma with arguments
+task docs:dev         # docs with live reload at http://localhost:5173/hikma-ai/
+task docs:preview     # production build served like GitHub Pages at http://localhost:4180/hikma-ai/
+task docs:pages       # same, from a clean npm install
+task docs:stop        # stop a docs server these tasks started
+```
+
 ## Registry boundary
 
 Hikma AI is the CLI repository only. Do not add a top-level `skills/` registry folder here. Tests build their registries on the fly in temporary directories; do not commit registry content.
