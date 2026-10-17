@@ -5,6 +5,8 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- `hikma` with no arguments in a terminal opens a menu for the common tasks (install, browse, update, verify, create, publish, set up a project, choose an agent, set a registry, install completion, check your setup). It runs the same command a script would and prints the equivalent `hikma` command afterwards. Without a terminal, `hikma` still prints help, so scripts and CI never wait for input.
+- A banner with the logo's frame and prompt shows above the menu, colored in a terminal. Output stays plain when piped, under `NO_COLOR`, or with `TERM=dumb`.
 - `hikma completion` with no shell detects yours, shows the file it would change, and asks before installing. `--install` does the same for a named shell; `--yes` skips the question. `hikma completion <shell>` still only prints the script.
 
 ### Fixed

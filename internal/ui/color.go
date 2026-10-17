@@ -11,6 +11,10 @@ import (
 const (
 	yellow = "\x1b[33m"
 	red    = "\x1b[31m"
+	green  = "\x1b[32m"
+	cyan   = "\x1b[36m"
+	bold   = "\x1b[1m"
+	dim    = "\x1b[2m"
 	reset  = "\x1b[0m"
 )
 
@@ -37,6 +41,18 @@ func Yellow(w io.Writer, s string) string { return paint(w, yellow, s) }
 
 // Red colors s for errors and failures when w is a color-capable terminal.
 func Red(w io.Writer, s string) string { return paint(w, red, s) }
+
+// Green colors s for success when w is a color-capable terminal.
+func Green(w io.Writer, s string) string { return paint(w, green, s) }
+
+// Cyan colors s for commands and paths when w is a color-capable terminal.
+func Cyan(w io.Writer, s string) string { return paint(w, cyan, s) }
+
+// Bold makes s bold when w is a color-capable terminal.
+func Bold(w io.Writer, s string) string { return paint(w, bold, s) }
+
+// Dim fades s for secondary text when w is a color-capable terminal.
+func Dim(w io.Writer, s string) string { return paint(w, dim, s) }
 
 // Warning is the "warning:" prefix, in yellow on a terminal.
 func Warning(w io.Writer) string { return Yellow(w, "warning:") }
