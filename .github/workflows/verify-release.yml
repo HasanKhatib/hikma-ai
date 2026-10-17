@@ -1,0 +1,78 @@
+name: Verify release
+
+# After a release is published, install it the way users do on each OS and
+# check it is the right version, passes its build attestation, and runs.
+# Trigger it by hand for any tag to re-check an old release.
+
+on:
+  workflow_run:
+    workflows: [Release]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Release tag to verify (empty means the latest release)
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  GH_TOKEN: ${{ github.token }}
+
+jobs:
+  verify:
+    # For the Release workflow, only verify when it succeeded.
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    name: ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Work out the tag
+        id: tag
+        run: |
+          tag="${{ inputs.tag || (github.event_name == 'workflow_run' && github.event.workflow_run.head_branch) || '' }}"
+          latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
+          [ -n "$tag" ] || tag=$latest
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
+          echo "is_latest=$([ "$tag" = "$latest" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          echo "Verifying $tag (latest release: $latest)"
+
+      - name: Install with the install script and check the attestation
+        env:
+          HIKMA_INSTALL_DIR: ${{ runner.temp }}/script-bin
+          HIKMA_REQUIRE_ATTESTATION: "1"
+        run: |
+          # Releases before v0.3.0 have no attestation, so do not insist on one for them.
+          case "${{ steps.tag.outputs.version }}" in 0.1.*|0.2.*) unset HIKMA_REQUIRE_ATTESTATION ;; esac
+          curl -fsSL "https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main/scripts/install.sh" | bash -s -- "${{ steps.tag.outputs.tag }}" | tee install.log
+          grep -q "Checksum verified" install.log
+          if [ -n "${HIKMA_REQUIRE_ATTESTATION:-}" ]; then grep -q "Attestation verified" install.log; fi
+          echo "${{ runner.temp }}/script-bin" >> "$GITHUB_PATH"
+
+      - name: The installed binary is this version and runs
+        run: |
+          hikma --version | tee version.txt
+          grep -q "${{ steps.tag.outputs.version }}" version.txt
+          mkdir demo && cd demo && git init -q
+          hikma doctor
+          hikma skill create demo --description "Smoke test" --agent claude
+          hikma skill list --installed | grep -q demo
+          hikma completion bash | grep -q hikma
+
+      - name: Install with Homebrew
+        # The tap only ever holds the latest release.
+        if: matrix.os != 'windows-latest' && steps.tag.outputs.is_latest == 'true'
+        run: |
+          if [ -x /home/linuxbrew/.linuxbrew/bin/brew ]; then eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"; fi
+          brew install HasanKhatib/tap/hikma
+          "$(brew --prefix)/bin/hikma" --version | tee brew-version.txt
+          grep -q "${{ steps.tag.outputs.version }}" brew-version.txt
