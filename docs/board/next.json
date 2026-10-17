@@ -1,10 +1,10 @@
 {
   "updated": "2026-10-17",
-  "next": "E7.3-T9",
+  "next": "E7.3-T6",
   "note": "v0.4.0 is released; P1 to P5 are done. #40 to #43 are merged, so main has the menu, --no-input and --no-color, every prompt behind the Prompter, the trimmed docs site, the Taskfile, and the v0.5 and v1.0 plan. Next: E7.3-T9 (survey to huh, survey stays until a Windows check passes), then E7.3-T6, E7.2-T4 to T8, the hand walks (E7.3-T8, E7.4-T7), the council run on the direct-push default (E7.4-T8), then E7.5 (tag v0.5.0). Then v1.0: E6.1-T5 council first, E6.1 contracts, E6.2 end-to-end and canary, E6.3 docs audit, rc, tag. Work goes on short branches off main, one PR per step.",
   "criticalPath": [
-    "E7.3-T9",
     "E7.3-T6",
+    "E7.3-T12",
     "E7.4-T8",
     "E7.4-T7",
     "E7.3-T8",
@@ -17,9 +17,9 @@
     "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries.",
     "Tests for global installs must never touch the real home directory (E4.2-T8).",
     "Claude personal skills do not load in cloud or Cowork sessions, so global installs do not help in a Codespace; the global-install docs must say so up front (E4.2-T3).",
-    "huh on Windows PowerShell and the legacy console is unchecked; T9 must test accessible mode and Ctrl-C before swapping, and survey stays until it passes (E7.3-T9).",
     "Agents disagree on a skill that exists at both scopes and mostly do not document it. Checked 2026-10-17: OpenCode 1.19.0 is unstable (project or global), Codex 0.133.0 lists both with project first, Copilot untested. Docs say documented, reported, or checked, never a winner beyond Claude Code.",
     "E6.1 adds public promises (exit codes, JSON schemas, config version) that cannot change before 2.0; the council run (E6.1-T5) must come before any of it is built.",
-    "gh skill was a public preview and may change; E6.2-T4 adds a canary so interop breakage shows up before users report it."
+    "gh skill was a public preview and may change; E6.2-T4 adds a canary so interop breakage shows up before users report it.",
+    "PR #45 makes huh the default and removes survey; it is a draft until the Windows walk (E7.3-T12). macOS (tmux) checked: menu, select, multi-select, confirm, input, Ctrl-C, TERM=dumb, --no-color, --no-input. Not checked: Windows, and a terminal that answers no capability queries (such a test terminal showed no prompt in 25 seconds)."
   ]
 }

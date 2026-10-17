@@ -2145,8 +2145,8 @@
             },
             {
               "id": "E7.3-T9",
-              "title": "Replace survey with charm.land/huh/v2 behind the Prompter: gate on a Windows hand check, map ErrUserAborted to errCancelled, use accessible mode for TERM=dumb, keep survey until it passes",
-              "status": "todo",
+              "title": "Replace survey with charm.land/huh/v2 behind the Prompter (code done in PR #45: huh is the default, survey and HIKMA_PROMPTS are gone; merge waits on T12)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "refactor",
@@ -2172,6 +2172,17 @@
               "assignee": "ai",
               "labels": [
                 "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T12",
+              "title": "Walk PR #45 by hand on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries; if it holds, mark the PR ready and merge it",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "verify",
                 "cli"
               ],
               "planned": null
