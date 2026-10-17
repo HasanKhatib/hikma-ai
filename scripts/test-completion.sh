@@ -33,6 +33,7 @@ install_twice() { # <rc-or-file> <installer shell arg>
 case $shell in
 bash)
   bash_bin=${BASH_BIN:-bash}
+  # shellcheck disable=SC2016 # the expansion must happen in the other bash
   major=$("$bash_bin" -c 'echo "${BASH_VERSINFO[0]}"')
   if [ "$major" -lt 4 ]; then
     echo "SKIP: $("$bash_bin" --version | head -1) is older than 4.1; completion needs bash 4.1+ and bash-completion"
@@ -73,6 +74,7 @@ fish)
   ;;
 pwsh)
   command -v pwsh >/dev/null || { echo "SKIP: pwsh is not installed"; exit 0; }
+  # shellcheck disable=SC2016 # $PROFILE is PowerShell's variable, not bash's
   profile=$(pwsh -NoProfile -Command '$PROFILE' | tr -d '\r')
   [ -n "$profile" ] || fail "pwsh did not report a profile path"
   # On Windows the profile lives under Documents, not in the throwaway home: start clean.
