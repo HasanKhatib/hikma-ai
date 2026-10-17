@@ -25,7 +25,7 @@ for want in \
   'sha256 "2222222222222222222222222222222222222222222222222222222222222222"' \
   'hikma_linux_arm64.tar.gz' 'sha256 "3333333333333333333333333333333333333333333333333333333333333333"' \
   'hikma_linux_amd64.tar.gz' 'sha256 "4444444444444444444444444444444444444444444444444444444444444444"' \
-  'bin.install "hikma"'; do
+  'bin.install "hikma"' 'generate_completions_from_executable'; do
   grep -qF "$want" "$WORK/hikma.rb" || { echo "FAIL: formula is missing: $want"; cat "$WORK/hikma.rb"; exit 1; }
 done
 if grep -q 'quarantine\|xattr\|postflight' "$WORK/hikma.rb"; then

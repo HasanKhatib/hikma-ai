@@ -59,6 +59,7 @@ ${LINUX_INTEL}
 
   def install
     bin.install "hikma"
+    generate_completions_from_executable(bin/"hikma", "completion")
   end
 
   test do

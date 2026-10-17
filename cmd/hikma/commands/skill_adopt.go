@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -79,7 +80,7 @@ The gh skill metadata in SKILL.md is replaced the next time you update.`,
 			if srcArg == "" {
 				p, ok := source.ReadProvenance(sc.path(dirs[0]))
 				if !ok {
-					return fmt.Errorf("%s has no gh skill metadata; pass --source <owner/repo>", dirs[0])
+					return noProvenanceError(name, dirs[0])
 				}
 				srcArg, ref = p.SourceRef()
 				if flagRef != "" {
@@ -150,4 +151,18 @@ func adoptHint(rows []installedSkill) string {
 		}
 	}
 	return strings.Join(list, ", ")
+}
+
+// noProvenanceError explains why adopt cannot tell where a skill came from and
+// offers the two real ways forward, using the configured registry when there is one.
+func noProvenanceError(name, dir string) error {
+	var b strings.Builder
+	fmt.Fprintf(&b, "%s was not installed by gh skill, so Hikma cannot tell where it came from.\n", dir)
+	b.WriteString("  If it came from a repository, say which:\n")
+	if src, _, err := resolveSource(""); err == nil && src.Display != "" {
+		fmt.Fprintf(&b, "    hikma skill adopt %s --source %s     (your configured registry)\n", name, src.Display)
+	}
+	fmt.Fprintf(&b, "    hikma skill adopt %s --source <owner/repo>\n", name)
+	fmt.Fprintf(&b, "  If it is your own skill that is not published yet:\n    hikma skill push %s", name)
+	return errors.New(b.String())
 }

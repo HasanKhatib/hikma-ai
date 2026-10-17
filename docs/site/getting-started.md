@@ -67,7 +67,7 @@ hikma skill create my-skill --description "What it helps with"
 hikma skill push my-skill
 ```
 
-`push` validates the skill, shows the target registry and asks you to confirm, then opens a pull request. See [skill push](/commands/skill-push).
+`push` validates the skill, shows the target registry and asks you to confirm, then commits the skill to your registry (or opens a pull request from your fork if you lack write access, or with `--pr`). See [skill push](/commands/skill-push).
 
 ## Next
 

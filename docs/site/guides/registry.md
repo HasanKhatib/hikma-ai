@@ -1,6 +1,6 @@
 # Run a registry
 
-A registry is a Git repository of skills that you choose as your default source and as the target of `hikma skill push`. There is nothing to host: Hikma reads it with `git`, and publishing is a pull request.
+A registry is a Git repository of skills that you choose as your default source and as the target of `hikma skill push`. There is nothing to host: Hikma reads it with `git`, and publishing is a commit if you own it or a pull request if you do not.
 
 ## Create one
 
@@ -81,7 +81,7 @@ The action needs Hikma v0.2.0 or later, the first release with `--format github`
 
 ## Publishing
 
-`hikma skill push <name>` opens a pull request against the registry. See [skill push](/commands/skill-push) for the confirmation prompt, fork behavior, and update behavior.
+`hikma skill push <name>` commits to the registry when you have write access, and opens a pull request through your fork when you do not (`--pr` forces one). See [skill push](/commands/skill-push) for the confirmation prompt, fork behavior, and update behavior.
 
 ## Keep it neutral
 

@@ -41,6 +41,10 @@ hikma skill adopt my-skill --source owner/repo --ref v1.2.0
 | `-g`, `--global` | Adopt a skill from your home directory into `~/.hikma/lock.json` |
 | `-y`, `--yes` | Skip the confirmation before changing your home directory |
 
+## A skill with no gh skill metadata
+
+If the skill was not installed by `gh skill`, Hikma cannot tell where it came from and says so, with the commands to run. Pass `--source <owner/repo>` if it came from a repository (the message fills in your configured registry when there is one), or run [`hikma skill push`](/commands/skill-push) if it is your own skill and not published yet.
+
 ## Where Hikma points you here
 
 - `hikma skill list --installed` marks these skills.

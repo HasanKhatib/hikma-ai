@@ -2,7 +2,10 @@
 package commands
 
 import (
-	"os"
+	"errors"
+	"fmt"
+	"slices"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -42,44 +45,70 @@ Set a registry with: hikma config registry owner/registry`,
 		newCompletionCmd(),
 	)
 
+	friendlyErrors(cmd)
 	return cmd
 }
 
 func newCompletionCmd() *cobra.Command {
-	return &cobra.Command{
-		Use:   "completion [bash|zsh|fish|powershell]",
-		Short: "Generate shell completion script",
-		Long: `Generate shell completion script for hikma.
+	shells := []string{"bash", "zsh", "fish", "powershell"}
+	var install, assumeYes bool
+	cmd := &cobra.Command{
+		Annotations: map[string]string{ownArgErrors: "true"},
+		Use:         "completion [bash|zsh|fish|powershell]",
+		Short:       "Install or print shell completion",
+		Long: `Install shell completion for hikma, or print the script.
+
+With no shell, hikma detects yours, shows exactly what it would change, and
+asks before installing (--yes skips the question). With a shell name it prints
+the script, or installs it with --install.
 
 Bash:
   source <(hikma completion bash)
   # To persist across sessions:
   hikma completion bash > /etc/bash_completion.d/hikma
 
-Zsh:
-  hikma completion zsh > "${fpath[1]}/_hikma"
-  # Then restart your shell or run:
-  autoload -U compinit && compinit
+Zsh (add to ~/.zshrc, after compinit):
+  source <(hikma completion zsh)
 
 Fish:
   hikma completion fish > ~/.config/fish/completions/hikma.fish
 
 PowerShell:
   hikma completion powershell | Out-String | Invoke-Expression`,
-		ValidArgs: []string{"bash", "zsh", "fish", "powershell"},
-		Args:      cobra.ExactValidArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			switch args[0] {
-			case "bash":
-				return cmd.Root().GenBashCompletion(os.Stdout)
-			case "zsh":
-				return cmd.Root().GenZshCompletion(os.Stdout)
-			case "fish":
-				return cmd.Root().GenFishCompletion(os.Stdout, true)
-			case "powershell":
-				return cmd.Root().GenPowerShellCompletionWithDesc(os.Stdout)
+		ValidArgs: shells,
+		Args: func(cmd *cobra.Command, args []string) error {
+			switch {
+			case len(args) == 0:
+				if install || assumeYes || isInteractive() {
+					return nil
+				}
+				return fmt.Errorf("which shell? Run one of: hikma completion %s\nOr install it for your shell: hikma completion --install\nSee 'hikma completion --help' for details", strings.Join(shells, "|"))
+			case len(args) > 1:
+				return fmt.Errorf("completion takes one shell name, got %d: %s", len(args), strings.Join(args, " "))
+			case !slices.Contains(shells, args[0]):
+				msg := fmt.Sprintf("unknown shell %q. Supported: %s", args[0], strings.Join(shells, ", "))
+				if s := closest(args[0], shells); s != "" {
+					msg += fmt.Sprintf(". Did you mean: hikma completion %s?", s)
+				}
+				return errors.New(msg)
 			}
 			return nil
 		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 0 {
+				shell, err := chooseShell(shells)
+				if err != nil {
+					return err
+				}
+				return installCompletion(cmd, shell, assumeYes)
+			}
+			if install {
+				return installCompletion(cmd, args[0], assumeYes)
+			}
+			return generateCompletion(cmd, args[0], cmd.OutOrStdout())
+		},
 	}
+	cmd.Flags().BoolVar(&install, "install", false, "install completion for the shell instead of printing it")
+	cmd.Flags().BoolVarP(&assumeYes, "yes", "y", false, "skip the confirmation question")
+	return cmd
 }

@@ -207,10 +207,11 @@ func printActiveSelection(selection config.Selection, isOverride bool) {
 }
 
 // confirmPush shows the target registry and asks the user to confirm.
-func confirmPush(cmd *cobra.Command, name, skillDir string, r config.Registry, origin string, assumeYes bool) error {
+func confirmPush(cmd *cobra.Command, name, skillDir string, r config.Registry, origin string, assumeYes bool, how string) error {
 	out := cmd.OutOrStdout()
 	fmt.Fprintf(out, "\nYou are pushing to registry: %s (%s)\n", r.FullName(), origin)
 	fmt.Fprintf(out, "  skill: %s (%s/)\n", name, skillDir)
+	fmt.Fprintf(out, "  how:   %s\n", how)
 	if assumeYes {
 		return nil
 	}

@@ -23,6 +23,7 @@ type fakeGH struct {
 	calls     []string
 	bodies    map[string]map[string]any // "METHOD endpoint" -> last body
 	blobCount int
+	protected bool // the default branch rejects direct updates
 }
 
 func newFakeGH() *fakeGH {
@@ -86,6 +87,9 @@ func (f *fakeGH) run(stdin string, args ...string) (string, error) {
 	case strings.HasSuffix(endpoint, "/git/commits") && method == "POST":
 		return "newcommit", nil
 	case method == "PATCH" && strings.Contains(endpoint, "/git/refs/heads/"):
+		if f.protected && strings.HasSuffix(endpoint, "/heads/main") {
+			return "", fmt.Errorf("HTTP 422: Protected branch update failed")
+		}
 		return "", nil
 	case method == "POST" && strings.HasSuffix(endpoint, "/git/refs"):
 		return "", nil
@@ -132,11 +136,51 @@ func testPlan() pushPlan {
 	}
 }
 
+func viaPRPlan() pushPlan {
+	p := testPlan()
+	p.viaPR = true
+	return p
+}
+
+func TestPushWithWriteAccessCommitsDirectly(t *testing.T) {
+	f := newFakeGH()
+	usePushFake(t, f)
+	var out bytes.Buffer
+	res, err := pushSkill(&out, testPlan())
+	if err != nil {
+		t.Fatalf("%v\n%s", err, out.String())
+	}
+	if res != "https://github.com/org/reg/commit/newcommit" {
+		t.Fatalf("result = %q", res)
+	}
+	if f.has("POST repos/org/reg/pulls") || f.has("POST repos/org/reg/git/refs") || f.has("POST repos/org/reg/forks") {
+		t.Fatalf("direct push must not open a PR, branch, or fork: %v", f.calls)
+	}
+	patch := f.bodies["PATCH repos/org/reg/git/refs/heads/main"]
+	if patch == nil || patch["force"] != false || patch["sha"] != "newcommit" {
+		t.Fatalf("patch = %v", patch)
+	}
+	if parents := f.bodies["POST repos/org/reg/git/commits"]["parents"].([]any); parents[0] != "base1" {
+		t.Fatalf("parents = %v", parents)
+	}
+}
+
+func TestPushDirectToProtectedBranchSuggestsPR(t *testing.T) {
+	f := newFakeGH()
+	f.protected = true
+	usePushFake(t, f)
+	var out bytes.Buffer
+	_, err := pushSkill(&out, testPlan())
+	if err == nil || !strings.Contains(err.Error(), "skill push x --pr") {
+		t.Fatalf("err = %v", err)
+	}
+}
+
 func TestPushWithWriteAccessCreatesBranchAndPR(t *testing.T) {
 	f := newFakeGH()
 	usePushFake(t, f)
 	var out bytes.Buffer
-	pr, err := pushSkill(&out, testPlan())
+	pr, err := pushSkill(&out, viaPRPlan())
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out.String())
 	}
@@ -202,7 +246,7 @@ func TestPushWithOpenPRAddsCommitWithoutForce(t *testing.T) {
 	f.hasSkill = true
 	usePushFake(t, f)
 	var out bytes.Buffer
-	pr, err := pushSkill(&out, testPlan())
+	pr, err := pushSkill(&out, viaPRPlan())
 	if err != nil {
 		t.Fatalf("%v\n%s", err, out.String())
 	}
@@ -227,7 +271,7 @@ func TestPushLeftoverBranchWithoutPRGetsNewBranch(t *testing.T) {
 	f.refs["org/reg/skill/x"] = "oldtip" // merged earlier, no open PR
 	usePushFake(t, f)
 	var out bytes.Buffer
-	if _, err := pushSkill(&out, testPlan()); err != nil {
+	if _, err := pushSkill(&out, viaPRPlan()); err != nil {
 		t.Fatalf("%v\n%s", err, out.String())
 	}
 	if f.has("PATCH repos/org/reg/git/refs/heads/skill/x") {
@@ -284,5 +328,22 @@ func TestReadPushFilesSkipsGitAndKeepsExecBit(t *testing.T) {
 		if strings.Contains(f.path, ".git") {
 			t.Fatalf("included %s", f.path)
 		}
+	}
+}
+
+func TestPushCodeownersRequiresPR(t *testing.T) {
+	cmd := Root()
+	cmd.SetArgs([]string{"skill", "push", "alpha", "--codeowners"})
+	cmd.SetOut(&bytes.Buffer{})
+	cmd.SetErr(&bytes.Buffer{})
+	err := cmd.Execute()
+	if err == nil || !strings.Contains(err.Error(), "add --pr") {
+		t.Fatalf("want an error asking for --pr, got %v", err)
+	}
+}
+
+func TestDescribePushWithPRFlagNeedsNoNetwork(t *testing.T) {
+	if got := describePush(config.Registry{}, true); !strings.Contains(got, "pull request") {
+		t.Errorf("got %q", got)
 	}
 }
