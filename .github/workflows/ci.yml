@@ -34,11 +34,15 @@ jobs:
         with:
           go-version-file: go.mod
       - name: no agent attribution in commits
-        if: github.event_name == 'pull_request'
         env:
-          BASE: ${{ github.event.pull_request.base.sha }}
-          HEAD: ${{ github.event.pull_request.head.sha }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
         run: |
+          # A new branch or a force-push has no usable "before"; skip rather than scan all history.
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ] || ! git cat-file -e "$BASE" 2>/dev/null; then
+            echo "No base commit to compare against; skipping."
+            exit 0
+          fi
           if git log --format='%h %B' "$BASE..$HEAD" | grep -iE '^(.* )?co-authored-by:.*(claude|anthropic)|generated with .*claude'; then
             echo "::error::Remove agent co-author or 'Generated with' lines from the commit messages (see AGENTS.md)."
             exit 1
