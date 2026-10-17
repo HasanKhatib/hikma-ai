@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-10-18
+
 ### Added
 - `hikma` with no arguments in a terminal opens a menu for the common tasks (install, browse, update, verify, create, publish, set up a project, choose an agent, set a registry, install completion, check your setup). It runs the same command a script would and prints the equivalent `hikma` command afterwards. Without a terminal, `hikma` still prints help, so scripts and CI never wait for input. The menu asks for what a command needs (the registry and agent for install, a skill picker for publish and update, the agents for project setup), so the command it prints is complete.
 - A banner with the logo's frame and prompt shows above the menu, colored in a terminal. Output stays plain when piped, under `NO_COLOR`, or with `TERM=dumb`.
@@ -16,6 +18,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ### Fixed
 - `hikma completion` writes to the command's output, and the zsh instructions no longer tell you to write to `${fpath[1]}`, which is often a folder you cannot write to or one zsh never reads. Use `source <(hikma completion zsh)` in `~/.zshrc`.
 - The Homebrew formula installs shell completions.
+- Bash completion installs into `~/.bashrc` on Linux and Windows even when that file does not exist yet (it used to fall back to `~/.bash_profile`, which interactive shells there never read). macOS still uses `~/.bash_profile`.
 
 ### Changed
 - `hikma skill push` commits straight to the registry's default branch when you have write access, instead of opening a pull request. Use `--pr` for the pull request flow. Without write access it still forks and opens a pull request. If the default branch is protected, the error suggests `--pr`. The confirmation states which of the two will happen, and `--codeowners` requires `--pr`. This changes the default for anyone with write access. When the default branch has a rule that requires pull requests, `skill push` opens one on its own and says why, instead of failing the commit.
@@ -85,7 +88,8 @@ First public release.
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
 
-[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.1.0...v0.2.0

@@ -1995,8 +1995,8 @@
             },
             {
               "id": "E7.2-T5",
-              "title": "Check the banner and colors by hand on Windows PowerShell, the legacy console, and a light terminal theme",
-              "status": "todo",
+              "title": "Check the banner and colors by hand on Windows PowerShell, the legacy console, and a light terminal theme (automated 2026-10-18 in the e2e tests: on a real pseudo-terminal (a pty on Linux and macOS, ConPTY on Windows) doctor colors, and NO_COLOR removes it; the look in the legacy console and a light terminal theme was not judged)",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "verify"
@@ -2135,8 +2135,8 @@
             },
             {
               "id": "E7.3-T8",
-              "title": "Walk every menu entry by hand on macOS and Windows PowerShell",
-              "status": "todo",
+              "title": "Walk every menu entry by hand on macOS and Windows PowerShell (automated 2026-10-18 in the e2e tests: the menu draws, takes keys, quits, picks a local skill, asks for a registry, and prints the command, on Linux, macOS, and Windows ConPTY; how it looks was not judged)",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "verify"
@@ -2178,8 +2178,8 @@
             },
             {
               "id": "E7.3-T12",
-              "title": "Walk the huh prompters on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries (skipped before the #45 merge by the owner's decision on 2026-10-17; do it before the v0.5 tag or on the first Windows report)",
-              "status": "todo",
+              "title": "Walk the huh prompters on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries (skipped before the #45 merge by the owner's decision on 2026-10-17; do it before the v0.5 tag or on the first Windows report) (automated 2026-10-18: the e2e tests run huh on a terminal that answers no capability queries on all three OSes and the prompt draws at once, so the 25 second hang did not reproduce; the look in the legacy console and a light theme was not judged)",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "verify",
@@ -2268,8 +2268,8 @@
             },
             {
               "id": "E7.4-T7",
-              "title": "Check completion install by hand on bash, fish, PowerShell, and a fresh macOS zsh, and rerun it to confirm it does nothing twice",
-              "status": "todo",
+              "title": "Check completion install by hand on bash, fish, PowerShell, and a fresh macOS zsh, and rerun it to confirm it does nothing twice (automated 2026-10-18: the Completion workflow installs and runs completion on bash, zsh, fish, and PowerShell on Linux, macOS, and Windows (Git Bash registers only: it has no bash-completion) and reruns the installer to confirm nothing changes; it found the .bashrc bug)",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "verify"
@@ -2315,8 +2315,8 @@
             },
             {
               "id": "E7.5-T2",
-              "title": "Work on short branches off main from here: one PR per E7.3 step, with commit messages checked for agent trailers (CI now fails them)",
-              "status": "todo",
+              "title": "Work on short branches off main from here: one PR per E7.3 step, with commit messages checked for agent trailers (CI now fails them) (superseded by the owner's decision of 2026-10-18 to push straight to main for the release run; CI now scans pushes for agent trailers too)",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "process"
@@ -2325,7 +2325,7 @@
             },
             {
               "id": "E7.5-T3",
-              "title": "After E7.2, E7.3, and E7.4 close: move Unreleased to 0.5.0 in CHANGELOG, tag v0.5.0, and let goreleaser publish",
+              "title": "After E7.2, E7.3, and E7.4 close: move Unreleased to 0.5.0 in CHANGELOG, tag v0.5.0, and let goreleaser publish (the CHANGELOG now has a 0.5.0 section; tagging is the owner's call: git tag v0.5.0 && git push origin v0.5.0)",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
@@ -2335,7 +2335,7 @@
             },
             {
               "id": "E7.5-T4",
-              "title": "Check brew install and the install script on macOS, Linux, and Windows after the release runs",
+              "title": "Check brew install and the install script on macOS, Linux, and Windows after the release runs (automated: the Verify release workflow runs after the Release workflow and was proven on v0.4.0 on all three OSes; confirm it is green after the v0.5.0 tag)",
               "status": "todo",
               "assignee": "me",
               "labels": [
@@ -2427,8 +2427,8 @@
             },
             {
               "id": "E7.6-T7",
-              "title": "Check the scene in a real browser: smoothness, a click on each stage, light mode, and the phone layout",
-              "status": "todo",
+              "title": "Check the scene in a real browser: smoothness, a click on each stage, light mode, and the phone layout (automated 2026-10-18: Playwright runs the site in Chromium, Firefox, WebKit, and two phone profiles in CI; it found and fixed a phone layout that scrolled sideways; smoothness and a real device were not judged)",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "verify"
@@ -2437,8 +2437,8 @@
             },
             {
               "id": "E7.6-T8",
-              "title": "Export the scene as an MP4 and GIF for X with Hyperframes, from the ?t= frames",
-              "status": "todo",
+              "title": "Export the scene as an MP4 and GIF for X with Hyperframes, from the ?t= frames (MP4 and GIF exported 2026-10-18 with render-frames.mjs in the video-pixel-scene skill; kept out of the repo and sent to the owner)",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "design"

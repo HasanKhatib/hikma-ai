@@ -45,7 +45,16 @@ A short story played as pixel art: a developer and a bot pet go through the prod
 
 ## Making a video
 
-The scene is a function of time, so a video is a sequence of frames: load `?t=` at a fixed step (15 fps), screenshot each, and assemble with `ffmpeg` into an MP4 and a GIF (`fps=15`, `scale=960`, palettegen and paletteuse). Not built yet; see board task E7.6-T8. For a terminal-only clip use `video-tech-demo` instead.
+The scene is a function of time, so a video is a sequence of frames. `assets/render-frames.mjs` loads `?t=` at 15 fps with Playwright (about 560 frames in 16 seconds) and screenshots the scene box at 2x:
+
+```bash
+cd docs/site && npm run docs:build && (npx vitepress preview . --port 4311 &)
+mkdir -p /tmp/frames && node ../../.claude/skills/video-pixel-scene/assets/render-frames.mjs /tmp/frames dark
+ffmpeg -framerate 15 -i /tmp/frames/f%04d.png -c:v libx264 -pix_fmt yuv420p -crf 18 -vf "scale=trunc(iw/2)*2:trunc(ih/2)*2" -movflags +faststart scene.mp4
+ffmpeg -framerate 15 -i /tmp/frames/f%04d.png -vf "scale=720:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=bayer:bayer_scale=4" -loop 0 scene.gif
+```
+
+If `LOOP` in `heroScene.ts` changes, change it in the script too. Keep the files out of the repo (about 0.4 MB MP4 and 1.4 MB GIF) and send them to the user. For a terminal-only clip use `video-tech-demo` instead.
 
 ## Gotchas
 
