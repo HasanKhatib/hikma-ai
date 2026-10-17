@@ -97,7 +97,7 @@ $ hikma
   Quit
 ```
 
-Pick an entry and Hikma asks for anything it needs, then runs the same command you could type yourself. When it finishes it prints that command:
+Pick an entry and Hikma asks for anything it needs, then runs the same command you could type yourself. It asks only for what is missing: the registry when none is set, the agent when none is chosen, a skill from this project's agent folders when you publish or update, and the agents to set up for a new project. That way the command it prints is complete. When it finishes it prints that command:
 
 ```text
 Equivalent command:

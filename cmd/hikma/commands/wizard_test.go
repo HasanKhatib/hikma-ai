@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"errors"
+	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
@@ -10,6 +11,7 @@ import (
 
 type fakePrompter struct {
 	pick     int
+	picks    []int // when set, successive Select calls take these in order
 	inputs   []string
 	confirms []bool
 	multi    []int
@@ -26,6 +28,11 @@ func (f *fakePrompter) Select(message string, options []string, def int) (int, e
 	f.asked = append(f.asked, message)
 	f.options = options
 	f.gotDef = def
+	if len(f.picks) > 0 {
+		p := f.picks[0]
+		f.picks = f.picks[1:]
+		return p, f.err
+	}
 	return f.pick, f.err
 }
 
@@ -76,6 +83,9 @@ func indexOf(t *testing.T, label string) int {
 }
 
 func TestWizardRunsTheFlagCommandAndPrintsIt(t *testing.T) {
+	project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills") // configured, so the menu has nothing to ask for install
+	t.Setenv("HIKMA_AGENT", "claude")
 	cases := []struct {
 		label  string
 		inputs []string
@@ -173,9 +183,12 @@ func TestWizardCtrlCInsideTheCommandIsQuiet(t *testing.T) {
 }
 
 func TestEveryWizardEntryIsARealCommand(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
 	root := Root()
 	for _, e := range wizardEntries {
-		args, err := e.collect(&fakePrompter{inputs: []string{"x"}})
+		args, err := e.collect(&fakePrompter{inputs: []string{"acme/skills"}, picks: []int{0}, multi: []int{0}})
 		if err != nil {
 			t.Fatalf("%s: %v", e.label, err)
 		}
@@ -203,5 +216,155 @@ func TestBareHikmaPrintsHelpWithoutATerminal(t *testing.T) {
 	}
 	if !strings.Contains(out.String(), "Usage:") || strings.Contains(out.String(), "What do you want to do?") {
 		t.Errorf("expected help text, got:\n%s", out.String())
+	}
+}
+
+// runEntry drives one menu entry with a fake prompter and returns the command it ran.
+func runEntry(t *testing.T, label string, p *fakePrompter) ([]string, error) {
+	t.Helper()
+	// The first Select picks the entry; later ones answer the entry's own questions.
+	p.picks = append([]int{indexOf(t, label)}, p.picks...)
+	var out bytes.Buffer
+	var ran []string
+	err := runWizard(p, &out, func(a []string) error { ran = a; return nil })
+	return ran, err
+}
+
+func agentIndex(t *testing.T, a string) int {
+	t.Helper()
+	names, _, err := agentChoices()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i, n := range names {
+		if string(n) == a {
+			return i
+		}
+	}
+	t.Fatalf("no agent %q", a)
+	return -1
+}
+
+func TestWizardInstallAsksForRegistryAndAgentWhenUnset(t *testing.T) {
+	project(t)
+	p := &fakePrompter{inputs: []string{" acme/skills "}, picks: []int{agentIndex(t, "claude")}}
+	ran, err := runEntry(t, "Install a skill from your registry", p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"skill", "install", "acme/skills", "--agent", "claude"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+}
+
+func TestWizardBrowseAsksForARegistryOnlyWhenNoneIsSet(t *testing.T) {
+	project(t)
+	ran, err := runEntry(t, "Browse skills in your registry", &fakePrompter{inputs: []string{"acme/skills"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"skill", "list", "acme/skills"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	ran, _ = runEntry(t, "Browse skills in your registry", &fakePrompter{})
+	if want := []string{"skill", "list"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("with a registry set, ran %v, want %v", ran, want)
+	}
+}
+
+func TestWizardRejectsABadRegistry(t *testing.T) {
+	project(t)
+	for _, in := range []string{"", "-x", "not a repo"} {
+		if _, err := runEntry(t, "Set your registry", &fakePrompter{inputs: []string{in}}); err == nil {
+			t.Errorf("registry %q was accepted", in)
+		}
+	}
+}
+
+func TestWizardPublishPicksALocalSkill(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	write(t, filepath.Join(dir, ".claude/skills/beta/SKILL.md"), "---\nname: beta\ndescription: d\n---\n")
+	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
+	p := &fakePrompter{picks: []int{1}} // names are sorted: alpha, beta
+	ran, err := runEntry(t, "Publish a skill to your registry", p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"skill", "push", "beta"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	if !reflect.DeepEqual(p.options, []string{"alpha", "beta"}) {
+		t.Errorf("picker options = %v", p.options)
+	}
+}
+
+func TestWizardPublishAsksForARegistryWhenNoneIsSet(t *testing.T) {
+	dir := project(t)
+	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
+	ran, err := runEntry(t, "Publish a skill to your registry", &fakePrompter{inputs: []string{"acme/skills"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"skill", "push", "alpha", "--registry", "acme/skills"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+}
+
+func TestWizardPublishAndUpdateSayWhatToDoWithNoSkills(t *testing.T) {
+	project(t)
+	for _, label := range []string{"Publish a skill to your registry", "Update installed skills"} {
+		_, err := runEntry(t, label, &fakePrompter{})
+		if err == nil || !strings.Contains(err.Error(), "first") {
+			t.Errorf("%s: want an error saying what to do first, got %v", label, err)
+		}
+	}
+}
+
+func TestWizardUpdateOffersAllOrOneSkill(t *testing.T) {
+	dir := project(t)
+	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
+	ran, err := runEntry(t, "Update installed skills", &fakePrompter{picks: []int{0}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"skill", "update", "--all"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	ran, _ = runEntry(t, "Update installed skills", &fakePrompter{picks: []int{1}})
+	if want := []string{"skill", "update", "alpha"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+}
+
+func TestWizardInitAsksForAgentsAndAnOptionalRegistry(t *testing.T) {
+	project(t)
+	claude, codex := agentIndex(t, "claude"), agentIndex(t, "codex")
+	p := &fakePrompter{multi: []int{codex, claude}, inputs: []string{"acme/skills"}}
+	ran, err := runEntry(t, "Set up this project for your agent", p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"init", "--agent", "codex,claude", "--registry", "acme/skills"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	if p.gotMin != 1 {
+		t.Errorf("must pick at least one agent, min = %d", p.gotMin)
+	}
+	ran, _ = runEntry(t, "Set up this project for your agent", &fakePrompter{multi: []int{claude}, inputs: []string{""}})
+	if want := []string{"init", "--agent", "claude"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("empty registry: ran %v, want %v", ran, want)
+	}
+}
+
+func TestWizardChooseAgentPrintsTheAgent(t *testing.T) {
+	project(t)
+	ran, err := runEntry(t, "Choose your agent", &fakePrompter{picks: []int{agentIndex(t, "claude")}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"config", "agent", "claude"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
 	}
 }

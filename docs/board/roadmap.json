@@ -2115,8 +2115,8 @@
             },
             {
               "id": "E7.3-T6",
-              "title": "Ask for what a command needs inside the menu: registry and agent for install, a local skill picker for publish, agents for project setup",
-              "status": "todo",
+              "title": "Ask for what a command needs inside the menu: registry and agent for install, a local skill picker for publish, agents for project setup (done 2026-10-18)",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "feature"
