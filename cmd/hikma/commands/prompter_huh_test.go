@@ -1,6 +1,11 @@
 package commands
 
-import "testing"
+import (
+	"os"
+	"testing"
+
+	"github.com/hasankhatib/hikma-ai/internal/ui"
+)
 
 func TestHuhIsOptIn(t *testing.T) {
 	t.Setenv("HIKMA_PROMPTS", "")
@@ -27,5 +32,19 @@ func TestAccessibleModeForDumbTerminals(t *testing.T) {
 	t.Setenv("ACCESSIBLE", "1")
 	if !accessible() {
 		t.Fatal("ACCESSIBLE should force plain line prompts")
+	}
+}
+
+func TestNoColorFlagReachesHuhThroughNoColorEnv(t *testing.T) {
+	t.Setenv("NO_COLOR", "")
+	t.Cleanup(func() { ui.NoColor = false })
+	applyNoColor()
+	if os.Getenv("NO_COLOR") != "" {
+		t.Fatal("NO_COLOR must stay untouched without --no-color")
+	}
+	ui.NoColor = true
+	applyNoColor()
+	if os.Getenv("NO_COLOR") != "1" {
+		t.Fatal("--no-color must set NO_COLOR so huh drops its colors")
 	}
 }

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"charm.land/huh/v2"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 )
 
 // huhPrompter asks through charm.land/huh, which survey's archived upstream no
@@ -21,7 +22,17 @@ func useHuh() bool { return strings.EqualFold(os.Getenv("HIKMA_PROMPTS"), "huh")
 // a dumb terminal and screen readers.
 func accessible() bool { return os.Getenv("TERM") == "dumb" || os.Getenv("ACCESSIBLE") != "" }
 
+// applyNoColor hands --no-color to huh, which decides its color profile from
+// NO_COLOR when it starts. Children (git, gh) read NO_COLOR too, which is what
+// someone passing --no-color wants.
+func applyNoColor() {
+	if ui.NoColor {
+		os.Setenv("NO_COLOR", "1")
+	}
+}
+
 func ask(f huh.Field) error {
+	applyNoColor()
 	err := huh.NewForm(huh.NewGroup(f)).WithAccessible(accessible()).Run()
 	if errors.Is(err, huh.ErrUserAborted) {
 		return errCancelled

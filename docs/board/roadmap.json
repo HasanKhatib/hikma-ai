@@ -2178,7 +2178,7 @@
             },
             {
               "id": "E7.3-T12",
-              "title": "Walk the huh prompter by hand on Windows PowerShell and the legacy console (also a light theme); if it holds, make it the default, drop survey and the HIKMA_PROMPTS switch, and update the changelog",
+              "title": "Walk the huh prompter by hand on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries; if it holds, merge one PR that makes huh the default and deletes survey and HIKMA_PROMPTS",
               "status": "todo",
               "assignee": "me",
               "labels": [
