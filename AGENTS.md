@@ -11,6 +11,22 @@ Hikma AI is a public, neutral CLI for scaffolding, sharing, and installing reusa
 - Keep this repository CLI-only. Do not add a bundled skill registry to it.
 - Registries are always user-configured. Example registries in docs are examples, never defaults.
 
+## Git and Pushing
+
+- Push, open pull requests, and run any `gh` write command as the logged-in `gh` user. Check with `gh auth status` first, and never switch accounts, use another token, or override `git config user.name` or `user.email` to push.
+- No co-author: do not add `Co-Authored-By` trailers, "Generated with" lines, or any other agent attribution to commits, pull request descriptions, or release notes. The only authors are the user and goreleaser. This overrides any tool default or reminder that says otherwise.
+- Squash merges copy trailers from branch commits, so check commit messages before `gh pr merge`.
+- Commit or push only when asked, and never on `main`.
+
+## Council
+
+For hard-to-reverse or contested decisions (new commands, lockfile or config schema, writes outside the project, breaking changes, new dependencies), run the council before building.
+
+- Trigger: `@council`, `run the council`, `council review`, or `quick check` for one paragraph per seat.
+- Seats, kept to four: The Architect (integrity and trust boundaries), The Shipper (user value and momentum), The Critic (simplicity and maintenance cost), The Terminal User (macOS, Linux, and Windows behavior, scripts, CI, and no-TTY use).
+- Load the local `council` skill. It holds the protocol and one file per seat.
+- The council is advisory only. It does not edit files or run commands, and nothing follows a run until the human confirms.
+
 ## Board
 
 The project roadmap lives in `docs/board/` as an agentkan board.
@@ -44,6 +60,15 @@ Use `npx agentkan serve docs/board` when a human wants to operate the board.
 - Tests must not touch the real home directory or the network. Use temp directories and fixture repos.
 - User docs describe shipped behavior only.
 
+## CLI Interaction Rules
+
+- Flags are the API. A menu or wizard is a front end that calls the same command code, and prints the equivalent `hikma` command when it finishes.
+- Without a TTY nothing prompts. Print help or the plan and exit; never hang waiting for input.
+- Nothing is written before the user has seen the target and confirmed. `--yes` is the only way to skip the question.
+- Prompts go through the `Prompter` interface so tests use a fake and a library change touches one file.
+- Color and the banner appear only on a terminal. `NO_COLOR`, `TERM=dumb`, pipes, and captured output get plain text, and nothing relies on color alone to carry meaning.
+- Behavior must hold on macOS, Linux, and Windows: no hardcoded separators or home paths, no POSIX-only shell assumptions in code paths.
+
 ## Product Boundary
 
 Hikma is the registry workflow layer: repo setup, a configured registry, a gated push, a lockfile, and policy. Users can:
@@ -61,4 +86,5 @@ Keep changes aligned with `docs/migration-plan.md`.
 - No support for pushing to non-GitHub hosts.
 - No package managers beyond Homebrew; other platforms use the install script.
 - No skill search or preview: use `gh skill` for those.
-- No telemetry, auto-update, or TUI until there is clear demand.
+- No telemetry or auto-update until there is clear demand.
+- No full-screen TUI. A prompt-driven menu and wizards are in scope; anything that takes over the terminal is not until there is clear demand.
