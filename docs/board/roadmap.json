@@ -1985,8 +1985,8 @@
             },
             {
               "id": "E7.2-T4",
-              "title": "Use the color helpers across doctor, list, and verify output: ok in green, FAIL in red, secondary text dim",
-              "status": "todo",
+              "title": "Use the color helpers across doctor, list, and verify output: ok in green, FAIL in red, secondary text dim (done 2026-10-18; checked in a real pseudo-terminal and under NO_COLOR)",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "feature"

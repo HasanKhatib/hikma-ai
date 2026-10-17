@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"os"
 	"path/filepath"
 	"strings"
@@ -171,5 +172,18 @@ func TestListInstalledWithNothingInstalledAndWithASource(t *testing.T) {
 	}
 	if _, err := run(t, "skill", "list", "--installed", "owner/repo"); err == nil {
 		t.Fatal("--installed with a source should be an error")
+	}
+}
+
+func TestStatusCellKeepsColumnsAlignedAndPlainOffATerminal(t *testing.T) {
+	var buf bytes.Buffer
+	for _, status := range []string{stateOK, stateModified, stateMissing, stateUntracked} {
+		got := statusCell(&buf, status)
+		if strings.Contains(got, "\x1b") {
+			t.Errorf("%s: escape codes for a non-terminal writer: %q", status, got)
+		}
+		if len(got) != 10 {
+			t.Errorf("%s: cell is %d wide, want 10: %q", status, len(got), got)
+		}
 	}
 }

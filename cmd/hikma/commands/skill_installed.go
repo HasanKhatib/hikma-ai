@@ -12,6 +12,7 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/lock"
 	"github.com/hasankhatib/hikma-ai/internal/source"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -162,12 +163,29 @@ func markDuplicates(rows []installedSkill) []installedSkill {
 	return rows
 }
 
+// statusCell pads the status first, then colors it, so the escape codes do not
+// push the columns out of line: ok green, modified yellow, missing red,
+// untracked dim.
+func statusCell(w io.Writer, status string) string {
+	cell := fmt.Sprintf("%-10s", status)
+	switch status {
+	case stateOK:
+		return ui.Green(w, cell)
+	case stateModified:
+		return ui.Yellow(w, cell)
+	case stateMissing:
+		return ui.Red(w, cell)
+	default:
+		return ui.Dim(w, cell)
+	}
+}
+
 func printInstalledTable(w io.Writer, rows []installedSkill) {
 	if len(rows) == 0 {
 		fmt.Fprintln(w, "No skills installed.")
 		return
 	}
-	fmt.Fprintf(w, "%-8s  %-42s  %-10s  %s\n", "SCOPE", "PATH", "STATUS", "SOURCE")
+	fmt.Fprintln(w, ui.Dim(w, fmt.Sprintf("%-8s  %-42s  %-10s  %s", "SCOPE", "PATH", "STATUS", "SOURCE")))
 	for _, r := range rows {
 		src := r.Source
 		lockName := ".hikma/lock.json"
@@ -187,7 +205,7 @@ func printInstalledTable(w io.Writer, rows []installedSkill) {
 		if r.AlsoAt != "" {
 			src += "  [also installed at " + r.AlsoAt + " scope]"
 		}
-		fmt.Fprintf(w, "%-8s  %-42s  %-10s  %s\n", r.Scope, r.Path, r.Status, src)
+		fmt.Fprintf(w, "%-8s  %-42s  %s  %s\n", r.Scope, r.Path, statusCell(w, r.Status), src)
 	}
 }
 

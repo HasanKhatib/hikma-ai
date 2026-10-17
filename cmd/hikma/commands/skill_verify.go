@@ -64,7 +64,7 @@ every skill in the lockfile is checked.`,
 				e := lf.Skills[key]
 				dir := sc.path(key)
 				if _, err := os.Stat(dir); err != nil {
-					fmt.Fprintf(out, "  FAIL  %s\n          the folder is missing ('hikma sync' restores it)\n", key)
+					fmt.Fprintf(out, "  %s  %s\n          %s\n", ui.Red(out, "FAIL"), key, ui.Dim(out, "the folder is missing ('hikma sync' restores it)"))
 					failed++
 					continue
 				}
@@ -74,11 +74,11 @@ every skill in the lockfile is checked.`,
 				}
 				added, modified, removed := source.DiffFiles(e.Files, current)
 				if len(added)+len(modified)+len(removed) == 0 {
-					fmt.Fprintf(out, "  ok    %s\n", key)
+					fmt.Fprintf(out, "  %s    %s\n", ui.Green(out, "ok"), key)
 					continue
 				}
 				failed++
-				fmt.Fprintf(out, "  FAIL  %s\n", key)
+				fmt.Fprintf(out, "  %s  %s\n", ui.Red(out, "FAIL"), key)
 				for _, g := range []struct {
 					label string
 					files []string

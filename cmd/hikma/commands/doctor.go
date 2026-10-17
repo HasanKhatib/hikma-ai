@@ -28,40 +28,40 @@ func runDoctor() error {
 	failed := 0
 
 	for _, name := range result.Passed {
-		fmt.Printf("  ok    %s\n", name)
+		fmt.Printf("  %s    %s\n", ui.Green(os.Stdout, "ok"), name)
 	}
 	for _, f := range result.Failures {
-		label := "FAIL"
+		label := ui.Red(os.Stdout, "FAIL")
 		if strings.HasPrefix(f.Name, "gh ") {
-			label = "warn" // gh is only needed for 'skill push' and some private repos
+			label = ui.Yellow(os.Stdout, "warn") // gh is only needed for 'skill push' and some private repos
 		} else {
 			failed++
 		}
 		fmt.Printf("  %s  %s\n", label, f.Name)
 		fmt.Printf("        %s\n", f.Err)
 		for _, fix := range f.Fix {
-			fmt.Printf("        fix: %s\n", fix)
+			fmt.Printf("        %s\n", ui.Dim(os.Stdout, "fix: "+fix))
 		}
 	}
 
 	if targets, err := config.ResolveTargets(""); err != nil {
 		failed++
-		fmt.Printf("  FAIL  agent config\n        %s\n        fix: run 'hikma config set agent <agent>'\n", err)
+		fmt.Printf("  %s  agent config\n        %s\n        %s\n", ui.Red(os.Stdout, "FAIL"), err, ui.Dim(os.Stdout, "fix: run 'hikma config set agent <agent>'"))
 	} else {
 		for _, t := range targets {
-			fmt.Printf("  ok    agent: %s (skills in %s)\n", t.Agent, t.Layout.SkillsDir)
+			fmt.Printf("  %s    agent: %s (skills in %s)\n", ui.Green(os.Stdout, "ok"), t.Agent, t.Layout.SkillsDir)
 		}
 	}
 
 	if src, origin, err := resolveSource(""); err != nil {
 		// A registry is optional: skills can always be installed from an explicit owner/repo.
-		fmt.Printf("  %s  registry not configured\n        fix: run 'hikma config set registry <owner/repo>' (needed for bare skill names and push)\n", ui.Yellow(os.Stdout, "warn"))
+		fmt.Printf("  %s  registry not configured\n        %s\n", ui.Yellow(os.Stdout, "warn"), ui.Dim(os.Stdout, "fix: run 'hikma config set registry <owner/repo>' (needed for bare skill names and push)"))
 	} else {
-		fmt.Printf("  ok    registry: %s (%s)\n", src.Display, origin)
+		fmt.Printf("  %s    registry: %s (%s)\n", ui.Green(os.Stdout, "ok"), src.Display, origin)
 	}
 
 	if gh := ghManagedUntracked(projectScope()); len(gh) > 0 {
-		fmt.Printf("  %s  skills installed by gh skill and not tracked by hikma: %s\n        fix: run 'hikma skill adopt <name>' so update, sync, and remove manage them\n", ui.Yellow(os.Stdout, "warn"), adoptHint(gh))
+		fmt.Printf("  %s  skills installed by gh skill and not tracked by hikma: %s\n        %s\n", ui.Yellow(os.Stdout, "warn"), adoptHint(gh), ui.Dim(os.Stdout, "fix: run 'hikma skill adopt <name>' so update, sync, and remove manage them"))
 	}
 
 	if sc, err := globalScope(); err == nil && !sameDir(".", sc.root) {
