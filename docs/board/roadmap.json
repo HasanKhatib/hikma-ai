@@ -1892,6 +1892,27 @@
                 "docs"
               ],
               "planned": null
+            },
+            {
+              "id": "E7.2-T7",
+              "title": "Enable ANSI processing on Windows consoles and keep color off where the console refuses it",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.2-T8",
+              "title": "Remove the old favicon.svg and logo.svg from docs/site/public once nothing links them",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "docs",
+                "design"
+              ],
+              "planned": null
             }
           ]
         },
@@ -1987,6 +2008,28 @@
               "assignee": "me",
               "labels": [
                 "verify"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T9",
+              "title": "Replace survey with charmbracelet/huh behind the Prompter: survey is archived on GitHub (last push 2024-04-07, v2.3.7), huh is maintained (v2.0.3)",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "refactor",
+                "dependency"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T10",
+              "title": "Add global --no-input and --no-color flags (clig.dev): --no-input fails with the flag to pass instead of prompting, --no-color forces plain output",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "cli"
               ],
               "planned": null
             }
