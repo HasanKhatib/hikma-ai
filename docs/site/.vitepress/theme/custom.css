@@ -458,15 +458,18 @@ kbd,
   border-radius: 8px;
   background: var(--code);
 }
-.hk-install-line code {
+/* The .vp-doc prefix is needed: VitePress colors inline code with a higher-specificity rule,
+   which made the command dark green on the dark box in light mode. */
+.vp-doc .hk-install-line code {
   min-width: 0;
   overflow-x: auto;
   white-space: nowrap;
+  padding: 0;
   background: transparent;
   color: var(--code-text);
   font-size: 14px;
 }
-.hk-install-line code span {
+.vp-doc .hk-install-line code span {
   color: var(--signal);
 }
 .hk-copy-button {
