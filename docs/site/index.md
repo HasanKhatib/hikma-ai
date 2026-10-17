@@ -24,5 +24,3 @@ import { withBase } from "vitepress";
   </div>
 </div>
 </div>
-
-<TerminalDemo />
