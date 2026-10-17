@@ -211,9 +211,7 @@ func confirmPush(cmd *cobra.Command, name, skillDir string, r config.Registry, o
 	out := cmd.OutOrStdout()
 	fmt.Fprintf(out, "\nYou are pushing to registry: %s (%s)\n", r.FullName(), origin)
 	fmt.Fprintf(out, "  skill: %s (%s/)\n", name, skillDir)
-	if how != "" {
-		fmt.Fprintf(out, "  how:   %s\n", how)
-	}
+	fmt.Fprintf(out, "  how:   %s\n", how)
 	if assumeYes {
 		return nil
 	}

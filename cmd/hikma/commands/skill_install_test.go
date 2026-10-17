@@ -269,13 +269,13 @@ func TestConfirmPushRequiresYesWhenNotInteractive(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := confirmPush(cmd, "alpha", ".claude/skills/alpha", r, "--registry flag", false, ""); err == nil {
+	if err := confirmPush(cmd, "alpha", ".claude/skills/alpha", r, "--registry flag", false, "as a pull request"); err == nil {
 		t.Fatal("expected confirmation error")
 	}
 	if !strings.Contains(out.String(), "owner/repo") || !strings.Contains(out.String(), "--registry flag") {
 		t.Fatalf("gate must show the target and its origin:\n%s", out.String())
 	}
-	if err := confirmPush(cmd, "alpha", ".claude/skills/alpha", r, "--registry flag", true, ""); err != nil {
+	if err := confirmPush(cmd, "alpha", ".claude/skills/alpha", r, "--registry flag", true, "as a pull request"); err != nil {
 		t.Fatalf("--yes: %v", err)
 	}
 }

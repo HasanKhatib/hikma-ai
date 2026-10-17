@@ -14,7 +14,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - The Homebrew formula installs shell completions.
 
 ### Changed
-- `hikma skill push` commits straight to the registry's default branch when you have write access, instead of opening a pull request. Use `--pr` for the pull request flow. Without write access it still forks and opens a pull request. If the default branch is protected, the error suggests `--pr`.
+- `hikma skill push` commits straight to the registry's default branch when you have write access, instead of opening a pull request. Use `--pr` for the pull request flow. Without write access it still forks and opens a pull request. If the default branch is protected, the error suggests `--pr`. The confirmation states which of the two will happen, and `--codeowners` requires `--pr`. This changes the default for anyone with write access.
 - Warnings are yellow and `FAIL`/errors red in a terminal. `NO_COLOR` turns it off, and piped output stays plain.
 - `hikma skill push` reports unfilled template placeholders as warnings and continues to its confirmation, so a draft can be pushed for review. `registry validate` still fails them.
 - `hikma skill adopt` on a skill with no `gh skill` metadata explains why and shows the commands to run, using your configured registry when there is one.
