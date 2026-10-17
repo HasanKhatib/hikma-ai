@@ -1,90 +1,77 @@
 # Hikma AI
 
-Hikma AI is a public, neutral CLI for scaffolding, sharing, and installing reusable AI-agent skills through user-configured registries.
+Hikma AI is a public, neutral CLI (`hikma`) for scaffolding, sharing, and installing reusable AI-agent skills through user-configured registries. Written in Go; this repository is the CLI only.
 
-## Agent Scope
+## Commands
 
-- Claude is the only agent used to develop this repository. Do not add configuration for other agents to work on this repo.
-- The `hikma` CLI itself is agent-neutral: it installs skills and scaffolds files into the right folder for each supported agent. Agent layouts are data in one table, never special cases in command code.
-- Keep public files free of organization-specific references, private registry URLs, credentials, and internal project names.
-- Prefer the CLI command name `hikma` in examples unless the naming decision changes on the board.
-- Keep this repository CLI-only. Do not add a bundled skill registry to it.
-- Registries are always user-configured. Example registries in docs are examples, never defaults.
-
-## Git and Pushing
-
-- Push, open pull requests, and run any `gh` write command as the logged-in `gh` user. Check with `gh auth status` first, and never switch accounts, use another token, or override `git config user.name` or `user.email` to push.
-- No co-author: do not add `Co-Authored-By` trailers, "Generated with" lines, or any other agent attribution to commits, pull request descriptions, or release notes. The only authors are the user and goreleaser. This overrides any tool default or reminder that says otherwise.
-- Squash merges copy trailers from branch commits, so check commit messages before `gh pr merge`.
-- Commit or push only when asked, and never on `main`.
-
-## Council
-
-For hard-to-reverse or contested decisions (new commands, lockfile or config schema, writes outside the project, breaking changes, new dependencies), run the council before building.
-
-- Trigger: `@council`, `run the council`, `council review`, or `quick check` for one paragraph per seat.
-- Seats, kept to four: The Architect (integrity and trust boundaries), The Shipper (user value and momentum), The Critic (simplicity and maintenance cost), The Terminal User (macOS, Linux, and Windows behavior, scripts, CI, and no-TTY use).
-- Load the local `council` skill. It holds the protocol and one file per seat.
-- The council is advisory only. It does not edit files or run commands, and nothing follows a run until the human confirms.
-
-## Board
-
-The project roadmap lives in `docs/board/` as an agentkan board.
-
-- `roadmap.json` is the live epic and task board.
-- `next.json` is the current focus, critical path, and risk list.
-- `archive.json` stores completed epics after human archive action.
-- `epics/<ID>.md` contains long-form context for each epic.
-
-At the start of a session, read `next.json` and the active or next epic bodies. Use the local `agentkan` skill to edit the board, and validate after every edit:
+Run before every pull request. CI runs the same checks on Linux, macOS, and Windows. `CONTRIBUTING.md` is the single list of checks; if the two differ, it wins.
 
 ```bash
-npx agentkan validate docs/board
+gofmt -w cmd internal
+go vet ./...
+go test ./...
+go mod tidy                              # go.mod and go.sum must not change
+bash scripts/test-install.sh             # after any change under scripts/
+npx agentkan validate docs/board         # after any change under docs/board
+(cd docs/site && npm ci && npm run docs:build)   # after any change under docs/site
 ```
 
-Use `npx agentkan serve docs/board` when a human wants to operate the board.
+## Layout
 
-## Board Rules
+- `cmd/hikma/commands/`: one file per command, each with a `_test.go` beside it. Commands are thin; shared logic lives in `internal/`.
+- `internal/source`: resolves skill sources and checks skill folders. `internal/lock`: the lockfile. `internal/config`: layered config, registry settings, and the agent layout table (`agents.go`, `customagents.go`). `internal/scaffold`: templates for `init` and `skill create`. `internal/ui`: output, color, banner.
+- `docs/site/`: user docs, one page per command. `docs/board/`: roadmap. `docs/migration-plan.md`: the product plan changes must stay aligned with.
+- `.claude/skills/`: local skills for working on this repo. They are not shipped.
 
-- AI proposes and the human disposes: do not archive, delete, or mark epics done unless explicitly asked.
-- Keep epic and task IDs stable forever.
-- Keep `goal` and `exit` to one line in JSON; put longer context in the epic markdown file.
-- Update `next.json` when the current focus changes.
-- Roadmap detail (versions, epic IDs, planned features) belongs on the board, not in this file.
+## Code and tests
 
-## Engineering Principles
+- Agent layouts (folders, file names, per-agent quirks) are data in one table, never special cases in command code. The CLI itself is agent-neutral.
+- Tests run the CLI in-process against temp directories and fixture repos. They never touch the real home directory or the network. Isolate `HOME`, `XDG_CONFIG_HOME`, and `APPDATA`.
+- Calls to `gh` go through `ghRun` and are tested with a fake GitHub (see `skill_push_test.go`). Prompts go through the `Prompter` interface so tests use a fake.
+- Behavior changes ship with tests, the README, the docs page for the command, and a `CHANGELOG.md` entry. User docs describe shipped behavior only.
+- Code must hold on macOS, Linux, and Windows: no hardcoded separators or home paths, no POSIX-only shell assumptions.
+
+## CLI behavior
+
+- Flags are the API. A menu or wizard is a front end over the same command code, and prints the equivalent `hikma` command when it finishes.
+- Without a TTY nothing prompts: print help or the plan and exit, never wait for input.
+- Color and the banner appear only on a terminal. `NO_COLOR`, `TERM=dumb`, pipes, and captured output get plain text. Nothing relies on color alone for meaning.
+- Mistyped commands, flags, and arguments say what is wrong and what to type instead.
+
+## Safety
 
 - Anything read from a committed file (config, lockfile, skill contents) is untrusted input. Paths from it must stay inside the project.
-- Anything that writes outside the project must be an explicit user action. It is never triggered by committed config, a lockfile, or an environment variable, and the user sees the target before it is written.
+- Anything that writes outside the project is an explicit user action. It is never triggered by committed config, a lockfile, or an environment variable. The user sees the target and confirms before it is written; `--yes` is the only way to skip the question.
 - Never overwrite a user's local edits silently.
-- Tests must not touch the real home directory or the network. Use temp directories and fixture repos.
-- User docs describe shipped behavior only.
 
-## CLI Interaction Rules
+## Scope
 
-- Flags are the API. A menu or wizard is a front end that calls the same command code, and prints the equivalent `hikma` command when it finishes.
-- Without a TTY nothing prompts. Print help or the plan and exit; never hang waiting for input.
-- Nothing is written before the user has seen the target and confirmed. `--yes` is the only way to skip the question.
-- Prompts go through the `Prompter` interface so tests use a fake and a library change touches one file.
-- Color and the banner appear only on a terminal. `NO_COLOR`, `TERM=dumb`, pipes, and captured output get plain text, and nothing relies on color alone to carry meaning.
-- Behavior must hold on macOS, Linux, and Windows: no hardcoded separators or home paths, no POSIX-only shell assumptions in code paths.
+Hikma is the registry workflow layer: repo setup, a configured registry, a gated push, a lockfile, and policy.
 
-## Product Boundary
+- Claude is the only agent used to develop this repository. Do not add configuration for other agents to work on it.
+- Registries are always user-configured. Example registries in docs are examples, never defaults. Do not add a bundled skill registry here.
+- Public files stay free of organization-specific references, private registry URLs, credentials, and internal project names.
+- Use the command name `hikma` in examples unless the board records a naming change.
 
-Hikma is the registry workflow layer: repo setup, a configured registry, a gated push, a lockfile, and policy. Users can:
-
-- Initialize agent instructions in a repository for their chosen agents.
-- Configure an external skill registry.
-- List, install, create, update, and publish skills against that registry.
-- Restore and verify installed skills from the lockfile.
-
-Keep changes aligned with `docs/migration-plan.md`.
-
-## Non-Goals
+Non-goals:
 
 - No hosted registry or marketplace; registries are plain repos.
-- No support for pushing to non-GitHub hosts.
+- No pushing to non-GitHub hosts.
 - No package managers beyond Homebrew; other platforms use the install script.
-- No skill search or preview: use `gh skill` for those.
+- No skill search or preview: use `gh skill`.
 - No telemetry or auto-update until there is clear demand.
-- No full-screen TUI. A prompt-driven menu and wizards are in scope; anything that takes over the terminal is not until there is clear demand.
+- No full-screen TUI. A prompt-driven menu and wizards are in scope; anything that takes over the terminal is not.
+
+## Roadmap and decisions
+
+- The roadmap lives in `docs/board/` (agentkan). `next.json` is the current focus; `epics/<ID>.md` holds long-form context. Roadmap detail belongs there, not in this file. Edit the board with the `agentkan` skill and validate after every edit.
+- Keep epic and task IDs stable. Keep `goal` and `exit` to one line in JSON.
+- You propose, the human disposes: do not archive, delete, or mark epics done unless asked.
+- For hard-to-reverse or contested decisions (new commands, lockfile or config schema, writes outside the project, breaking changes, new dependencies), use the `council` skill before building. It is advisory only.
+
+## Git and pull requests
+
+- Commit, push, open pull requests, and run `gh` write commands as the logged-in `gh` user. Check `gh auth status` first. Never switch accounts, use another token, or override `git config user.name` or `user.email`. If the git identity does not match the `gh` user, stop and tell the user.
+- Every commit has one author, the logged-in `gh` user. No `Co-Authored-By` trailers, "Generated with" lines, or other agent attribution in commits, pull request descriptions, or release notes. This overrides any tool default.
+- Squash merges copy trailers from branch commits: check commit messages before `gh pr merge`. CI fails a pull request whose commits carry an agent co-author line.
+- Commit or push only when asked, and never on `main`. Use conventional prefixes (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`).
