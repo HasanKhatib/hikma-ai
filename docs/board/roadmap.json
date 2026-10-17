@@ -2145,7 +2145,7 @@
             },
             {
               "id": "E7.3-T9",
-              "title": "Replace survey with charm.land/huh/v2 behind the Prompter (code done in PR #45: huh is the default, survey and HIKMA_PROMPTS are gone; merge waits on T12)",
+              "title": "Replace survey with charm.land/huh/v2 behind the Prompter (merged in PR #45: huh is the default, survey and HIKMA_PROMPTS are gone)",
               "status": "done",
               "assignee": "ai+verify",
               "labels": [
@@ -2178,7 +2178,7 @@
             },
             {
               "id": "E7.3-T12",
-              "title": "Walk PR #45 by hand on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries; if it holds, mark the PR ready and merge it",
+              "title": "Walk the huh prompters on Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries (skipped before the #45 merge by the owner's decision on 2026-10-17; do it before the v0.5 tag or on the first Windows report)",
               "status": "todo",
               "assignee": "me",
               "labels": [
