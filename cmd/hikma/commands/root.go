@@ -29,9 +29,13 @@ it in whichever agent you use: Claude, Codex, Copilot, OpenCode, or a custom
 layout you define. One CLI, plain Git.
 
 Install from any repo with: hikma skill install owner/repo my-skill
-Set a registry with: hikma config registry owner/registry`,
+Set a registry with: hikma config registry owner/registry
+
+Run hikma with no arguments in a terminal for a menu that walks you through
+the common tasks and prints the command it ran.`,
 		SilenceUsage:  true,
 		SilenceErrors: true,
+		RunE:          rootRun,
 	}
 
 	cmd.AddCommand(
