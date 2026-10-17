@@ -114,8 +114,8 @@ When a skill name is installed in the project and globally, Hikma warns and carr
 | Agent | What is known |
 |---|---|
 | Claude Code | [Documented](https://code.claude.com/docs/en/skills): both are listed, tagged user and project, and the slash command runs the personal copy. Not verified: which copy the model picks on its own |
-| Codex | Both are listed, with no documented winner ([openai/codex#9930](https://github.com/openai/codex/issues/9930)) |
-| OpenCode | Reported as non-deterministic: the last file read wins ([anomalyco/opencode#53119](https://github.com/anomalyco/opencode/issues/53119)) |
+| Codex | Both are listed, with no documented winner ([openai/codex#9930](https://github.com/openai/codex/issues/9930)). On 0.133.0 the project copy is listed first |
+| OpenCode | Non-deterministic ([anomalyco/opencode#53119](https://github.com/anomalyco/opencode/issues/53119)). On 1.19.0 it listed one copy, and with a project and a global copy repeated runs of `opencode debug skill` returned either one |
 | Copilot | Not documented. Check with `/skills info NAME` |
 
 If it matters, rename one of the two. `sync` also flags a project lockfile entry that shares a name with a global skill, since a project skill with that name could inherit permissions you granted the one you trust.

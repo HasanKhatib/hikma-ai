@@ -32,7 +32,7 @@
       "id": "v0.4",
       "title": "Personal scope",
       "emoji": "v0.4",
-      "status": "planned",
+      "status": "done",
       "goal": "Support user-scope (global) installs with the same lockfile, verify, and safety gates as project installs.",
       "exit": "hikma skill install --global works for every supported agent with its own lockfile, a confirmation gate, and duplicate warnings."
     },
@@ -66,7 +66,7 @@
       "id": "P1",
       "title": "Foundation and Rebrand",
       "emoji": "P1",
-      "status": "active",
+      "status": "done",
       "release": "v0.1",
       "goal": "Create a Claude-only planning repo and define the safe migration path into Hikma AI.",
       "exit": "The repo has agentkan planning, Claude instructions, and a reviewed migration checklist with no organization references.",
@@ -1024,7 +1024,7 @@
       "id": "P4",
       "title": "Registry Workflow",
       "emoji": "P4",
-      "status": "active",
+      "status": "done",
       "release": "v0.2",
       "goal": "Harden the registry workflow and make hikma coexist with gh skill.",
       "exit": "sync, interop, custom agents, and registry CI are shipped and documented.",
@@ -1091,7 +1091,7 @@
           "id": "E4.2",
           "title": "User-scope installs",
           "emoji": "G",
-          "status": "backlog",
+          "status": "done",
           "assignee": "ai+verify",
           "labels": [
             "skills",
@@ -1190,7 +1190,7 @@
             {
               "id": "E4.2-T9",
               "title": "Check precedence by hand: same skill name at both scopes on each agent you use, with the agent version, and record the result",
-              "status": "todo",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "test",
@@ -1470,7 +1470,7 @@
       "id": "P5",
       "title": "Trust",
       "emoji": "P5",
-      "status": "planned",
+      "status": "done",
       "release": "v0.3",
       "goal": "Let users verify what they install and what they download.",
       "exit": "Pinned installs, verification, signed artifacts.",
@@ -1668,7 +1668,7 @@
             },
             {
               "id": "E6.1-T3",
-              "title": "Define and document JSON output schemas and exit codes",
+              "title": "Define and document JSON output schemas for the commands that have --json today, decide which others need it (verify, diff, doctor, sync), and define exit codes (0 ok, 1 failure, 2 usage, a distinct code for verify mismatch)",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -1684,6 +1684,47 @@
               "labels": [
                 "docs",
                 "oss"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E6.1-T5",
+              "title": "Run the council on the 1.0 contract surface (config, lockfile, JSON, exit codes, deprecation) before building any of it",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "process"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E6.1-T6",
+              "title": "Add a version field to .hikma/config.json (the lockfile already has one) with a migration path and a clear error for a newer file",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "config",
+                "design"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E6.1-T7",
+              "title": "Add a deprecation helper: warnings go to stderr, name the replacement and the removal version, and are suppressed once the user has switched",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E6.1-T8",
+              "title": "Publish a reference page for every global flag and environment variable (NO_COLOR, TERM, --no-input, --no-color, --yes, --global) with their precedence",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "docs"
               ],
               "planned": null
             }
@@ -1716,7 +1757,7 @@
             },
             {
               "id": "E6.2-T2",
-              "title": "Test shell completions and Windows Git Bash behavior",
+              "title": "Test shell completions and Windows Git Bash behavior (CI already runs ubuntu, macOS, and windows-latest; add Git Bash and completion cases to it)",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -1733,8 +1774,78 @@
                 "ux"
               ],
               "planned": null
+            },
+            {
+              "id": "E6.2-T4",
+              "title": "Add a scheduled canary that runs the gh skill interop tests against the latest gh release (gh skill was a public preview in April 2026 and may change)",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "ci",
+                "interop"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E6.2-T5",
+              "title": "Re-check the per-scope skills folders and the same-name precedence for each agent before 1.0 (agent CLIs change fast); record versions in E4.2.md",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "verify",
+                "docs"
+              ],
+              "planned": null
             }
           ]
+        },
+        {
+          "id": "E6.3",
+          "title": "Release v1.0",
+          "emoji": "S",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": [
+            "release"
+          ],
+          "planned": null,
+          "goal": "Cut v1.0 once the contracts are frozen, the docs match shipped behavior, and a release candidate has been tried on all three platforms.",
+          "exit": "v1.0.0 is tagged after an rc, the docs describe only shipped behavior, and the contracts in E6.1 are published.",
+          "body": "epics/E6.3.md",
+          "tasks": [
+            {
+              "id": "E6.3-T1",
+              "title": "Audit every page under docs/site against the shipped CLI: commands, flags, output, and examples; fix or remove what is not shipped",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E6.3-T2",
+              "title": "Cut v1.0.0-rc.1, install it with brew and the script on macOS, Linux, and Windows, and run the E6.2 end-to-end test against it",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "release",
+                "verify"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E6.3-T3",
+              "title": "Move Unreleased to 1.0.0 in CHANGELOG, tag v1.0.0, and check the tap and release signatures",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "release"
+              ],
+              "planned": null
+            }
+          ],
+          "release": "v1.0"
         }
       ]
     },
@@ -1796,7 +1907,7 @@
             {
               "id": "E7.1-T4",
               "title": "Run the council on the wizard flow design (E7.3) and record the decision on the board",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "process"
@@ -1993,7 +2104,7 @@
             },
             {
               "id": "E7.3-T7",
-              "title": "Let the menu return to the main menu after a task instead of exiting",
+              "title": "Deferred by the council (2026-10-17): the menu exits after one task so runs stay scriptable. Reopen only on user demand",
               "status": "todo",
               "assignee": "ai",
               "labels": [
@@ -2013,7 +2124,7 @@
             },
             {
               "id": "E7.3-T9",
-              "title": "Replace survey with charmbracelet/huh behind the Prompter: survey is archived on GitHub (last push 2024-04-07, v2.3.7), huh is maintained (v2.0.3)",
+              "title": "Replace survey with charm.land/huh/v2 behind the Prompter: gate on a Windows hand check, map ErrUserAborted to errCancelled, use accessible mode for TERM=dumb, keep survey until it passes",
               "status": "todo",
               "assignee": "ai+verify",
               "labels": [
@@ -2024,9 +2135,20 @@
             },
             {
               "id": "E7.3-T10",
-              "title": "Add global --no-input and --no-color flags (clig.dev): --no-input fails with the flag to pass instead of prompting, --no-color forces plain output",
+              "title": "Add global --no-input and --no-color flags (clig.dev): --no-input fails naming the flag to pass, on stderr with a non-zero exit; --no-color matches NO_COLOR",
               "status": "todo",
               "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T11",
+              "title": "Add Confirm and MultiSelect to the Prompter so T5 can move every survey call site, with fake and tests",
+              "status": "todo",
+              "assignee": "ai",
               "labels": [
                 "feature",
                 "cli"
@@ -2133,6 +2255,65 @@
               "planned": null
             }
           ]
+        },
+        {
+          "id": "E7.5",
+          "title": "Release v0.5",
+          "emoji": "R",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": [
+            "release"
+          ],
+          "planned": null,
+          "goal": "Ship v0.5 Guided CLI: land the open docs PR, finish the P7 work on main, tag, and check the install paths.",
+          "exit": "v0.5.0 is tagged, brew and the install script install it, and CHANGELOG moves Unreleased to 0.5.0.",
+          "body": "epics/E7.5.md",
+          "tasks": [
+            {
+              "id": "E7.5-T1",
+              "title": "Decide whether PR #40 (docs site footer, guides cut to three) ships in v0.5 and merge it; rebase the global.md precedence edit on it",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "release",
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.5-T2",
+              "title": "Work on short branches off main from here: one PR per E7.3 step, with commit messages checked for agent trailers (CI now fails them)",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "process"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.5-T3",
+              "title": "After E7.2, E7.3, and E7.4 close: move Unreleased to 0.5.0 in CHANGELOG, tag v0.5.0, and let goreleaser publish",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "release"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.5-T4",
+              "title": "Check brew install and the install script on macOS, Linux, and Windows after the release runs",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "release",
+                "verify"
+              ],
+              "planned": null
+            }
+          ],
+          "release": "v0.5"
         }
       ]
     }
