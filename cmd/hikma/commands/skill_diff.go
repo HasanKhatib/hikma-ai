@@ -11,6 +11,7 @@ import (
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/source"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -156,7 +157,7 @@ func diffOne(u *updater, key string, patch bool) error {
 	printMarked(u.out, "modified", modified, edited)
 	printMarked(u.out, "removed", removed, edited)
 	if touchesScripts(added, modified, removed) {
-		fmt.Fprintln(u.out, "  warning: scripts/ changed - review before updating")
+		fmt.Fprintf(u.out, "  %s scripts/ changed - review before updating\n", ui.Warning(u.out))
 	}
 	if patch && !missing {
 		return printPatch(u.out, localDir, srcDir, append(append(append([]string{}, added...), modified...), removed...))

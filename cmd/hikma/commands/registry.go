@@ -11,6 +11,7 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
 	"github.com/hasankhatib/hikma-ai/internal/source"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -94,6 +95,14 @@ func validateSkillDir(dir, name string) ([]source.Issue, error) {
 }
 
 func validateSkillDirAs(dir, name string, isRoot bool) ([]source.Issue, error) {
+	return validateSkillDirSeverity(dir, name, isRoot, source.SeverityError)
+}
+
+// validateSkillDirSeverity validates a skill folder, reporting unfilled
+// template placeholders at placeholderSeverity. `registry validate` treats them
+// as errors, since it gates what lands in a registry; `skill push` only warns,
+// because a skill you push as a draft for review is a normal workflow.
+func validateSkillDirSeverity(dir, name string, isRoot bool, placeholderSeverity string) ([]source.Issue, error) {
 	issues := source.CheckSkill(dir, name, isRoot)
 	if naming, err := config.NamingConvention(); err != nil {
 		return nil, err
@@ -105,7 +114,7 @@ func validateSkillDirAs(dir, name string, isRoot bool) ([]source.Issue, error) {
 		return nil, err
 	}
 	for _, p := range placeholders {
-		issue := source.Issue{Severity: source.SeverityError, Message: "unfilled placeholder " + p}
+		issue := source.Issue{Severity: placeholderSeverity, Message: "unfilled placeholder " + p}
 		// p is "file:line: text"
 		if parts := strings.SplitN(p, ":", 3); len(parts) == 3 {
 			if n, err := strconv.Atoi(parts[1]); err == nil {
@@ -124,13 +133,17 @@ func printIssuesFor(w io.Writer, name string, issues []source.Issue) bool {
 		fmt.Fprintf(w, "  ok    %s\n", name)
 		return false
 	}
-	label := "warn"
+	label := ui.Yellow(w, "warn")
 	if bad {
-		label = "FAIL"
+		label = ui.Red(w, "FAIL")
 	}
 	fmt.Fprintf(w, "  %s  %s\n", label, name)
 	for _, i := range issues {
-		fmt.Fprintf(w, "          %s: %s\n", i.Severity, i.Message)
+		sev := ui.Yellow(w, i.Severity)
+		if i.Severity == source.SeverityError {
+			sev = ui.Red(w, i.Severity)
+		}
+		fmt.Fprintf(w, "          %s: %s\n", sev, i.Message)
 	}
 	return bad
 }

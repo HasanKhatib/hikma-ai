@@ -7,6 +7,7 @@ import (
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/source"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -87,7 +88,7 @@ every skill in the lockfile is checked.`,
 					}
 				}
 				if touchesScripts(added, modified, removed) {
-					fmt.Fprintln(out, "          warning: scripts/ differ from what was installed")
+					fmt.Fprintf(out, "          %s scripts/ differ from what was installed\n", ui.Warning(out))
 				}
 			}
 			fmt.Fprintf(out, "\n%d skill(s) checked, %d differ.\n", len(keys), failed)

@@ -12,6 +12,7 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/lock"
 	"github.com/hasankhatib/hikma-ai/internal/source"
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -176,7 +177,7 @@ func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen bool) erro
 			// borrow trust you gave the global skill.
 			w += "; a project skill with this name could inherit permissions you granted the global one"
 		}
-		fmt.Fprintln(out, w)
+		ui.PrintWarning(out, w)
 	}
 	upToDate := 0
 	for _, it := range items {

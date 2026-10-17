@@ -10,7 +10,7 @@
 | Install a public skill for many different agents | `gh skill` (it supports many more agents) |
 | Set up a whole repository for several agents in one step, with shared config | `hikma init` |
 | Install from a registry you named once, using bare names | `hikma` |
-| Publish to your registry by pull request, with a confirmation of the target | `hikma skill push` |
+| Publish to your registry, with a confirmation of the target | `hikma skill push` |
 | Keep a lockfile that protects local edits and flags script changes | `hikma` |
 | Enforce a naming rule and validate a registry in CI | `hikma registry validate` |
 

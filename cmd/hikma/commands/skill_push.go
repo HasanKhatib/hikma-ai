@@ -84,6 +84,8 @@ type pushPlan struct {
 	files    []pushFile
 	// codeowners, when non-empty, is the owner to add for skills/<name>/.
 	codeowners string
+	// viaPR opens a pull request even when you can write to the registry.
+	viaPR bool
 }
 
 func readPushFiles(skillDir, name string) ([]pushFile, error) {
@@ -150,33 +152,54 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 		writeRepo, headOwner = fork, strings.SplitN(fork, "/", 2)[0]
 	}
 
+	// With write access the skill is committed straight to the default branch:
+	// the point of a registry you own is to save the round trip. --pr opts into
+	// a reviewed pull request instead. Without write access it is always a PR
+	// from your fork.
+	direct := canPush == "true" && !plan.viaPR
+
 	branch := "skill/" + plan.name
 	existingPR := ""
-	head, exists, err := branchHead(writeRepo, branch)
-	if err != nil {
-		return "", err
-	}
-	if exists {
-		existingPR, err = findOpenPR(upstream, headOwner, branch)
+	var head string
+	var exists bool
+	if direct {
+		branch = baseBranch
+		head, exists, err = branchHead(writeRepo, baseBranch)
 		if err != nil {
 			return "", err
 		}
-		if existingPR == "" {
-			// The old branch has no open PR (merged or closed); do not reuse or rewrite it.
-			branch = fmt.Sprintf("%s-%s", branch, pushNow().UTC().Format("20060102-150405"))
-			exists = false
-		}
-	}
-	if !exists {
-		head, _, err = branchHead(writeRepo, baseBranch)
-		if err != nil {
-			return "", err
-		}
-		if head == "" {
+		if !exists {
 			return "", fmt.Errorf("cannot find branch %s in %s", baseBranch, writeRepo)
 		}
+	} else {
+		head, exists, err = branchHead(writeRepo, branch)
+		if err != nil {
+			return "", err
+		}
+		if exists {
+			existingPR, err = findOpenPR(upstream, headOwner, branch)
+			if err != nil {
+				return "", err
+			}
+			if existingPR == "" {
+				// The old branch has no open PR (merged or closed); do not reuse or rewrite it.
+				branch = fmt.Sprintf("%s-%s", branch, pushNow().UTC().Format("20060102-150405"))
+				exists = false
+			}
+		}
+		if !exists {
+			head, _, err = branchHead(writeRepo, baseBranch)
+			if err != nil {
+				return "", err
+			}
+			if head == "" {
+				return "", fmt.Errorf("cannot find branch %s in %s", baseBranch, writeRepo)
+			}
+		}
 	}
-	if existingPR != "" {
+	if direct {
+		fmt.Fprintf(w, "Committing to %s on %s...\n", baseBranch, writeRepo)
+	} else if existingPR != "" {
 		fmt.Fprintf(w, "Updating branch %s on %s...\n", branch, writeRepo)
 	} else {
 		fmt.Fprintf(w, "Creating branch %s on %s...\n", branch, writeRepo)
@@ -248,9 +271,17 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 		_, err = ghSend("POST", "repos/"+writeRepo+"/git/refs", "", map[string]string{"ref": "refs/heads/" + branch, "sha": commit})
 	}
 	if err != nil {
+		if direct {
+			return "", fmt.Errorf("could not commit to %s on %s: %w\nif the branch is protected, publish through a pull request instead: hikma skill push %s --pr", baseBranch, upstream, err, plan.name)
+		}
 		return "", fmt.Errorf("update branch: %w", err)
 	}
 
+	if direct {
+		url := fmt.Sprintf("https://github.com/%s/commit/%s", upstream, commit)
+		fmt.Fprintf(w, "  Pushed to %s (%s): %s\n", baseBranch, upstream, url)
+		return url, nil
+	}
 	if existingPR != "" {
 		fmt.Fprintf(w, "Updated PR: %s\n", existingPR)
 		return existingPR, nil
@@ -386,21 +417,42 @@ func readSkillOwner(skillDir string) (string, error) {
 	return doc.Metadata.Team, nil
 }
 
+// describePush says what this push will do, so the confirmation is never
+// vague about skipping review. It asks GitHub whether you can write to the
+// registry; if that check fails, the later push reports the real error.
+func describePush(r config.Registry, viaPR bool) string {
+	if viaPR {
+		return "as a pull request (--pr)"
+	}
+	canPush, err := ghGet("repos/"+r.FullName(), ".permissions.push")
+	switch {
+	case err != nil:
+		return "committed to the default branch if you have write access (no review), otherwise a pull request from your fork; add --pr to always open one"
+	case canPush == "true":
+		return "committed straight to the default branch, with no review (add --pr for a pull request)"
+	}
+	return "as a pull request from your fork (you have no write access)"
+}
+
 func newSkillPushCmd(flagRegistry *string) *cobra.Command {
 	var flagAgent string
-	var assumeYes, withCodeowners bool
+	var assumeYes, withCodeowners, viaPR bool
 
 	cmd := &cobra.Command{
 		Use:   "push <name>",
 		Short: "Open a pull request to publish a skill to your registry",
-		Long: `Publish a local skill to your configured registry as a pull request.
+		Long: `Publish a local skill to your configured registry.
 
 The target registry is always shown, and you must confirm it (--yes skips the
-prompt). With write access the branch is pushed to the registry; otherwise it is
-pushed to your fork. Nothing is force-pushed.`,
+prompt). With write access the skill is committed straight to the registry's
+default branch; use --pr to open a pull request instead. Without write access
+it is pushed to your fork and a pull request is opened. Nothing is force-pushed.`,
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if withCodeowners && !viaPR {
+				return fmt.Errorf("--codeowners changes who must review the registry, so it has to go through a pull request: add --pr")
+			}
 			name := normalizeSkillName(args[0])
 			if err := checkSkillName(name); err != nil {
 				return err
@@ -423,16 +475,20 @@ pushed to your fork. Nothing is force-pushed.`,
 			}
 
 			fmt.Fprintf(out, "Validating %s...\n", name)
-			issues, err := validateSkillDir(skillDir, name)
+			issues, err := validateSkillDirSeverity(skillDir, name, false, source.SeverityWarning)
 			if err != nil {
 				return err
 			}
 			if printIssues(cmd.ErrOrStderr(), skillDir, issues) {
-				return fmt.Errorf("validation failed: fix the problems above before pushing")
+				return fmt.Errorf("validation failed: fix the errors above before pushing")
 			}
-			fmt.Fprintln(out, "Validating...  ok")
+			if len(issues) == 0 {
+				fmt.Fprintln(out, "Validating...  ok")
+			} else {
+				fmt.Fprintln(out, ui.Yellow(out, "Validating...  warnings only, continuing.")+" 'hikma registry validate' in the registry's CI treats unfilled placeholders as errors.")
+			}
 
-			if err := confirmPush(cmd, name, skillDir, registry, origin, assumeYes); err != nil {
+			if err := confirmPush(cmd, name, skillDir, registry, origin, assumeYes, describePush(registry, viaPR)); err != nil {
 				return err
 			}
 
@@ -440,7 +496,7 @@ pushed to your fork. Nothing is force-pushed.`,
 			if err != nil {
 				return err
 			}
-			plan := pushPlan{upstream: registry, name: name, files: files}
+			plan := pushPlan{upstream: registry, name: name, files: files, viaPR: viaPR}
 			if withCodeowners {
 				owner, err := readSkillOwner(skillDir)
 				if err != nil {
@@ -453,10 +509,15 @@ pushed to your fork. Nothing is force-pushed.`,
 				}
 				plan.codeowners = owner
 			}
-			if _, err := pushSkill(out, plan); err != nil {
+			result, err := pushSkill(out, plan)
+			if err != nil {
 				return fmt.Errorf("push failed: %w", err)
 			}
-			fmt.Fprintln(out, "\nA maintainer will review and merge your skill.")
+			if strings.Contains(result, "/pull/") {
+				fmt.Fprintln(out, "\nA maintainer will review and merge your skill.")
+			} else if result != "" {
+				fmt.Fprintf(out, "\nPublished %s. Install it anywhere with: hikma skill install %s\n", name, name)
+			}
 			return nil
 		},
 		ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
@@ -469,6 +530,7 @@ pushed to your fork. Nothing is force-pushed.`,
 
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	cmd.Flags().BoolVarP(&assumeYes, "yes", "y", false, "skip the confirmation prompt")
+	cmd.Flags().BoolVar(&viaPR, "pr", false, "open a pull request even if you can write to the registry")
 	cmd.Flags().BoolVar(&withCodeowners, "codeowners", false, "also add the skill owner to .github/CODEOWNERS in the registry")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
