@@ -14,16 +14,16 @@ func TestDoctorColorsOnATerminalAndNotUnderNoColor(t *testing.T) {
 	if exited, _ := colored.waitDone(30 * time.Second); !exited {
 		t.Fatalf("doctor did not finish; screen:\n%s", plain(colored.output()))
 	}
-	if !strings.Contains(colored.output(), "\x1b[32m") {
-		t.Errorf("expected green ok on a terminal, got %q", colored.output())
+	if !hasColor(colored.output()) {
+		t.Errorf("expected color on a terminal, got %q", colored.output())
 	}
 
 	nocolor := startTerm(t, sb.project, sb.with("TERM=xterm-256color", "NO_COLOR=1"), "doctor")
 	if exited, _ := nocolor.waitDone(30 * time.Second); !exited {
 		t.Fatalf("doctor did not finish under NO_COLOR; screen:\n%s", plain(nocolor.output()))
 	}
-	if strings.Contains(nocolor.output(), "\x1b[") {
-		t.Errorf("NO_COLOR output has escape codes: %q", nocolor.output())
+	if hasColor(nocolor.output()) {
+		t.Errorf("NO_COLOR output has color codes: %q", nocolor.output())
 	}
 }
 

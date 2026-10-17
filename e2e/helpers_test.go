@@ -30,7 +30,27 @@ const (
 	ctrlC = "\x03"
 )
 
-func downs(n int) string { return strings.Repeat(down, n) }
+// settle gives a freshly drawn prompt time to start reading input. On Linux a
+// key sent the instant the text appears can be dropped while the program is
+// still switching the terminal to raw mode.
+func (tm *term) settle() { time.Sleep(500 * time.Millisecond) }
+
+// press sends keys one at a time with a short gap, like a person typing, so no
+// key arrives in the same read as the last.
+func (tm *term) press(keys ...string) {
+	tm.t.Helper()
+	for _, k := range keys {
+		tm.write(k)
+		time.Sleep(40 * time.Millisecond)
+	}
+}
+
+// colorCode matches the SGR codes hikma uses for color, bold, and dim. The
+// terminal layer may add its own cursor and title sequences, so tests look for
+// these specifically rather than for any escape code.
+var colorCode = regexp.MustCompile(`\x1b\[(?:[0-9]+;)*(?:1|2|3[0-7]|9[0-7])m`)
+
+func hasColor(s string) bool { return colorCode.MatchString(s) }
 
 func skipShort(t *testing.T) {
 	t.Helper()
