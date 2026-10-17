@@ -128,7 +128,11 @@ func rootRun(cmd *cobra.Command, _ []string) error {
 		return cmd.Help()
 	}
 	return runWizard(prompter, out, func(args []string) error {
+		// Root() rebinds the global flags to their defaults, so carry the
+		// values the user passed over to the command the menu runs.
+		keepNoInput, keepNoColor := noInput, ui.NoColor
 		inner := Root()
+		noInput, ui.NoColor = keepNoInput, keepNoColor
 		inner.SetArgs(args)
 		return inner.Execute()
 	})
