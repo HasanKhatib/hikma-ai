@@ -6,7 +6,7 @@ Remove an installed skill.
 hikma skill remove <name> [--agent <list>] [--force] [--global]
 ```
 
-Deletes the skill from the selected agents' skills folders and drops its entry from [`.hikma/lock.json`](/guides/lockfile). With no `--agent`, it acts on every agent configured for the repository.
+Deletes the skill from the selected agents' skills folders and drops its entry from [`.hikma/lock.json`](/commands/sync#the-lockfile). With no `--agent`, it acts on every agent configured for the repository.
 
 ```text
 $ hikma skill remove deploy-helper
@@ -31,7 +31,7 @@ When the last skill is removed, the empty lockfile is deleted too.
 |---|---|
 | `--force` | Also remove untracked skills and skills with local changes |
 | `--agent <list>` | Agents, comma-separated |
-| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/global) |
+| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/agents#global-installs) |
 | `-y`, `--yes` | Skip the confirmation before changing your home directory |
 
 To bring a removed skill back, run [`hikma skill install`](/commands/skill-install) again.

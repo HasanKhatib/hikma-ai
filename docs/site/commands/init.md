@@ -55,4 +55,40 @@ Existing files are skipped unless you pass `--force`. Without a terminal, `init`
 }
 ```
 
-Commit it. Later `hikma skill install` and `update` calls in that repository act on every listed agent without extra flags. See [Set up a team repo](/guides/team-setup).
+Commit it. Later `hikma skill install` and `update` calls in that repository act on every listed agent without extra flags. See [Share it with your team](#share-it-with-your-team).
+
+## Share it with your team
+
+Commit `AGENTS.md`, `.hikma/config.json`, `.hikma/lock.json`, and the skills folders so everyone who clones the repository gets the same instructions and skills.
+
+### What teammates get
+
+After cloning, `hikma skill install other-skill` installs into every agent listed in `.hikma/config.json`, from the project's registry, with no flags. Their personal `agent` default does not override a project's `agents` list.
+
+### On a fresh clone
+
+If the skills folders are not committed (for example they are git-ignored), restore them from the lockfile:
+
+```bash
+hikma sync
+```
+
+### Updating
+
+```bash
+hikma skill update --all
+```
+
+Review the printed changes, especially anything under `scripts/`, and commit the result. See [The lockfile](/commands/sync#the-lockfile).
+
+### Edit the instructions
+
+`AGENTS.md` is generated once with placeholders for build commands and invariants. Fill those in; Hikma will not overwrite the file unless you pass `--force`.
+
+### Settings you can share
+
+| Setting | Command |
+|---|---|
+| Agents | `hikma config set agents claude,codex --project` |
+| Registry | `hikma config set registry owner/repo --project` |
+| Naming rule | `hikma config set naming kebab-case --project` |
