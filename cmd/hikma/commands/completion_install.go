@@ -47,9 +47,10 @@ func completionTargetFor(shell string) (completionTarget, error) {
 	case "zsh":
 		return completionTarget{path: filepath.Join(home, ".zshrc"), line: guardedSource("zsh")}, nil
 	case "bash":
-		// macOS terminals start login shells, which read .bash_profile, not .bashrc.
+		// macOS terminals start login shells, which read .bash_profile. Elsewhere
+		// interactive shells read .bashrc, even when it does not exist yet.
 		rc := filepath.Join(home, ".bashrc")
-		if _, err := os.Stat(rc); err != nil || runtime.GOOS == "darwin" {
+		if runtime.GOOS == "darwin" {
 			rc = filepath.Join(home, ".bash_profile")
 		}
 		return completionTarget{path: rc, line: guardedSource("bash")}, nil

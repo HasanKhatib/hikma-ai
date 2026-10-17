@@ -53,7 +53,7 @@ jobs:
       - name: Build hikma
         run: |
           mkdir -p "$RUNNER_TEMP/bin"
-          go build -o "$RUNNER_TEMP/bin/hikma" ./cmd/hikma
+          go build -o "$RUNNER_TEMP/bin/hikma${{ runner.os == 'Windows' && '.exe' || '' }}" ./cmd/hikma
           echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
       - name: Test completion in ${{ matrix.shell }}
         run: bash scripts/test-completion.sh "${{ matrix.shell }}"

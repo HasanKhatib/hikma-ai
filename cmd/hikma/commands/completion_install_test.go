@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -77,5 +78,20 @@ func TestHasActiveLineIgnoresComments(t *testing.T) {
 	}
 	if !hasActiveLine("a\n  "+line+"  \nb", line) {
 		t.Error("active line not found")
+	}
+}
+
+func TestCompletionBashTargetFollowsThePlatform(t *testing.T) {
+	home := fakeHome(t)
+	tg, err := completionTargetFor("bash")
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(home, ".bashrc")
+	if runtime.GOOS == "darwin" {
+		want = filepath.Join(home, ".bash_profile")
+	}
+	if tg.path != want {
+		t.Errorf("bash target = %s, want %s (it must not depend on .bashrc already existing)", tg.path, want)
 	}
 }
