@@ -11,10 +11,16 @@ export default defineConfig({
   base,
   cleanUrls: true,
   lastUpdated: true,
-  head: [["link", { rel: "icon", href: `${base}favicon.svg` }]],
+  head: [
+    ["link", { rel: "icon", type: "image/svg+xml", href: `${base}favicon.svg` }],
+    ["link", { rel: "icon", type: "image/png", sizes: "32x32", href: `${base}logo/favicon-32x32.png` }],
+    ["link", { rel: "icon", type: "image/png", sizes: "16x16", href: `${base}logo/favicon-16x16.png` }],
+    ["link", { rel: "apple-touch-icon", sizes: "180x180", href: `${base}logo/apple-touch-icon.png` }],
+    ["link", { rel: "manifest", href: `${base}logo/site.webmanifest` }],
+  ],
 
   themeConfig: {
-    logo: "/logo.svg",
+    logo: "/logo/Logo.png",
     nav: [
       { text: "Get Started", link: "/getting-started" },
       { text: "Commands", link: "/commands/" },
@@ -66,6 +72,7 @@ export default defineConfig({
           { text: "Skill format", link: "/guides/skill-format" },
           { text: "Run a registry", link: "/guides/registry" },
           { text: "Set up a team repo", link: "/guides/team-setup" },
+          { text: "Menu and wizard", link: "/guides/menu" },
           { text: "Global installs", link: "/guides/global" },
           { text: "Lockfile and updates", link: "/guides/lockfile" },
           { text: "Using Hikma with gh skill", link: "/guides/gh-skill" },

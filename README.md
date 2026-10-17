@@ -1,3 +1,5 @@
+<p align="center"><img src="docs/site/public/logo/Logo.png" alt="Hikma" width="140"></p>
+
 # Hikma AI
 
 **Skills follow you.** Hikma AI is one CLI for developers: define your source, publish skills from any project to a registry repo you own, and install them into Claude, Codex, Copilot, OpenCode, or a custom agent layout of your own.
