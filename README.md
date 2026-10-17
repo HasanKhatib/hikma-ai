@@ -31,7 +31,7 @@ hikma init --agent claude,codex --skill my-skill # set up a whole repo for your 
 
 Run `hikma` with no arguments in a terminal for a menu of the common tasks.
 
-Guides: [agents and folders](https://hasankhatib.github.io/hikma-ai/guides/agents), [registries](https://hasankhatib.github.io/hikma-ai/guides/registry), [the lockfile](https://hasankhatib.github.io/hikma-ai/guides/lockfile), [team setup](https://hasankhatib.github.io/hikma-ai/guides/team-setup), [using `gh skill` alongside Hikma](https://hasankhatib.github.io/hikma-ai/guides/gh-skill).
+Guides: [agents and folders](https://hasankhatib.github.io/hikma-ai/guides/agents), [skill format](https://hasankhatib.github.io/hikma-ai/guides/skill-format), and [running a registry](https://hasankhatib.github.io/hikma-ai/guides/registry).
 
 ## Develop Hikma
 

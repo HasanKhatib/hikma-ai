@@ -7,7 +7,7 @@ hikma skill update <name>
 hikma skill update --all
 ```
 
-Updates use [`.hikma/lock.json`](/guides/lockfile): each skill is fetched from its recorded source and ref, which may differ from your configured registry.
+Updates use [`.hikma/lock.json`](/commands/sync#the-lockfile): each skill is fetched from its recorded source and ref, which may differ from your configured registry.
 
 ## Behavior
 
@@ -26,7 +26,7 @@ Updates use [`.hikma/lock.json`](/guides/lockfile): each skill is fetched from i
 | `--force` | Overwrite local changes |
 | `-y`, `--yes` | Apply updates that change `scripts/`, and changes to your home directory, without asking |
 | `--agent <list>` | Limit to these agents' folders (not with `--all`) |
-| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/global) |
+| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/agents#global-installs) |
 
 ```text
 $ hikma skill update deploy-helper

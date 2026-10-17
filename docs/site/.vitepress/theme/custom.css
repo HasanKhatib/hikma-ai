@@ -623,3 +623,41 @@ kbd,
 .VPHome {
   margin-bottom: 0 !important;
 }
+
+/* Floating credit, bottom right on every page. */
+.hk-credit {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 20;
+  padding: 6px 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel);
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 6px 20px rgba(11, 60, 56, 0.12);
+}
+.hk-credit a {
+  color: var(--vp-c-brand-1);
+  font-weight: 600;
+  text-decoration: none;
+}
+.hk-credit a:hover,
+.hk-credit a:focus-visible {
+  text-decoration: underline;
+}
+@media (max-width: 640px) {
+  .hk-credit {
+    right: 8px;
+    bottom: 8px;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+}
+@media print {
+  .hk-credit {
+    display: none;
+  }
+}

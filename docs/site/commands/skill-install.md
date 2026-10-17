@@ -26,7 +26,7 @@ With a source but no name, a terminal shows a picker. Without a terminal the ski
 | `--ref <ref>` | Branch, tag, or commit to install from. `--pin` is an alias, matching `gh skill` |
 | `--agent <list>` | Agents, comma-separated, overriding your configuration |
 | `--force` | Reinstall even if already installed |
-| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/global) |
+| `-g`, `--global` | Use your home directory and `~/.hikma/lock.json` instead of this project. See [Global installs](/guides/agents#global-installs) |
 | `-y`, `--yes` | Skip the confirmation before changing your home directory |
 | `--registry <source>` | Registry for bare names, for this command |
 
@@ -34,7 +34,7 @@ With a source but no name, a terminal shows a picker. Without a terminal the ski
 
 1. The source and commit are printed, with where the registry setting came from.
 2. The skill folder is copied into each target agent's skills folder. `.git` and symlinks are skipped.
-3. The install is recorded in [`.hikma/lock.json`](/guides/lockfile).
+3. The install is recorded in [`.hikma/lock.json`](/commands/sync#the-lockfile).
 
 With more than one agent configured, the skill is installed into every distinct folder. Agents that share `.agents/skills` get one copy.
 

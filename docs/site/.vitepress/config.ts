@@ -71,11 +71,10 @@ export default defineConfig({
           { text: "Agents and folders", link: "/guides/agents" },
           { text: "Skill format", link: "/guides/skill-format" },
           { text: "Run a registry", link: "/guides/registry" },
-          { text: "Set up a team repo", link: "/guides/team-setup" },
-          { text: "Menu and wizard", link: "/guides/menu" },
-          { text: "Global installs", link: "/guides/global" },
-          { text: "Lockfile and updates", link: "/guides/lockfile" },
-          { text: "Using Hikma with gh skill", link: "/guides/gh-skill" },
+
+
+
+
         ],
       },
     ],
