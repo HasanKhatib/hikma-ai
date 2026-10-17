@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en" data-resolution="landscape">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.14.2/dist/gsap.min.js"></script>
+    <style>
+      :root {
+        --bg: #0b121c;
+        --teal: #5eead4;
+        --blue: #38a0f8;
+        --text: #e6f1f5;
+        --muted: #8aa0b0;
+        --panel: #0f1a27;
+        --line: #1c2c3d;
+        --warn: #f5c15a;
+      }
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body {
+        width: 1920px; height: 1080px; overflow: hidden; background: var(--bg);
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, sans-serif; color: var(--text);
+      }
+      #root { position: relative; width: 1920px; height: 1080px; background: var(--bg); overflow: hidden; }
+      .glow {
+        position: absolute; width: 1300px; height: 1300px; border-radius: 50%; left: 1000px; top: -100px;
+        background: radial-gradient(circle, rgba(56,160,248,0.14), rgba(94,234,212,0.06) 40%, transparent 70%);
+      }
+
+      /* left: moving index */
+      #list { position: absolute; left: 100px; top: 100px; width: 580px; height: 690px; }
+      #bar {
+        position: absolute; left: 0; top: 0; width: 580px; height: 226px; border-radius: 22px;
+        background: linear-gradient(90deg, rgba(94,234,212,0.10), rgba(56,160,248,0.02));
+        border: 2px solid var(--line);
+      }
+      #bar::before {
+        content: ""; position: absolute; left: -2px; top: 22px; bottom: 22px; width: 6px; border-radius: 3px;
+        background: linear-gradient(180deg, var(--teal), var(--blue));
+      }
+      .item { position: absolute; left: 0; width: 580px; height: 226px; padding: 26px 32px 0 48px; opacity: 0.36; }
+      .item .n { font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 24px; color: var(--teal); letter-spacing: 0.08em; }
+      .item .h { font-size: 48px; font-weight: 650; letter-spacing: -0.025em; line-height: 1.15; margin-top: 6px; }
+      .item .s { font-size: 28px; color: var(--muted); margin-top: 10px; opacity: 0; }
+
+      /* right: terminal */
+      #term { position: absolute; left: 740px; top: 100px; width: 1100px; height: 690px; background: var(--panel); border: 2px solid var(--line); border-radius: 26px; overflow: hidden; }
+      .bar { position: relative; height: 68px; border-bottom: 2px solid var(--line); display: flex; align-items: center; gap: 14px; padding: 0 30px; }
+      .dot { width: 18px; height: 18px; border-radius: 50%; background: var(--line); }
+      .where { position: absolute; left: 0; right: 0; text-align: center; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 22px; color: var(--muted); }
+      .body { position: relative; height: 620px; }
+      .scn { position: absolute; inset: 0; padding: 36px 36px; font-family: "JetBrains Mono", ui-monospace, Menlo, monospace; font-size: 30px; line-height: 1.7; opacity: 0; }
+      .ln { white-space: pre; opacity: 0; }
+      .ln.gap { margin-top: 26px; }
+      .cmd .p { color: var(--teal); }
+      .out { color: var(--muted); font-size: 25px; }
+      .ok { color: var(--teal); }
+      .hl { color: var(--text); }
+      .ask { color: var(--warn); }
+      .file { color: var(--text); font-size: 24px; border-left: 4px solid var(--line); padding-left: 20px; margin-left: 4px; }
+      .file .k { color: var(--blue); }
+
+      /* pixel character, bottom right */
+      #sprite { position: absolute; left: 1560px; top: 816px; width: 280px; height: 224px; shape-rendering: crispEdges; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="18" data-width="1920" data-height="1080">
+      <div class="glow"></div>
+      <div id="list"><div id="bar"></div></div>
+      <div id="term">
+        <div class="bar"><i class="dot"></i><i class="dot"></i><i class="dot"></i></div>
+        <div class="body" id="body"></div>
+      </div>
+      <svg id="sprite" viewBox="0 0 20 16" width="280" height="224"></svg>
+    </div>
+
+    <script>
+      window.__timelines = window.__timelines || {};
+      const tl = gsap.timeline({ paused: true });
+      const ease = "power3.out";
+      const H = 230, D = 6.0, TOTAL = 18;
+      const REG = "myghaccount/myrepo";
+
+      // ---- scenarios: left index copy + timed terminal steps (seconds relative to scene start) ----
+      const scenes = [
+        { n: "01", h: "Found a skill you like?", s: "Keep it in your own registry.", where: "~/myproject", steps: [
+          { cmd: "hikma skill install anthropics/skills pdf", at: 0.3, dur: 1.3 },
+          { out: "Source: anthropics/skills (argument)", at: 1.9 },
+          { out: "  -> .claude/skills/pdf/", at: 2.3 },
+          { cmd: "hikma skill push pdf", at: 2.8, dur: 0.7, gap: true },
+          { out: '<span class="ask">You are pushing to registry: ' + REG + ' (user config)</span>', at: 3.8 },
+          { out: "  skill: pdf (.claude/skills/pdf/)", at: 4.2 },
+          { out: '<span class="ask">? Push to ' + REG + '? (y/N)</span> y', at: 4.7 },
+          { out: '<span class="ok">✓</span> published to ' + REG, at: 5.2, win: true },
+        ]},
+        { n: "02", h: "Got an idea? Create it on the spot.", s: "Write it once, push it anywhere.", where: "~/myproject", idea: true, steps: [
+          { cmd: "hikma skill create bs-detector", at: 0.4, dur: 1.0 },
+          { out: "Created .claude/skills/bs-detector/", at: 1.7 },
+          { out: '<span class="k">name:</span> bs-detector', at: 2.1, file: true },
+          { out: "<span class=\"k\">description:</span> Calls out confident nonsense in my agent's answers", at: 2.5, file: true },
+          { cmd: "hikma skill push bs-detector", at: 3.2, dur: 0.9, gap: true },
+          { out: '<span class="ask">? Push to ' + REG + '? (y/N)</span> y', at: 4.4 },
+          { out: '<span class="ok">✓</span> published to ' + REG, at: 5.0, win: true },
+        ]},
+        { n: "03", h: "New laptop? Same skills.", s: "One command brings them back.", where: "~/myproject  (fresh clone)", wave: true, steps: [
+          { cmd: "hikma sync", at: 0.3, dur: 0.5 },
+          { out: "Skills recorded in .hikma/lock.json: 2", at: 1.1 },
+          { out: "  restore  .claude/skills/pdf (anthropics/skills @ dbd4588)", at: 1.5 },
+          { out: "  restore  .claude/skills/bs-detector (" + REG + " @ 4be7f0c)", at: 1.8 },
+          { out: '<span class="ask">? Fetch 2 skill(s) from 2 source(s) listed above? (y/N)</span> y', at: 2.4 },
+          { out: "  restored .claude/skills/pdf", at: 3.1 },
+          { out: "  restored .claude/skills/bs-detector", at: 3.4 },
+          { out: '<span class="ok">Done:</span> 2 restored, 0 up to date, 0 skipped, 0 failed.', at: 3.9, win: true },
+        ]},
+      ];
+
+      // ---- pixel character ----
+      const PAL = { F: "#2a4156", S: "#07101a", T: "#5eead4", B: "#38a0f8", K: "#ffd9b0", H: "#5eead4", D: "#0b121c", Y: "#f5c15a", W: "#e6f1f5", L: "#1c2c3d" };
+      const NS = "http://www.w3.org/2000/svg";
+      const sprite = document.getElementById("sprite");
+      function layer(id, rows, y0 = 0) {
+        const g = document.createElementNS(NS, "g"); g.id = id;
+        rows.forEach((row, dy) => [...row].forEach((ch, x) => {
+          if (ch === ".") return;
+          const r = document.createElementNS(NS, "rect");
+          r.setAttribute("x", x); r.setAttribute("y", y0 + dy); r.setAttribute("width", 1); r.setAttribute("height", 1); r.setAttribute("fill", PAL[ch]);
+          g.appendChild(r);
+        }));
+        sprite.appendChild(g); return g;
+      }
+      function dots(id, pts, color) {
+        const g = document.createElementNS(NS, "g"); g.id = id;
+        pts.forEach(([x, y, c]) => {
+          const r = document.createElementNS(NS, "rect");
+          r.setAttribute("x", x); r.setAttribute("y", y); r.setAttribute("width", 1); r.setAttribute("height", 1); r.setAttribute("fill", c || color);
+          g.appendChild(r);
+        });
+        sprite.appendChild(g); return g;
+      }
+      layer("base", [
+        "....................",
+        "........FFFFFFFFFFFF",
+        "........FSSSSSSSSSSF",
+        ".HHHHHH.FSSSSSSSSSSF",
+        ".HHHHHH.FSSSSSSSSSSF",
+        ".HKKKKH.FSSSSSSSSSSF",
+        ".KDKKDK.FSSSSSSSSSSF",
+        ".KKKKKK.FSSSSSSSSSSF",
+        "..KKKK..FSSSSSSSSSSF",
+        ".BBBBBB.FFFFFFFFFFFF",
+        "BBBBBBBB....FFFF....",
+        "BBBBBBBB..FFFFFFFF..",
+        "BBBBBBBB............",
+        "BBBBBBBB.FFFFFFFFF..",
+        "LLLLLLLLLLLLLLLLLLLL",
+        "LLLLLLLLLLLLLLLLLLLL",
+      ]);
+      dots("armA", [[8, 12, "#38a0f8"], [9, 12, "#ffd9b0"]]);
+      dots("armB", [[8, 13, "#38a0f8"], [9, 13, "#ffd9b0"]]);
+      dots("waveA", [[7, 5, "#ffd9b0"], [7, 6, "#38a0f8"], [7, 7, "#38a0f8"], [7, 8, "#38a0f8"]]);
+      dots("waveB", [[7, 4, "#ffd9b0"], [7, 5, "#38a0f8"], [7, 6, "#38a0f8"], [7, 7, "#38a0f8"], [7, 8, "#38a0f8"]]);
+      dots("prompt", [[10, 4], [11, 5], [10, 6], [13, 6], [14, 6]], "#5eead4");
+      dots("check", [[11, 5], [12, 6], [13, 5], [14, 4], [15, 3]], "#5eead4");
+      layer("bulb", ["...YY...", "..YYYY..", "...WW..."].map((r) => r.padEnd(20, ".")));
+      gsap.set(["#armB", "#waveA", "#waveB", "#check", "#bulb"], { opacity: 0 });
+
+      // ---- build left index + terminal scenes ----
+      const list = document.getElementById("list");
+      const body = document.getElementById("body");
+      const where = document.querySelector(".bar");
+
+      function typeInto(el, text, at, dur) {
+        const o = { n: 0 };
+        tl.to(o, { n: text.length, duration: dur, ease: "none", onUpdate() { el.textContent = text.slice(0, Math.round(o.n)); } }, at);
+      }
+      // arm alternates while typing (deterministic: sets on the timeline)
+      function typingArms(at, dur) {
+        for (let t = 0, k = 0; t < dur; t += 0.16, k++) {
+          tl.set("#armA", { opacity: k % 2 ? 0 : 1 }, at + t);
+          tl.set("#armB", { opacity: k % 2 ? 1 : 0 }, at + t);
+        }
+        tl.set("#armA", { opacity: 1 }, at + dur);
+        tl.set("#armB", { opacity: 0 }, at + dur);
+      }
+
+      scenes.forEach((sc, i) => {
+        const it = document.createElement("div");
+        it.className = "item"; it.id = "it" + i; it.style.top = i * H + "px";
+        it.innerHTML = '<div class="n">' + sc.n + '</div><div class="h">' + sc.h + '</div><div class="s">' + sc.s + "</div>";
+        list.appendChild(it);
+
+        const box = document.createElement("div");
+        box.className = "scn"; box.id = "sc" + i;
+        const lines = sc.steps.map((st) => {
+          const ln = document.createElement("div");
+          ln.className = "ln " + (st.cmd ? "cmd" : "out") + (st.gap ? " gap" : "") + (st.file ? " file" : "");
+          if (st.cmd) ln.innerHTML = '<span class="p">$ </span><span class="t"></span>';
+          else ln.innerHTML = st.out;
+          box.appendChild(ln);
+          return ln;
+        });
+        body.appendChild(box);
+
+        const lab = document.createElement("div");
+        lab.className = "where"; lab.id = "wh" + i; lab.textContent = sc.where; lab.style.opacity = i === 0 ? 1 : 0;
+        where.appendChild(lab);
+
+        const r = i * D;
+        // index state: scene 0 starts lit so the loop seam is clean
+        if (i === 0) { gsap.set("#it0", { opacity: 1 }); gsap.set("#it0 .s", { opacity: 1 }); gsap.set("#sc0", { opacity: 1 }); }
+        else {
+          tl.to("#bar", { y: i * H, duration: 0.55, ease: "power3.inOut" }, r);
+          tl.to("#it" + (i - 1), { opacity: 0.36, duration: 0.4 }, r);
+          tl.to("#it" + (i - 1) + " .s", { opacity: 0, duration: 0.3 }, r);
+          tl.to("#it" + i, { opacity: 1, duration: 0.4 }, r + 0.1);
+          tl.fromTo("#it" + i + " .s", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.5, ease }, r + 0.3);
+          tl.to("#wh" + (i - 1), { opacity: 0, duration: 0.2 }, r);
+          tl.to("#wh" + i, { opacity: 1, duration: 0.3 }, r + 0.15);
+          tl.fromTo("#sc" + i, { opacity: 0 }, { opacity: 1, duration: 0.3 }, r + 0.15);
+        }
+
+        sc.steps.forEach((st, k) => {
+          if (st.cmd) {
+            tl.set(lines[k], { opacity: 1 }, r + st.at);
+            typeInto(lines[k].querySelector(".t"), st.cmd, r + st.at, st.dur);
+            typingArms(r + st.at, st.dur);
+          } else {
+            tl.fromTo(lines[k], { opacity: 0, y: 8 }, { opacity: 1, y: 0, duration: 0.3, ease }, r + st.at);
+          }
+          if (st.win) { // screen turns to a check, character does a small hop
+            tl.set("#prompt", { opacity: 0 }, r + st.at);
+            tl.set("#check", { opacity: 1 }, r + st.at);
+            tl.to("#sprite", { y: -14, duration: 0.18, ease: "power2.out" }, r + st.at);
+            tl.to("#sprite", { y: 0, duration: 0.22, ease: "bounce.out" }, r + st.at + 0.18);
+            tl.set("#check", { opacity: 0 }, r + st.at + 1.1);
+            tl.set("#prompt", { opacity: 1 }, r + st.at + 1.1);
+          }
+        });
+
+        if (sc.idea) { // lightbulb pops on as the idea arrives
+          tl.fromTo("#bulb", { opacity: 0, y: 6 }, { opacity: 1, y: 0, duration: 0.25, ease: "back.out(2)" }, r + 0.1);
+          tl.set("#bulb", { opacity: 0 }, r + 1.7);
+        }
+        if (sc.wave) { // wave at the end of the last scene
+          for (let t = 0, k = 0; t < 1.4; t += 0.2, k++) {
+            tl.set("#waveA", { opacity: k % 2 ? 0 : 1 }, r + 4.3 + t);
+            tl.set("#waveB", { opacity: k % 2 ? 1 : 0 }, r + 4.3 + t);
+          }
+          tl.set(["#waveA", "#waveB"], { opacity: 0 }, r + 5.7);
+        }
+
+        // clear the terminal before the next scene (and before the loop wraps)
+        if (i < scenes.length - 1) tl.to("#sc" + i, { opacity: 0, duration: 0.25 }, r + D - 0.3);
+      });
+
+      // loop seam: last scene fades out while the index returns to item 1
+      const L = TOTAL - 0.55;
+      tl.to("#sc2", { opacity: 0, duration: 0.3 }, L);
+      tl.to("#bar", { y: 0, duration: 0.5, ease: "power3.inOut" }, L);
+      tl.to("#it2", { opacity: 0.36, duration: 0.4 }, L);
+      tl.to("#it2 .s", { opacity: 0, duration: 0.3 }, L);
+      tl.to("#it0", { opacity: 1, duration: 0.4 }, L + 0.1);
+      tl.to("#it0 .s", { opacity: 1, duration: 0.4 }, L + 0.1);
+      tl.to("#wh2", { opacity: 0, duration: 0.2 }, L);
+      tl.to("#wh0", { opacity: 1, duration: 0.3 }, L + 0.15);
+
+      window.__timelines["main"] = tl;
+      tl.seek(0);
+    </script>
+  </body>
+</html>
