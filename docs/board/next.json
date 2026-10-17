@@ -20,6 +20,6 @@
     "Agents disagree on a skill that exists at both scopes and mostly do not document it. Checked 2026-10-17: OpenCode 1.19.0 is unstable (project or global), Codex 0.133.0 lists both with project first, Copilot untested. Docs say documented, reported, or checked, never a winner beyond Claude Code.",
     "E6.1 adds public promises (exit codes, JSON schemas, config version) that cannot change before 2.0; the council run (E6.1-T5) must come before any of it is built.",
     "gh skill was a public preview and may change; E6.2-T4 adds a canary so interop breakage shows up before users report it.",
-    "PR #45 makes huh the default and removes survey; it is a draft until the Windows walk (E7.3-T12). macOS (tmux) checked: menu, select, multi-select, confirm, input, Ctrl-C, TERM=dumb, --no-color, --no-input. Not checked: Windows, and a terminal that answers no capability queries (such a test terminal showed no prompt in 25 seconds)."
+    "huh is the default prompter on Windows without a hand walk: #45 was merged on 2026-10-17 at the owner's decision, overriding the Terminal User seat. macOS (tmux) was checked and the Windows build compiles. Walk Windows PowerShell, the legacy console, a light theme, and a terminal that answers no capability queries (E7.3-T12) before the v0.5 tag; a terminal that answers none showed no prompt in 25 seconds. --no-input is the way out."
   ]
 }
