@@ -6,6 +6,8 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/AlecAivazis/survey/v2/terminal"
 )
 
 type fakePrompter struct {
@@ -120,12 +122,28 @@ func TestWizardPassesCommandErrorThrough(t *testing.T) {
 	}
 }
 
-func TestWizardRejectsNamesWithSpaces(t *testing.T) {
-	p := &fakePrompter{pick: indexOf(t, "Create a new skill"), inputs: []string{"two words"}}
+func TestWizardRejectsBadNames(t *testing.T) {
+	for in, want := range map[string]string{
+		"two words": "no spaces",
+		"   ":       "enter a value",
+		"--yes":     "dash",
+		" -h":       "dash",
+	} {
+		p := &fakePrompter{pick: indexOf(t, "Create a new skill"), inputs: []string{in}}
+		var out bytes.Buffer
+		err := runWizard(p, &out, func([]string) error { t.Fatalf("%q ran", in); return nil })
+		if err == nil || !strings.Contains(err.Error(), want) {
+			t.Errorf("%q: got %v, want an error containing %q", in, err, want)
+		}
+	}
+}
+
+func TestWizardCtrlCInsideTheCommandIsQuiet(t *testing.T) {
+	p := &fakePrompter{pick: indexOf(t, "Install shell completion")}
 	var out bytes.Buffer
-	err := runWizard(p, &out, func([]string) error { t.Fatal("ran"); return nil })
-	if err == nil || !strings.Contains(err.Error(), "no spaces") {
-		t.Fatalf("got %v, want a spaces error", err)
+	err := runWizard(p, &out, func([]string) error { return terminal.InterruptErr })
+	if err != nil {
+		t.Fatalf("got %v, want a quiet exit", err)
 	}
 }
 

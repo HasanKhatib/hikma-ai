@@ -12,7 +12,7 @@ export default defineConfig({
   cleanUrls: true,
   lastUpdated: true,
   head: [
-    ["link", { rel: "icon", type: "image/svg+xml", href: `${base}favicon.svg` }],
+    ["link", { rel: "icon", href: `${base}logo/favicon.ico`, sizes: "48x48" }],
     ["link", { rel: "icon", type: "image/png", sizes: "32x32", href: `${base}logo/favicon-32x32.png` }],
     ["link", { rel: "icon", type: "image/png", sizes: "16x16", href: `${base}logo/favicon-16x16.png` }],
     ["link", { rel: "apple-touch-icon", sizes: "180x180", href: `${base}logo/apple-touch-icon.png` }],

@@ -27,7 +27,15 @@ func fixed(args ...string) func(Prompter) ([]string, error) {
 func askName(message string, args ...string) func(Prompter) ([]string, error) {
 	return func(p Prompter) ([]string, error) {
 		name, err := p.Input(message, func(s string) error {
-			if strings.ContainsAny(strings.TrimSpace(s), " \t") {
+			s = strings.TrimSpace(s)
+			switch {
+			case s == "":
+				return errors.New("enter a value")
+			case strings.HasPrefix(s, "-"):
+				// The value becomes a command argument, so a leading dash
+				// would be read as a flag.
+				return errors.New("cannot start with a dash")
+			case strings.ContainsAny(s, " \t"):
 				return errors.New("use one word, with no spaces")
 			}
 			return nil
@@ -80,7 +88,8 @@ func runWizard(p Prompter, out io.Writer, run func(args []string) error) error {
 	}
 	fmt.Fprintln(out)
 
-	runErr := run(args)
+	// Ctrl-C inside the command's own prompt is a cancel, like Ctrl-C in ours.
+	runErr := quietCancel(cancelled(run(args)))
 
 	fmt.Fprintf(out, "\n%s\n  %s\n", ui.Dim(out, "Equivalent command:"), ui.Cyan(out, equivalent(args)))
 	return runErr

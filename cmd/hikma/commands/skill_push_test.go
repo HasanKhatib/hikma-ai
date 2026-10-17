@@ -24,6 +24,7 @@ type fakeGH struct {
 	bodies    map[string]map[string]any // "METHOD endpoint" -> last body
 	blobCount int
 	protected bool // the default branch rejects direct updates
+	moved     bool // the default branch moved after it was read
 }
 
 func newFakeGH() *fakeGH {
@@ -89,6 +90,9 @@ func (f *fakeGH) run(stdin string, args ...string) (string, error) {
 	case method == "PATCH" && strings.Contains(endpoint, "/git/refs/heads/"):
 		if f.protected && strings.HasSuffix(endpoint, "/heads/main") {
 			return "", fmt.Errorf("HTTP 422: Protected branch update failed")
+		}
+		if f.moved && strings.HasSuffix(endpoint, "/heads/main") {
+			return "", fmt.Errorf("HTTP 422: Update is not a fast forward")
 		}
 		return "", nil
 	case method == "POST" && strings.HasSuffix(endpoint, "/git/refs"):
@@ -327,6 +331,51 @@ func TestReadPushFilesSkipsGitAndKeepsExecBit(t *testing.T) {
 	for _, f := range files {
 		if strings.Contains(f.path, ".git") {
 			t.Fatalf("included %s", f.path)
+		}
+	}
+}
+
+func TestPushDirectWhenBranchMovedSaysRetryNotPR(t *testing.T) {
+	f := newFakeGH()
+	f.moved = true
+	usePushFake(t, f)
+	var out bytes.Buffer
+	_, err := pushSkill(&out, testPlan())
+	if err == nil || !strings.Contains(err.Error(), "changed while pushing") || strings.Contains(err.Error(), "--pr") {
+		t.Fatalf("err = %v", err)
+	}
+}
+
+func TestPushDirectWithNoChangesDoesNothing(t *testing.T) {
+	f := newFakeGH()
+	f.sameTree = true
+	usePushFake(t, f)
+	var out bytes.Buffer
+	res, err := pushSkill(&out, testPlan())
+	if err != nil || res != "" || f.has("PATCH repos/org/reg/git/refs/heads/main") {
+		t.Fatalf("res=%q err=%v calls=%v", res, err, f.calls)
+	}
+}
+
+func TestPushHowStatesTheRealOutcome(t *testing.T) {
+	r := config.Registry{Owner: "org", Repo: "reg"}
+	cases := []struct {
+		canPush string
+		viaPR   bool
+		direct  bool
+		want    string
+	}{
+		{"true", false, true, "straight to the default branch"},
+		{"true", true, false, "--pr"},
+		{"false", false, false, "from your fork"},
+	}
+	for _, c := range cases {
+		f := newFakeGH()
+		f.canPush = c.canPush
+		usePushFake(t, f)
+		how, direct, err := pushHow(r, c.viaPR)
+		if err != nil || direct != c.direct || !strings.Contains(how, c.want) {
+			t.Errorf("%+v: how=%q direct=%v err=%v", c, how, direct, err)
 		}
 	}
 }

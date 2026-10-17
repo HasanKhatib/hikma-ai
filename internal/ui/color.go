@@ -26,7 +26,10 @@ func colorOK(w io.Writer) bool {
 		return false
 	}
 	f, ok := w.(*os.File)
-	return ok && (isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd()))
+	if !ok || !(isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())) {
+		return false
+	}
+	return vtSupported(f)
 }
 
 func paint(w io.Writer, code, s string) string {

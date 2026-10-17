@@ -272,7 +272,7 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 	}
 	if err != nil {
 		if direct {
-			return "", fmt.Errorf("could not commit to %s on %s: %w\nif the branch is protected, publish through a pull request instead: hikma skill push %s --pr", baseBranch, upstream, err, plan.name)
+			return "", directPushError(err, baseBranch, upstream, plan.name)
 		}
 		return "", fmt.Errorf("update branch: %w", err)
 	}
@@ -423,7 +423,7 @@ func newSkillPushCmd(flagRegistry *string) *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "push <name>",
-		Short: "Open a pull request to publish a skill to your registry",
+		Short: "Publish a skill to your registry",
 		Long: `Publish a local skill to your configured registry.
 
 The target registry is always shown, and you must confirm it (--yes skips the
@@ -468,7 +468,14 @@ it is pushed to your fork and a pull request is opened. Nothing is force-pushed.
 				fmt.Fprintln(out, ui.Yellow(out, "Validating...  warnings only, continuing.")+" 'hikma registry validate' in the registry's CI treats unfilled placeholders as errors.")
 			}
 
-			if err := confirmPush(cmd, name, skillDir, registry, origin, assumeYes, viaPR); err != nil {
+			how, direct, err := pushHow(registry, viaPR)
+			if err != nil {
+				return err
+			}
+			if direct && withCodeowners {
+				return fmt.Errorf("--codeowners changes who must review the registry, so it is not committed straight to %s: add --pr", registry.FullName())
+			}
+			if err := confirmPush(cmd, name, skillDir, registry, origin, assumeYes, how); err != nil {
 				return err
 			}
 
@@ -495,7 +502,9 @@ it is pushed to your fork and a pull request is opened. Nothing is force-pushed.
 			}
 			if strings.Contains(result, "/pull/") {
 				fmt.Fprintln(out, "\nA maintainer will review and merge your skill.")
-			} else if result != "" {
+			} else if result == "" {
+				fmt.Fprintf(out, "\n%s is already up to date in %s.\n", name, registry.FullName())
+			} else {
 				fmt.Fprintf(out, "\nPublished %s. Install it anywhere with: hikma skill install %s\n", name, name)
 			}
 			return nil
@@ -528,4 +537,33 @@ func resolvePushRegistry(flagRegistry string) (config.Registry, string, error) {
 		return config.Registry{}, "", fmt.Errorf("push needs a GitHub registry (owner/repo); %s is a %s source", src.Display, src.Kind)
 	}
 	return config.Registry{Owner: src.Owner, Repo: src.Repo, Raw: src.Raw}, origin, nil
+}
+
+// pushHow resolves, before the user confirms, what the push will do, so the
+// confirmation states the real outcome instead of a conditional.
+func pushHow(r config.Registry, viaPR bool) (how string, direct bool, err error) {
+	if viaPR {
+		return "as a pull request (--pr)", false, nil
+	}
+	canPush, err := ghGet("repos/"+r.FullName(), ".permissions.push")
+	if err != nil {
+		return "", false, fmt.Errorf("check access to %s: %w", r.FullName(), err)
+	}
+	if canPush == "true" {
+		return "committed straight to the default branch, no pull request (use --pr to open one)", true, nil
+	}
+	return "as a pull request from your fork (you have no write access)", false, nil
+}
+
+// directPushError words a failed commit to the default branch by its cause.
+// Only a protection rejection points at --pr; a moved branch just needs a retry.
+func directPushError(err error, branch, upstream, name string) error {
+	msg := strings.ToLower(err.Error())
+	switch {
+	case strings.Contains(msg, "fast forward") || strings.Contains(msg, "fast-forward"):
+		return fmt.Errorf("%s on %s changed while pushing; nothing was published. Run the push again: %w", branch, upstream, err)
+	case strings.Contains(msg, "protected") || strings.Contains(msg, "403"):
+		return fmt.Errorf("could not commit to %s on %s: %w\nthe branch looks protected; publish through a pull request instead: hikma skill push %s --pr", branch, upstream, err, name)
+	}
+	return fmt.Errorf("could not commit to %s on %s: %w", branch, upstream, err)
 }
