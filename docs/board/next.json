@@ -1,7 +1,7 @@
 {
   "updated": "2026-10-17",
   "next": "E7.3-T9",
-  "note": "v0.4.0 is released and P1 to P5 are done. Plan, proposed by the council on 2026-10-17 and confirmed 2026-10-17 (E7.1-T4 done): (1) settle PR #40, the open docs PR (E7.5-T1); the menu PR #37 and board sync #39 are merged and work now happens on main; (2) E7.3 in order T10, T11, T5, T9, T6; T7 deferred; (3) E7.2-T4 to T8; (4) hand walks on macOS and Windows; (5) E7.4-T7 and T8 (completion hand check, council on the direct-push default); (6) E7.5: PR, tag v0.5.0, check installs. Then v1.0: E6.1-T5 council run first, then contracts (config version, JSON, exit codes, flag reference), E6.2 end-to-end and canary, E6.3 docs audit, rc, tag.",
+  "note": "v0.4.0 is released; P1 to P5 are done. #40 to #43 are merged, so main has the menu, --no-input and --no-color, every prompt behind the Prompter, the trimmed docs site, the Taskfile, and the v0.5 and v1.0 plan. Next: E7.3-T9 (survey to huh, survey stays until a Windows check passes), then E7.3-T6, E7.2-T4 to T8, the hand walks (E7.3-T8, E7.4-T7), the council run on the direct-push default (E7.4-T8), then E7.5 (tag v0.5.0). Then v1.0: E6.1-T5 council first, E6.1 contracts, E6.2 end-to-end and canary, E6.3 docs audit, rc, tag. Work goes on short branches off main, one PR per step.",
   "criticalPath": [
     "E7.3-T9",
     "E7.3-T6",
