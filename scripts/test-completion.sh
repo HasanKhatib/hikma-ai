@@ -48,7 +48,8 @@ bash)
   install_twice "$rc" bash
   out=$("$bash_bin" --norc --noprofile -c "source '$rc'; complete -p hikma" 2>&1) || fail "bash did not register completion: $out"
   case $out in *__start_hikma*) ;; *) fail "unexpected registration: $out" ;; esac
-  # Ask for completions of 'hikma sk' the way bash would.
+  # Ask for completions of 'hikma sk' the way bash would. bash-completion only loads in an
+  # interactive shell, which is a non-empty PS1, so set one.
   if [ -z "$bc" ]; then
     # Git Bash ships no bash-completion, which cobra's bash script needs, so only registration can be checked.
     case $(uname -s) in
@@ -56,7 +57,7 @@ bash)
     esac
     fail "bash-completion is not installed, so completion cannot be checked"
   fi
-  words=$("$bash_bin" --norc --noprofile -c "source '$bc'; source '$rc'; COMP_WORDS=(hikma sk); COMP_CWORD=1; COMP_LINE='hikma sk'; COMP_POINT=\${#COMP_LINE}; __start_hikma; printf '%s\n' \"\${COMPREPLY[@]}\"" 2>&1) || true
+  words=$("$bash_bin" --norc --noprofile -c "PS1='\$ '; source '$bc'; source '$rc'; COMP_WORDS=(hikma sk); COMP_CWORD=1; COMP_LINE='hikma sk'; COMP_POINT=\${#COMP_LINE}; __start_hikma; printf '%s\n' \"\${COMPREPLY[@]}\"" 2>&1) || true
   case $words in *skill*) echo "bash completes 'hikma sk' to: $words" ;; *) fail "bash did not complete 'hikma sk': $words" ;; esac
   ;;
 zsh)
