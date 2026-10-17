@@ -1,9 +1,11 @@
 ---
-name: tech-demo-videos
+name: video-tech-demo
 description: "Makes short, silent, loopable tech demo videos and GIFs for a CLI or developer tool, with real terminal output and the project's own brand, built with Hyperframes. Use when the user asks for a demo video, product video, GIF, launch clip, or a post for X about Hikma or another CLI."
 ---
 
 # Tech demo videos
+
+For a game-style animated scene on a web page, use `video-pixel-scene` instead.
 
 A short silent clip that shows a CLI doing something a person recognizes from their own work. The terminal output is real, the look is the brand's, and the clip works muted and on a loop.
 
