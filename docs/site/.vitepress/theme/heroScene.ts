@@ -26,10 +26,11 @@ const PAL: Palette = {
   b: "#2fa89f", // bot
   w: "#f1ede2", // bot eye
   o: "#ff9a6b", // antenna tip
-  g: "#f2c46d", // gem
-  q: "#fff7d6", // gem glint
-  d: "#b4532a", // gem shade
-  n: "#ff9a6b", // new gem
+  g: "#4aa8ff", // first skill, blue like the bot it turns blue
+  q: "#e6f3ff", // gem glint
+  d: "#2468b3", // gem shade
+  n: "#a78bfa", // second skill, violet like the bot with two skills
+  v: "#6d4fc4", // second gem shade
   m: "#c4622f", // chest
   s: "#e8c27a", // chest trim
 };
@@ -55,7 +56,7 @@ const PET_BLINK = ["...o....", "...b....", ".bbbbbb.", "bbbbbbbb", "bbbbbbbb", "
 const PET_COLORS = ["#44504e", "#4aa8ff", "#a78bfa"];
 
 const GEM = ["..g..", ".gqg.", "ggggg", ".gdg.", "..g.."];
-const GEM2 = ["..n..", ".nqn.", "nnnnn", ".ndn.", "..n.."];
+const GEM2 = ["..n..", ".nqn.", "nnnnn", ".nvn.", "..n.."];
 const CHEST = ["..mmmmmmmmmm..", ".mssssssssssm.", ".mmmmmsmmmmmm.", ".mmmmmmmmmmmm.", ".mmmmmmmmmmmm.", ".mmmmmmmmmmmm."];
 const SIGN = ["wwwww", "wlllw", "wwwww", "..d..", "..d.."];
 const FLAG = ["d", "d", "d", "d", "d", "d", "d", "d", "d", "d"];
@@ -165,13 +166,13 @@ function px(ctx: CanvasRenderingContext2D, color: string, x: number, y: number, 
   ctx.fillRect(Math.round(x), Math.round(y), w, h);
 }
 
-function burst(ctx: CanvasRenderingContext2D, cx: number, cy: number, t0: number, t: number, color = "#f2c46d") {
+function burst(ctx: CanvasRenderingContext2D, cx: number, cy: number, t0: number, t: number, color = "#4aa8ff") {
   const dt = t - t0;
   if (dt < 0 || dt > 0.7) return;
   for (let i = 0; i < 8; i++) {
     const a = (i / 8) * Math.PI * 2;
     const r = 5 + dt * 30;
-    px(ctx, i % 2 ? "#fff7d6" : color, cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1, 1);
+    px(ctx, i % 2 ? "#e6f3ff" : color, cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1, 1);
   }
 }
 
@@ -265,9 +266,9 @@ function drawGems(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sp
     }
     blit(ctx, s.gem2, x, y);
   }
-  burst(ctx, CHEST_X + 14, GROUND - 10, 14, t, "#ff9a6b");
+  burst(ctx, CHEST_X + 14, GROUND - 10, 14, t, "#a78bfa");
   burst(ctx, pet.x + 8, pet.y + 4, 18, t);
-  burst(ctx, pet.x + 8, pet.y + 4, 18.3, t, "#ff9a6b");
+  burst(ctx, pet.x + 8, pet.y + 4, 18.3, t, "#a78bfa");
 }
 
 function drawPet(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
@@ -278,7 +279,7 @@ function drawPet(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Spr
   // skills the pet knows, shown as tiny gems above its antenna
   const n = skillCount(t);
   for (let i = 0; i < n; i++) {
-    px(ctx, i === 0 ? "#f2c46d" : "#ff9a6b", x + 2 + i * 6, y - 8, 4, 4);
+    px(ctx, i === 0 ? "#4aa8ff" : "#a78bfa", x + 2 + i * 6, y - 8, 4, 4);
   }
   if (t >= 16 && t < 17.9) {
     px(ctx, "#a9b0a6", x + 7, y - 6, 2, 2);
@@ -364,14 +365,14 @@ const CLI: Cmd[] = [
   { group: 1, at: 0.4, text: "hikma init" },
   { group: 1, at: 1.4, text: "Created AGENTS.md", out: true },
   { group: 1, at: 1.7, text: "Wrote .hikma/config.json", out: true },
-  { group: 2, at: 3.4, text: "hikma skill install anthropics/skills pdf" },
-  { group: 2, at: 5.3, text: "-> .claude/skills/pdf/ (1 files)", out: true },
+  { group: 2, at: 3.4, text: "hikma skill install go-blue" },
+  { group: 2, at: 5.3, text: "-> .claude/skills/go-blue/ (1 files)", out: true },
   { group: 3, at: 8.2, text: "hikma skill create walking-above-holes" },
   { group: 3, at: 9.8, text: "Created .claude/skills/walking-above-holes/", out: true },
   { group: 4, at: 10.4, text: "hikma skill push walking-above-holes" },
   { group: 4, at: 12.2, text: "Pushed to myghaccount/myrepo", out: true },
   { group: 5, at: 17.0, text: "hikma sync" },
-  { group: 5, at: 18.0, text: "restored .claude/skills/pdf", out: true },
+  { group: 5, at: 18.0, text: "restored .claude/skills/go-blue", out: true },
   { group: 5, at: 18.3, text: "restored .claude/skills/walking-above-holes", out: true },
   { group: 5, at: 18.6, text: "Done: 2 restored, 0 failed", out: true },
 ];
@@ -404,7 +405,7 @@ export function cliAt(raw: number): CliLine[] {
 }
 
 export const TRANSCRIPT =
-  "A pixel-art loop. A developer and a small bot pet start a new repo with hikma init, find a skill and install it, create a new skill called walking-above-holes and push it to a registry, fall into a hole, and respawn on a new laptop where hikma sync restores their skills.";
+  "A pixel-art loop. A developer and a small bot pet start a new repo with hikma init, find a skill called go-blue and install it, which turns the bot blue, create a new skill called walking-above-holes and push it to a registry, fall into a hole, and respawn on a new laptop where hikma sync restores their skills.";
 
 // ── Stages ───────────────────────────────────────────────────────────────────
 
