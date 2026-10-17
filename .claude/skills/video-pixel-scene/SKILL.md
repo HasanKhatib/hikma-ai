@@ -53,3 +53,7 @@ The scene is a function of time, so a video is a sequence of frames: load `?t=` 
 - Task's built-in shell has no `kill`; call it through `env kill`.
 - Negative scene time happens on the title screen; use `((t % n) + n) % n` for modulo.
 - Keep the scene's dark panel and text colors independent of any hard-coded page color, or light mode breaks.
+
+## Social card
+
+`assets/og-template.html` renders the 1200x630 social card (`docs/site/public/og.png`) from a crop of the scene: screenshot the home page at `?t=13` in dark mode, crop the scene box to `scene.png` beside the template, and screenshot the template with Chrome at `--window-size=1200,630`.

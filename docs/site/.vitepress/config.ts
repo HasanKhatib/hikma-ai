@@ -22,6 +22,12 @@ export default defineConfig({
     ["link", { rel: "icon", type: "image/png", sizes: "16x16", href: `${base}logo/favicon-16x16.png` }],
     ["link", { rel: "apple-touch-icon", sizes: "180x180", href: `${base}logo/apple-touch-icon.png` }],
     ["link", { rel: "manifest", href: `${base}logo/site.webmanifest` }],
+    // Social card: shown when a page link is shared. Absolute URLs, as link previews require.
+    ["meta", { property: "og:type", content: "website" }],
+    ["meta", { property: "og:title", content: "Hikma: skills follow you" }],
+    ["meta", { property: "og:description", content: "Define your source, publish to a registry you own, and install into any agent with one CLI." }],
+    ["meta", { property: "og:image", content: "https://hasankhatib.github.io/hikma-ai/og.png" }],
+    ["meta", { name: "twitter:card", content: "summary_large_image" }],
   ],
 
   themeConfig: {

@@ -2005,8 +2005,8 @@
             },
             {
               "id": "E7.2-T6",
-              "title": "Add a social card (og image) to the docs site",
-              "status": "todo",
+              "title": "Add a social card (og image) to the docs site (done 2026-10-18: public/og.png and og and twitter meta tags; the template is in the video-pixel-scene skill)",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "design",
