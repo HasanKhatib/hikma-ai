@@ -36,3 +36,14 @@ Hikma AI is the CLI repository only. Do not add a top-level `skills/` registry f
 ## Planning
 
 Roadmap and decisions live in `docs/board/`. See `AGENTS.md` for the board rules and the project's non-goals.
+
+## Releasing
+
+Releases are tag-based. Pushing a `v*` tag runs GoReleaser, publishes binaries to GitHub Releases, attests the archives and `checksums.txt`, and writes the Homebrew formula (`scripts/render-formula.sh`) into `HasanKhatib/homebrew-tap`, using the `HOMEBREW_TAP_DEPLOY_KEY` repository secret (a write-enabled deploy key on the tap). Pre-release tags such as `v0.3.0-rc.1` build and attest but do not update the tap.
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+Try a release locally with `goreleaser release --snapshot --clean`.

@@ -16,7 +16,9 @@ curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/i
 
 :::
 
-The script downloads the matching release, checks it against `checksums.txt`, and installs to `~/.local/bin`. From v0.3.0 it also verifies the release's build attestation when the GitHub CLI (`gh`) is installed and signed in, and tells you when it skips that check. To verify an archive yourself: `gh attestation verify hikma_darwin_arm64.tar.gz -R HasanKhatib/hikma-ai`. Set `HIKMA_INSTALL_DIR` to change that, or pass a version: `... | bash -s -- v0.1.0`. On Windows run it in Git Bash and make sure the install directory is on your `PATH`.
+The script downloads the matching release, checks it against `checksums.txt`, and installs to `~/.local/bin`. From v0.3.0 it also verifies the release's build attestation when the GitHub CLI (`gh`) is installed and signed in, and tells you when it skips that check. To verify an archive yourself: `gh attestation verify hikma_darwin_arm64.tar.gz -R HasanKhatib/hikma-ai`. Set `HIKMA_INSTALL_DIR` to change that, or pass a version: `... | bash -s -- v0.1.0`. On Windows run it in Git Bash and make sure the install directory is on your `PATH`. Set `HIKMA_REQUIRE_ATTESTATION=1` to make the script fail instead of skipping the attestation check when `gh` is missing; releases before v0.3.0 have no attestation and are checked against `checksums.txt` only.
+
+Installed the old Homebrew cask? Switch once: `brew uninstall --cask hikma`, then `brew install HasanKhatib/tap/hikma`. To build from source instead: `go install github.com/hasankhatib/hikma-ai/cmd/hikma@latest`.
 
 Check the install:
 
