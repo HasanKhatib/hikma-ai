@@ -9,6 +9,8 @@ All notable changes to this project are documented here. The format follows [Kee
 - A banner with the logo's frame and prompt shows above the menu, colored in a terminal. Output stays plain when piped, under `NO_COLOR`, or with `TERM=dumb`.
 - `hikma completion` with no shell detects yours, shows the file it would change, and asks before installing. `--install` does the same for a named shell; `--yes` skips the question. `hikma completion <shell>` still only prints the script.
 
+- Global `--no-input` and `--no-color` flags. `--no-input` stops every prompt, even in a terminal: a command that would have asked fails and names the flag to pass (usually `--yes`), and bare `hikma` prints help instead of the menu. `--no-color` does the same as `NO_COLOR`.
+
 ### Fixed
 - `hikma completion` writes to the command's output, and the zsh instructions no longer tell you to write to `${fpath[1]}`, which is often a folder you cannot write to or one zsh never reads. Use `source <(hikma completion zsh)` in `~/.zshrc`.
 - The Homebrew formula installs shell completions.

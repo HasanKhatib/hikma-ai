@@ -54,7 +54,7 @@ func runConfigAddAgent(cmd *cobra.Command, name, skillsDir, instructionFile stri
 
 	if skillsDir == "" {
 		if !interactive {
-			return fmt.Errorf("--skills-dir is required when there is no terminal to ask")
+			return fmt.Errorf("--skills-dir is required when there is no terminal to ask or --no-input is set")
 		}
 		validate := func(ans interface{}) error {
 			return config.ValidateCustomAgent(name, config.CustomAgent{SkillsDir: ans.(string)})

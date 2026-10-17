@@ -109,7 +109,17 @@ func discoverSkills(src source.Source, co source.Checkout) ([]source.Skill, erro
 	return source.Discover(co.Dir, fallback)
 }
 
+// noInput is the global --no-input flag. It is bound at parse time, so it is
+// already set when argument validation runs.
+var noInput bool
+
+// isInteractive reports whether a command may prompt: stdin is a terminal and
+// --no-input was not passed. Every prompt site gates on it, so --no-input makes
+// each one fail with the flag to pass instead of asking.
 func isInteractive() bool {
+	if noInput {
+		return false
+	}
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 

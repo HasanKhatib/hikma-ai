@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strings"
 
+	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -37,6 +38,9 @@ the common tasks and prints the command it ran.`,
 		SilenceErrors: true,
 		RunE:          rootRun,
 	}
+
+	cmd.PersistentFlags().BoolVar(&noInput, "no-input", false, "never prompt; fail and name the flag to pass instead")
+	cmd.PersistentFlags().BoolVar(&ui.NoColor, "no-color", false, "turn off color (same as setting NO_COLOR)")
 
 	cmd.AddCommand(
 		newConfigCmd(),

@@ -116,9 +116,11 @@ Copy it into a script or run it directly next time.
 
 The menu opens only when both input and output are a terminal. When either is piped or redirected, `hikma` with no arguments prints help and exits, and nothing waits for input.
 
+Pass `--no-input` to any command to rule out prompts even in a terminal. A command that would have asked fails instead and names the flag to pass, such as `--yes` to confirm. Bare `hikma --no-input` prints help instead of opening the menu.
+
 ### Color
 
-The banner and the command output use color in a terminal. Set `NO_COLOR=1` or `TERM=dumb` to turn it off. Piped output is always plain, and no message relies on color alone.
+The banner and the command output use color in a terminal. Set `NO_COLOR=1` or `TERM=dumb`, or pass `--no-color`, to turn it off. Piped output is always plain, and no message relies on color alone.
 
 ## Next
 

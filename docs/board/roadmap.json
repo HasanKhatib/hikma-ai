@@ -2136,7 +2136,7 @@
             {
               "id": "E7.3-T10",
               "title": "Add global --no-input and --no-color flags (clig.dev): --no-input fails naming the flag to pass, on stderr with a non-zero exit; --no-color matches NO_COLOR",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "feature",
