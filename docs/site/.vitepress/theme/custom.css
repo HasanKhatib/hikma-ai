@@ -121,7 +121,6 @@ kbd,
   letter-spacing: 0;
 }
 
-
 .hk-hero-wrap {
   display: flex;
   flex-direction: column;
@@ -225,11 +224,9 @@ kbd,
 .hk-button.hk-button-alt:hover {
   border-color: var(--forest);
 }
-
 .hk-button:focus-visible,
 .hk-workflow-step:focus-visible,
-.hk-guide-link:focus-visible,
-.hk-install-panel button:focus-visible {
+.hk-guide-link:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--orange) 55%, transparent);
   outline-offset: 4px;
 }
@@ -260,102 +257,6 @@ kbd,
   animation: hk-enter 0.7s 0.16s ease-out both;
 }
 
-/* Install panel */
-
-.hk-install-panel {
-  width: 100%;
-  max-width: 540px;
-  overflow: hidden;
-  border: 1px solid rgba(255, 255, 255, 0.09);
-  border-radius: 9px;
-  background: var(--code);
-  color: var(--code-text);
-  box-shadow: var(--shadow);
-  font-family: "SFMono-Regular", Consolas, monospace;
-}
-
-.hk-install-bar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 50px;
-  padding: 0 12px 0 18px;
-  border-bottom: 1px solid var(--code-line);
-}
-
-.hk-install-tabs {
-  display: flex;
-  align-items: center;
-  align-self: stretch;
-  gap: 4px;
-}
-
-.hk-install-tabs button,
-.hk-copy-button {
-  border: 0;
-  background: transparent;
-  font:
-    650 12px/1 "SFMono-Regular",
-    Consolas,
-    monospace;
-  cursor: pointer;
-}
-
-.hk-install-tabs button {
-  position: relative;
-  padding: 0 10px;
-  color: var(--code-text-2);
-}
-
-.hk-install-tabs button[aria-selected="true"] {
-  color: var(--signal);
-}
-
-.hk-install-tabs button[aria-selected="true"]::after {
-  content: "";
-  position: absolute;
-  right: 8px;
-  bottom: -20px;
-  left: 8px;
-  height: 2px;
-  background: var(--signal);
-}
-
-.hk-copy-button {
-  min-height: 30px;
-  padding: 0 10px;
-  border: 1px solid var(--code-line);
-  border-radius: 3px;
-  color: var(--code-text-2);
-}
-
-.hk-copy-button:hover {
-  border-color: rgba(242, 184, 75, 0.5);
-  color: var(--signal);
-}
-
-.hk-install-command {
-  padding: 26px 25px 24px;
-}
-
-.hk-install-label {
-  margin: 0;
-  color: var(--code-text-2);
-  font-size: 12px;
-  font-weight: 650;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.hk-install-heading {
-  display: flex;
-  min-height: 31px;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 18px;
-  margin-bottom: 18px;
-}
-
 .hk-shell-switch {
   display: inline-flex;
   padding: 3px;
@@ -383,86 +284,12 @@ kbd,
   color: var(--signal);
 }
 
-.hk-install-lines {
-  display: grid;
-  gap: 7px;
-}
-
-.hk-install-line {
-  display: grid;
-  grid-template-columns: 28px minmax(0, 1fr);
-  align-items: start;
-}
-
-.hk-install-line > span {
-  padding-top: 3px;
-  color: var(--signal);
-  font-size: 13px;
-}
-
-.hk-install-command .hk-install-line code {
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: #fffbea;
-  font-size: 13px;
-  line-height: 1.9;
-  white-space: normal;
-  overflow-wrap: anywhere;
-}
-
-.hk-install-next {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 48px;
-  padding: 0 20px 0 25px;
-  border-top: 1px solid var(--code-line);
-  color: var(--code-text-2);
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.hk-install-next span {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.hk-install-next i {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--signal);
-  box-shadow: 0 0 12px color-mix(in srgb, var(--signal) 75%, transparent);
-}
-
-.vp-doc .hk-install-next code {
-  padding: 4px 7px;
-  border: 0;
-  background: rgba(255, 255, 255, 0.06);
-  color: var(--signal);
-  font-size: 12px;
-}
-
 @keyframes hk-enter {
   from {
     opacity: 0;
     transform: translateY(14px);
   }
 }
-
-/* Install panel hint */
-
-.hk-install-hint {
-  margin: 0;
-  color: var(--code-text-3);
-  font-size: 11px;
-  font-weight: 650;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
 
 /* One-screen home: quiet link, flow line, footer */
 
@@ -548,11 +375,6 @@ kbd,
     gap: 28px;
     padding-top: 28px;
   }
-
-  .hk-hero-image,
-  .hk-install-panel {
-    max-width: 680px;
-  }
 }
 
 @media (max-width: 640px) {
@@ -575,28 +397,12 @@ kbd,
     margin-bottom: 12px;
   }
 
-  .hk-install-command {
-    padding: 20px 18px 18px;
-  }
-
-  .hk-install-heading {
-    margin-bottom: 10px;
-  }
-
   .hk-home-footer {
     padding: 0 20px 16px;
   }
 }
 
 @media (max-width: 640px) and (max-height: 760px) {
-  .hk-flow,
-  .hk-install-heading {
-    display: none;
-  }
-
-  .hk-install-command {
-    padding: 18px;
-  }
 
   .hk-hero {
     gap: 18px;
@@ -662,7 +468,142 @@ kbd,
   }
 }
 
-.hk-install-hint a {
+/* Home install line */
+.hk-install-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  max-width: 460px;
+  margin-top: 28px;
+  padding: 10px 12px 10px 16px;
+  border: 1px solid var(--code-line);
+  border-radius: 8px;
+  background: var(--code);
+}
+.hk-install-line code {
+  min-width: 0;
+  overflow-x: auto;
+  white-space: nowrap;
+  background: transparent;
+  color: var(--code-text);
+  font-size: 14px;
+}
+.hk-install-line code span {
   color: var(--signal);
-  text-decoration: underline;
+}
+.hk-copy-button {
+  flex: none;
+  padding: 4px 12px;
+  border: 1px solid var(--code-line);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--code-text-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.hk-copy-button:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+.hk-install-alt {
+  max-width: 460px;
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+/* Home scene: the pixel-art loop. */
+.hk-scene {
+  position: relative;
+  width: 100%;
+  max-width: 560px;
+  margin: 0;
+  aspect-ratio: 16 / 9;
+  border: 1px solid var(--code-line);
+  border-radius: 10px;
+  background: #0b1514;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.hk-scene canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+}
+.hk-scene-balloon {
+  position: absolute;
+  max-width: 46%;
+  padding: 5px 9px;
+  border: 2px solid #14201e;
+  border-radius: 6px;
+  background: #f1ede2;
+  color: #14201e;
+  font: 600 12px/1.3 var(--vp-font-family-mono);
+  transform: translate(-50%, -100%);
+  pointer-events: none;
+}
+.hk-scene-balloon::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  width: 8px;
+  height: 8px;
+  background: #f1ede2;
+  border-right: 2px solid #14201e;
+  border-bottom: 2px solid #14201e;
+  transform: translateX(-50%) rotate(45deg);
+}
+.hk-scene-balloon.pet {
+  background: #d6f3ee;
+}
+.hk-scene-balloon.pet::after {
+  background: #d6f3ee;
+}
+.hk-scene-cli {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  bottom: 4%;
+  min-height: 24%;
+  padding: 6px 10px;
+  border: 1px solid var(--code-line);
+  border-radius: 6px;
+  background: rgba(8, 15, 14, 0.9);
+  font: 12px/1.5 var(--vp-font-family-mono);
+  color: var(--code-text-2);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.hk-scene-cli .cmd {
+  color: var(--code-text);
+}
+.hk-scene-cli .cmd b {
+  color: var(--signal);
+  font-weight: 600;
+}
+.hk-scene-toggle {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 2px 10px;
+  border: 1px solid var(--code-line);
+  border-radius: 999px;
+  background: rgba(8, 15, 14, 0.7);
+  color: var(--code-text-2);
+  font-size: 12px;
+  cursor: pointer;
+}
+.hk-scene-toggle:focus-visible {
+  outline: 2px solid var(--signal);
+  outline-offset: 2px;
+}
+@media (max-width: 640px) {
+  .hk-scene-balloon,
+  .hk-scene-cli {
+    font-size: 10px;
+  }
 }
