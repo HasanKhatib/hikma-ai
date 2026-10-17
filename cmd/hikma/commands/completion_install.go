@@ -46,13 +46,14 @@ func completionTargetFor(shell string) (completionTarget, error) {
 	}
 	switch shell {
 	case "zsh":
-		return completionTarget{path: filepath.Join(home, ".zshrc"), line: "source <(hikma completion zsh)"}, nil
+		return completionTarget{path: filepath.Join(home, ".zshrc"), line: guardedSource("zsh")}, nil
 	case "bash":
+		// macOS terminals start login shells, which read .bash_profile, not .bashrc.
 		rc := filepath.Join(home, ".bashrc")
-		if _, err := os.Stat(rc); err != nil {
+		if _, err := os.Stat(rc); err != nil || runtime.GOOS == "darwin" {
 			rc = filepath.Join(home, ".bash_profile")
 		}
-		return completionTarget{path: rc, line: "source <(hikma completion bash)"}, nil
+		return completionTarget{path: rc, line: guardedSource("bash")}, nil
 	case "fish":
 		return completionTarget{path: filepath.Join(home, ".config", "fish", "completions", "hikma.fish"), create: true}, nil
 	case "powershell":
@@ -60,9 +61,26 @@ func completionTargetFor(shell string) (completionTarget, error) {
 		if err != nil {
 			return completionTarget{}, err
 		}
-		return completionTarget{path: profile, line: "hikma completion powershell | Out-String | Invoke-Expression"}, nil
+		return completionTarget{path: profile, line: "if (Get-Command hikma -ErrorAction SilentlyContinue) { hikma completion powershell | Out-String | Invoke-Expression }"}, nil
 	}
 	return completionTarget{}, fmt.Errorf("unknown shell %q", shell)
+}
+
+// guardedSource skips the line quietly when hikma is no longer on PATH, so
+// uninstalling hikma never leaves an error on every new shell.
+func guardedSource(shell string) string {
+	return "command -v hikma >/dev/null 2>&1 && source <(hikma completion " + shell + ")"
+}
+
+// hasActiveLine reports whether a line of the file is exactly line, ignoring
+// comments, so a commented-out copy does not count as installed.
+func hasActiveLine(content, line string) bool {
+	for _, l := range strings.Split(content, "\n") {
+		if strings.TrimSpace(l) == line {
+			return true
+		}
+	}
+	return false
 }
 
 func powershellProfile() (string, error) {
@@ -114,7 +132,7 @@ func installCompletion(cmd *cobra.Command, shell string, assumeYes bool) error {
 		fmt.Fprintf(out, "Completion for %s is already installed (%s).\n", shell, t.path)
 		return nil
 	}
-	if !t.create && strings.Contains(string(existing), t.line) {
+	if !t.create && hasActiveLine(string(existing), t.line) {
 		fmt.Fprintf(out, "Completion for %s is already set up in %s.\n", shell, t.path)
 		return nil
 	}
@@ -127,8 +145,11 @@ func installCompletion(cmd *cobra.Command, shell string, assumeYes bool) error {
 		fmt.Fprintf(out, "This will %s %s with the %s completion script.\n", verb, t.path, shell)
 	} else {
 		fmt.Fprintf(out, "This will add these lines to %s:\n  %s\n  %s\n", t.path, completionMarker, t.line)
-		if shell == "zsh" {
-			fmt.Fprintln(out, "(zsh needs compinit to run before this line; it usually does in ~/.zshrc.)")
+		if shell == "zsh" && !strings.Contains(string(existing), "compinit") && !strings.Contains(string(existing), "oh-my-zsh") {
+			fmt.Fprintln(out, "Note: no compinit found in this file. zsh completion needs 'autoload -U compinit && compinit' before this line.")
+		}
+		if shell == "bash" {
+			fmt.Fprintln(out, "Note: bash completion needs bash 4.1+ and the bash-completion package (macOS ships bash 3.2).")
 		}
 	}
 
@@ -137,7 +158,7 @@ func installCompletion(cmd *cobra.Command, shell string, assumeYes bool) error {
 			return fmt.Errorf("confirmation required: re-run with --yes to install completion for %s", shell)
 		}
 		var ok bool
-		if err := survey.AskOne(&survey.Confirm{Message: "Install completion for " + shell + "?", Default: true}, &ok); err != nil {
+		if err := survey.AskOne(&survey.Confirm{Message: "Install completion for " + shell + "?", Default: !(t.create && len(existing) > 0)}, &ok); err != nil {
 			return err
 		}
 		if !ok {

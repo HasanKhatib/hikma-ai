@@ -36,7 +36,7 @@ func TestCompletionInstallZshIsIdempotent(t *testing.T) {
 		t.Fatal(err)
 	}
 	got, _ := os.ReadFile(rc)
-	if want := "export A=1\n" + completionMarker + "\nsource <(hikma completion zsh)\n"; string(got) != want {
+	if want := "export A=1\n" + completionMarker + "\n" + guardedSource("zsh") + "\n"; string(got) != want {
 		t.Fatalf("zshrc = %q, want %q", got, want)
 	}
 	out, err := runCompletion(t, "zsh", "--install", "--yes")
@@ -67,5 +67,15 @@ func TestCompletionInstallNeedsConfirmationWhenNotInteractive(t *testing.T) {
 	}
 	if _, statErr := os.Stat(filepath.Join(home, ".zshrc")); statErr == nil {
 		t.Fatal("wrote without confirmation")
+	}
+}
+
+func TestHasActiveLineIgnoresComments(t *testing.T) {
+	line := guardedSource("zsh")
+	if hasActiveLine("# "+line+"\n", line) {
+		t.Error("commented-out line counted as installed")
+	}
+	if !hasActiveLine("a\n  "+line+"  \nb", line) {
+		t.Error("active line not found")
 	}
 }
