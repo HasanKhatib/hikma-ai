@@ -1,0 +1,59 @@
+name: Completion
+
+# Installs hikma's shell completion into a throwaway home on each OS and shell,
+# checks the shell really registers it, and reruns the installer to confirm it
+# changes nothing the second time.
+
+on:
+  pull_request:
+    paths: ["cmd/**", "internal/**", "scripts/test-completion.sh", ".github/workflows/completion.yml"]
+  push:
+    branches: [main]
+    paths: ["cmd/**", "internal/**", "scripts/test-completion.sh", ".github/workflows/completion.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  completion:
+    name: ${{ matrix.shell }} (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-latest, shell: bash }
+          - { os: ubuntu-latest, shell: zsh }
+          - { os: ubuntu-latest, shell: fish }
+          - { os: ubuntu-latest, shell: pwsh }
+          - { os: macos-latest, shell: bash }
+          - { os: macos-latest, shell: zsh }
+          - { os: macos-latest, shell: fish }
+          - { os: macos-latest, shell: pwsh }
+          - { os: windows-latest, shell: bash }
+          - { os: windows-latest, shell: pwsh }
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Install the shell
+        run: |
+          case "${{ matrix.os }}/${{ matrix.shell }}" in
+            ubuntu-latest/bash) sudo apt-get update && sudo apt-get install -y bash-completion ;;
+            ubuntu-latest/zsh)  sudo apt-get update && sudo apt-get install -y zsh ;;
+            ubuntu-latest/fish) sudo apt-get update && sudo apt-get install -y fish ;;
+            macos-latest/bash)  brew install bash bash-completion@2 && echo "BASH_BIN=$(brew --prefix)/bin/bash" >> "$GITHUB_ENV" ;;
+            macos-latest/fish)  brew install fish ;;
+          esac
+      - name: Build hikma
+        run: |
+          mkdir -p "$RUNNER_TEMP/bin"
+          go build -o "$RUNNER_TEMP/bin/hikma" ./cmd/hikma
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+      - name: Test completion in ${{ matrix.shell }}
+        run: bash scripts/test-completion.sh "${{ matrix.shell }}"
