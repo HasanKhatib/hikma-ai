@@ -28,9 +28,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+      - name: no agent attribution in commits
+        if: github.event_name == 'pull_request'
+        env:
+          BASE: ${{ github.event.pull_request.base.sha }}
+          HEAD: ${{ github.event.pull_request.head.sha }}
+        run: |
+          if git log --format='%h %B' "$BASE..$HEAD" | grep -iE '^(.* )?co-authored-by:.*(claude|anthropic)|generated with .*claude'; then
+            echo "::error::Remove agent co-author or 'Generated with' lines from the commit messages (see AGENTS.md)."
+            exit 1
+          fi
       - name: gofmt
         run: test -z "$(gofmt -l cmd internal)"
       - name: go mod tidy
