@@ -2,7 +2,7 @@
   "$schema": "./roadmap.schema.json",
   "version": 1,
   "project": "Hikma AI",
-  "updated": "2026-10-12",
+  "updated": "2026-10-17",
   "releases": [
     {
       "id": "v0.1",
@@ -35,6 +35,14 @@
       "status": "planned",
       "goal": "Support user-scope (global) installs with the same lockfile, verify, and safety gates as project installs.",
       "exit": "hikma skill install --global works for every supported agent with its own lockfile, a confirmation gate, and duplicate warnings."
+    },
+    {
+      "id": "v0.5",
+      "title": "Guided CLI",
+      "emoji": "v0.5",
+      "status": "active",
+      "goal": "Make hikma easy to start and pleasant to read: guided completion setup, a menu and wizards over the flag commands, and a recognizable terminal look.",
+      "exit": "Bare hikma opens a menu in a terminal and prints help elsewhere, every wizard path prints its equivalent flag command, output is colored only on a terminal, and the logo ships in the CLI, site, and README."
     },
     {
       "id": "v1.0",
@@ -1723,6 +1731,262 @@
               "assignee": "ai",
               "labels": [
                 "ux"
+              ],
+              "planned": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "P7",
+      "title": "Guided CLI",
+      "emoji": "P7",
+      "status": "active",
+      "release": "v0.5",
+      "goal": "Make hikma approachable: a menu and wizards over the flag commands, a recognizable terminal look, and explicit agent working rules.",
+      "exit": "Bare hikma opens a menu, output is colored only on a terminal, the logo ships everywhere, and the council and push rules are written down.",
+      "epics": [
+        {
+          "id": "E7.1",
+          "title": "Agent working model",
+          "emoji": "C",
+          "status": "active",
+          "assignee": "ai+verify",
+          "labels": [
+            "process",
+            "docs"
+          ],
+          "planned": null,
+          "goal": "Give the repo explicit rules for how Claude pushes and decides: the logged-in gh user, no co-author, and a four-seat council for contested changes.",
+          "exit": "AGENTS.md states the push and CLI interaction rules, the council skill exists with four seats, and the council has been run on a real decision.",
+          "body": "epics/E7.1.md",
+          "tasks": [
+            {
+              "id": "E7.1-T1",
+              "title": "Add the Git and Pushing rules to AGENTS.md: push as the logged-in gh user, no co-author or generated-by lines",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.1-T2",
+              "title": "Add the council skill with four seats: Architect, Shipper, Critic, Terminal User",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "process"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.1-T3",
+              "title": "Add CLI Interaction Rules to AGENTS.md and narrow the TUI non-goal to full-screen only",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "docs",
+                "design"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.1-T4",
+              "title": "Run the council on the wizard flow design (E7.3) and record the decision on the board",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "process"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.1-T5",
+              "title": "Add a council-first convention to Board Rules: the first task of a risky epic is a council run",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "process",
+                "docs"
+              ],
+              "planned": null
+            }
+          ]
+        },
+        {
+          "id": "E7.2",
+          "title": "Brand and terminal look",
+          "emoji": "L",
+          "status": "active",
+          "assignee": "ai+verify",
+          "labels": [
+            "design",
+            "docs"
+          ],
+          "planned": null,
+          "goal": "Hikma has one recognizable logo and a terminal look that is colored on a terminal and plain everywhere else.",
+          "exit": "The logo appears in the CLI banner, docs site, favicons, manifest, and README, and color is verified on macOS, Linux, and Windows terminals with NO_COLOR respected.",
+          "body": "epics/E7.2.md",
+          "tasks": [
+            {
+              "id": "E7.2-T1",
+              "title": "Add color helpers (green, cyan, bold, dim) that stay plain when piped, under NO_COLOR, or with TERM=dumb",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.2-T2",
+              "title": "Draw the CLI banner from the logo frame and prompt with a gradient wordmark",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "design"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.2-T3",
+              "title": "Wire the logo, favicons, and fixed web manifest into the docs site, and the logo into the README",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "docs",
+                "design"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.2-T4",
+              "title": "Use the color helpers across doctor, list, and verify output: ok in green, FAIL in red, secondary text dim",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.2-T5",
+              "title": "Check the banner and colors by hand on Windows PowerShell, the legacy console, and a light terminal theme",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "verify"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.2-T6",
+              "title": "Add a social card (og image) to the docs site",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "design",
+                "docs"
+              ],
+              "planned": null
+            }
+          ]
+        },
+        {
+          "id": "E7.3",
+          "title": "Menu and wizards",
+          "emoji": "W",
+          "status": "active",
+          "assignee": "ai+verify",
+          "labels": [
+            "feature",
+            "cli"
+          ],
+          "planned": null,
+          "goal": "Bare hikma opens a menu in a terminal, every wizard path is a front end for a flag command, and scripts never wait for input.",
+          "exit": "Every menu entry runs the same code as its flag command and prints it, all prompts go through the Prompter interface, and non-TTY runs print help.",
+          "body": "epics/E7.3.md",
+          "tasks": [
+            {
+              "id": "E7.3-T1",
+              "title": "Add the Prompter interface with a survey implementation and a test fake",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T2",
+              "title": "Open a menu on bare hikma in a terminal, run the chosen flag command, print the equivalent command, and print help without a TTY",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T3",
+              "title": "Test the menu with a fake prompter: every entry resolves to a real command, Quit and Ctrl-C run nothing",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T4",
+              "title": "Write the menu guide and changelog entry",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T5",
+              "title": "Move the existing survey call sites (config agent, scaffold, install picker, push and sync confirmations, completion) behind the Prompter",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "refactor"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T6",
+              "title": "Ask for what a command needs inside the menu: registry and agent for install, a local skill picker for publish, agents for project setup",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T7",
+              "title": "Let the menu return to the main menu after a task instead of exiting",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.3-T8",
+              "title": "Walk every menu entry by hand on macOS and Windows PowerShell",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "verify"
               ],
               "planned": null
             }
