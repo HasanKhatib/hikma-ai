@@ -21,7 +21,6 @@ import { withBase } from "vitepress";
   </div>
   <div class="hk-hero-image">
     <HeroScene />
-    <p class="hk-flow"><code>hikma init</code><i aria-hidden="true">&#8594;</i><code>skill install</code><i aria-hidden="true">&#8594;</i><code>skill push</code></p>
   </div>
 </div>
 </div>

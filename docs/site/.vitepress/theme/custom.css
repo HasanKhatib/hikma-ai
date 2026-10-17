@@ -314,24 +314,6 @@ kbd,
   outline-offset: 2px;
 }
 
-.hk-flow {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 4px 10px;
-  margin: 18px 2px 0;
-  color: var(--muted);
-  font:
-    650 12px/1.5 "SFMono-Regular",
-    Consolas,
-    monospace;
-}
-
-.hk-flow i {
-  color: var(--orange);
-  font-style: normal;
-}
-
 .hk-home-footer {
   display: flex;
   flex-wrap: wrap;
@@ -362,11 +344,6 @@ kbd,
 .hk-hero-image {
   flex-direction: column;
   align-items: center;
-}
-
-.hk-hero-image .hk-flow {
-  width: 100%;
-  max-width: 540px;
 }
 
 @media (max-width: 900px) {
@@ -521,11 +498,15 @@ kbd,
   max-width: 560px;
   margin: 0;
   aspect-ratio: 16 / 9;
-  border: 1px solid var(--code-line);
+  border: 1px solid var(--line);
   border-radius: 10px;
-  background: #0b1514;
+  background: #cfe7e1;
   box-shadow: var(--shadow);
   overflow: hidden;
+}
+.dark .hk-scene {
+  border-color: var(--code-line);
+  background: #0b1514;
 }
 .hk-scene canvas {
   display: block;
@@ -570,32 +551,48 @@ kbd,
   bottom: 4%;
   min-height: 24%;
   padding: 6px 10px;
-  border: 1px solid var(--code-line);
+  border: 1px solid var(--line);
   border-radius: 6px;
-  background: rgba(8, 15, 14, 0.9);
+  background: rgba(252, 250, 244, 0.93);
   font: 12px/1.5 var(--vp-font-family-mono);
-  color: var(--code-text-2);
+  color: var(--muted);
   white-space: nowrap;
   overflow: hidden;
 }
 .hk-scene-cli .cmd {
-  color: var(--code-text);
+  color: var(--ink);
 }
 .hk-scene-cli .cmd b {
+  color: var(--orange);
+  font-weight: 700;
+}
+.dark .hk-scene-cli {
+  border-color: var(--code-line);
+  background: rgba(8, 15, 14, 0.9);
+  color: var(--code-text-2);
+}
+.dark .hk-scene-cli .cmd {
+  color: var(--code-text);
+}
+.dark .hk-scene-cli .cmd b {
   color: var(--signal);
-  font-weight: 600;
 }
 .hk-scene-toggle {
   position: absolute;
   top: 8px;
   right: 8px;
   padding: 2px 10px;
-  border: 1px solid var(--code-line);
+  border: 1px solid var(--line);
   border-radius: 999px;
-  background: rgba(8, 15, 14, 0.7);
-  color: var(--code-text-2);
+  background: rgba(252, 250, 244, 0.85);
+  color: var(--muted);
   font-size: 12px;
   cursor: pointer;
+}
+.dark .hk-scene-toggle {
+  border-color: var(--code-line);
+  background: rgba(8, 15, 14, 0.7);
+  color: var(--code-text-2);
 }
 .hk-scene-toggle:focus-visible {
   outline: 2px solid var(--signal);
@@ -605,5 +602,139 @@ kbd,
   .hk-scene-balloon,
   .hk-scene-cli {
     font-size: 10px;
+  }
+}
+
+.hk-scene-wrap {
+  width: 100%;
+  max-width: 560px;
+}
+.hk-scene-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  pointer-events: none;
+}
+.hk-scene-title strong {
+  font: 800 clamp(28px, 7vw, 44px) / 1 var(--vp-font-family-mono);
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #f2c46d;
+  text-shadow: 3px 3px 0 #0b1514;
+}
+.hk-scene-title span {
+  font: 700 13px/1 var(--vp-font-family-mono);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #f1ede2;
+  text-shadow: 2px 2px 0 #0b1514;
+  animation: hk-blink 1s steps(2, start) infinite;
+}
+@keyframes hk-blink {
+  50% {
+    visibility: hidden;
+  }
+}
+
+/* The four steps under the scene: lit when active, dim until reached, click to jump. */
+.hk-stages {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 14px;
+}
+.hk-stages button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  opacity: 0.5;
+  transition: opacity 0.25s, border-color 0.25s, background 0.25s;
+}
+.hk-stages button.done {
+  opacity: 0.85;
+}
+.hk-stages button.on {
+  opacity: 1;
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-soft);
+  color: var(--ink);
+  box-shadow: 0 0 0 1px var(--vp-c-brand-1);
+}
+.hk-stages button:hover {
+  opacity: 1;
+}
+.hk-stages button:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 2px;
+}
+.hk-stages i {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--line);
+  color: var(--ink);
+  font: 700 11px/1 var(--vp-font-family-mono);
+  font-style: normal;
+}
+.hk-stages button.on i {
+  background: var(--vp-c-brand-1);
+  color: var(--paper);
+}
+.hk-stages code {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+  font-size: 13px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .hk-scene-title span {
+    animation: none;
+  }
+  .hk-stages button {
+    transition: none;
+  }
+}
+
+/* Short laptop screens: tighten the hero so it still fits without scrolling. */
+@media (min-width: 901px) and (max-height: 800px) {
+  .hk-hero {
+    padding-block: 12px;
+  }
+  .hk-hero h1 {
+    margin-bottom: 14px;
+    font-size: clamp(38px, 4.2vw, 54px);
+  }
+  .hk-hero-tagline {
+    margin-bottom: 20px;
+    font-size: 17px;
+    line-height: 1.5;
+  }
+  .hk-install-line {
+    margin-top: 18px;
+  }
+  .hk-install-alt {
+    margin-top: 8px;
+    font-size: 12px;
+  }
+  .hk-stages {
+    margin-top: 10px;
   }
 }

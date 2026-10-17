@@ -24,9 +24,9 @@ async function copy() {
     </button>
   </div>
   <p class="hk-install-alt">
-    macOS and Linux. Other ways:
+    Other ways:
     <a href="https://github.com/HasanKhatib/hikma-ai/blob/main/scripts/install.sh" target="_blank" rel="noopener">install script</a>
-    (read it first), <code>go install</code>, or see
-    <a :href="withBase('/getting-started')">Getting started</a>.
+    (read it first), <code>go install</code>, or
+    <a :href="withBase('/getting-started')">all options</a>.
   </p>
 </template>

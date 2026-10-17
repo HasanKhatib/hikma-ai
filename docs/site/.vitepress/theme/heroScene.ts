@@ -1,11 +1,14 @@
 // The home page scene: a pixel-art loop that tells the Hikma story.
-// Everything is a pure function of time `t` (seconds into a 22 second loop),
+// Everything is a pure function of time (scene seconds into the story, played slower),
 // so the same code can draw a live canvas or render frames for a video.
 
 export const W = 240;
 export const H = 135;
 export const GROUND = 92;
-export const LOOP = 22;
+export const STORY = 22; // length of the story, in scene seconds
+export const INTRO = 1.4; // a title screen before the story starts
+export const SLOW = 1.6; // real seconds per scene second
+export const LOOP = (STORY + INTRO) * SLOW; // real length of one loop
 
 const HOLE_A = 142;
 const HOLE_B = 172;
@@ -48,6 +51,9 @@ const LEGS_B = [".l....l."];
 const PET = ["...o....", "...b....", ".bbbbbb.", "bbwbbwbb", "bbbbbbbb", ".bb..bb."];
 const PET_BLINK = ["...o....", "...b....", ".bbbbbb.", "bbbbbbbb", "bbbbbbbb", ".bb..bb."];
 
+// The pet is dark with no skills, turns blue with the first, and violet with two.
+const PET_COLORS = ["#44504e", "#4aa8ff", "#a78bfa"];
+
 const GEM = ["..g..", ".gqg.", "ggggg", ".gdg.", "..g.."];
 const GEM2 = ["..n..", ".nqn.", "nnnnn", ".ndn.", "..n.."];
 const CHEST = ["..mmmmmmmmmm..", ".mssssssssssm.", ".mmmmmsmmmmmm.", ".mmmmmmmmmmmm.", ".mmmmmmmmmmmm.", ".mmmmmmmmmmmm."];
@@ -57,15 +63,16 @@ const FLAG = ["d", "d", "d", "d", "d", "d", "d", "d", "d", "d"];
 type Sprite = HTMLCanvasElement;
 let sprites: Record<string, Sprite> | null = null;
 
-function make(rows: string[]): Sprite {
+function make(rows: string[], override: Palette = {}): Sprite {
   const c = document.createElement("canvas");
   c.width = rows[0].length;
   c.height = rows.length;
   const x = c.getContext("2d")!;
   rows.forEach((row, j) =>
     [...row].forEach((ch, i) => {
-      if (ch === "." || !PAL[ch]) return;
-      x.fillStyle = PAL[ch];
+      const color = override[ch] ?? PAL[ch];
+      if (ch === "." || !color) return;
+      x.fillStyle = color;
       x.fillRect(i, j, 1, 1);
     }),
   );
@@ -77,8 +84,12 @@ function getSprites() {
   sprites = {
     charA: make([...CHAR, ...LEGS_A]),
     charB: make([...CHAR, ...LEGS_B]),
-    pet: make(PET),
-    petBlink: make(PET_BLINK),
+    pet0: make(PET, { b: PET_COLORS[0] }),
+    pet1: make(PET, { b: PET_COLORS[1] }),
+    pet2: make(PET, { b: PET_COLORS[2] }),
+    petBlink0: make(PET_BLINK, { b: PET_COLORS[0] }),
+    petBlink1: make(PET_BLINK, { b: PET_COLORS[1] }),
+    petBlink2: make(PET_BLINK, { b: PET_COLORS[2] }),
     gem: make(GEM),
     gem2: make(GEM2),
     chest: make(CHEST),
@@ -164,28 +175,45 @@ function burst(ctx: CanvasRenderingContext2D, cx: number, cy: number, t0: number
   }
 }
 
-function drawWorld(ctx: CanvasRenderingContext2D, t: number) {
-  px(ctx, "#0b1514", 0, 0, W, H);
-  px(ctx, "#0f1d1b", 0, 28, W, 30);
-  px(ctx, "#12302d", 0, 58, W, GROUND - 58);
+const THEMES = {
+  dark: { sky: "#0b1514", mid: "#0f1d1b", low: "#12302d", hills: "#163d39", grass: "#2fa89f", soil: "#136761", dirt: "#0b3b37", speck: "#0f4a45", hole: "#050b0a" },
+  light: { sky: "#cfe7e1", mid: "#dcefe9", low: "#e9f5f1", hills: "#b4d9cf", grass: "#2a8f84", soil: "#5aa79c", dirt: "#8cc2b8", speck: "#7bb5aa", hole: "#1b2f2c" },
+};
+
+function drawWorld(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
+  const c = dark ? THEMES.dark : THEMES.light;
+  px(ctx, c.sky, 0, 0, W, H);
+  px(ctx, c.mid, 0, 28, W, 30);
+  px(ctx, c.low, 0, 58, W, GROUND - 58);
   // distant hills
   for (let x = 0; x < W; x += 2) {
     const h = 10 + Math.round(Math.sin(x / 17) * 5 + Math.sin(x / 7) * 2);
-    px(ctx, "#163d39", x, GROUND - h, 2, h);
+    px(ctx, c.hills, x, GROUND - h, 2, h);
   }
-  // stars
-  for (let i = 0; i < 18; i++) {
-    const sx = (i * 53) % W;
-    const sy = 4 + ((i * 29) % 40);
-    if (Math.floor(t * 1.5 + i) % 3) px(ctx, "#f2c46d", sx, sy);
+  if (dark) {
+    for (let i = 0; i < 18; i++) {
+      const sx = (i * 53) % W;
+      const sy = 4 + ((i * 29) % 40);
+      if (Math.floor(t * 1.5 + i) % 3) px(ctx, "#f2c46d", sx, sy);
+    }
+  } else {
+    // a blocky sun and two slow clouds
+    px(ctx, "#f2c46d", 196, 12, 14, 14);
+    px(ctx, "#ffe39a", 199, 15, 8, 8);
+    for (const [cx, cy] of [[30, 16], [120, 30]] as const) {
+      const x = ((cx + t * 3) % (W + 40)) - 20;
+      px(ctx, "#ffffff", x, cy, 22, 5);
+      px(ctx, "#ffffff", x + 5, cy - 4, 12, 4);
+    }
   }
   // ground, with a hole
+  px(ctx, c.hole, HOLE_A, GROUND, HOLE_B - HOLE_A, H - GROUND);
   for (let x = 0; x < W; x++) {
     if (x >= HOLE_A && x < HOLE_B) continue;
-    px(ctx, "#2fa89f", x, GROUND, 1, 2);
-    px(ctx, "#136761", x, GROUND + 2, 1, 4);
-    px(ctx, "#0b3b37", x, GROUND + 6, 1, H - GROUND - 6);
-    if ((x * 7) % 11 === 0) px(ctx, "#0f4a45", x, GROUND + 8 + (x % 5) * 3, 2, 1);
+    px(ctx, c.grass, x, GROUND, 1, 2);
+    px(ctx, c.soil, x, GROUND + 2, 1, 4);
+    px(ctx, c.dirt, x, GROUND + 6, 1, H - GROUND - 6);
+    if ((x * 7) % 11 === 0) px(ctx, c.speck, x, GROUND + 8 + (x % 5) * 3, 2, 1);
   }
   px(ctx, "#ff9a6b", HOLE_A - 2, GROUND - 1, 2, 1);
   px(ctx, "#ff9a6b", HOLE_B, GROUND - 1, 2, 1);
@@ -244,8 +272,9 @@ function drawGems(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sp
 
 function drawPet(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
   const { x, y } = petPos(t);
-  const blink = (t % 3.2) < 0.12;
-  blit(ctx, blink ? s.petBlink : s.pet, x, y);
+  const blink = (((t % 3.2) + 3.2) % 3.2) < 0.12;
+  const tone = Math.min(2, skillCount(t));
+  blit(ctx, s[(blink ? "petBlink" : "pet") + tone], x, y);
   // skills the pet knows, shown as tiny gems above its antenna
   const n = skillCount(t);
   for (let i = 0; i < n; i++) {
@@ -281,19 +310,27 @@ function drawChar(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sp
   blit(ctx, sprite, charX(t), charY(t));
 }
 
-export function drawScene(ctx: CanvasRenderingContext2D, rawT: number) {
-  const t = ((rawT % LOOP) + LOOP) % LOOP;
+// Real seconds into the loop -> scene seconds into the story (negative on the title screen).
+function sceneTime(raw: number): number {
+  return (((raw % LOOP) + LOOP) % LOOP) / SLOW - INTRO;
+}
+
+export function drawScene(ctx: CanvasRenderingContext2D, raw: number, dark = true) {
+  const t = sceneTime(raw);
+  const story = t + INTRO;
   const s = getSprites();
   ctx.imageSmoothingEnabled = false;
-  drawWorld(ctx, t);
+  drawWorld(ctx, t, dark);
   drawProps(ctx, t, s);
   drawGems(ctx, t, s);
   drawPet(ctx, t, s);
   drawChar(ctx, t, s);
-  const fade = t > 21.6 ? seg(t, 21.6, 22) : t < 0.4 ? 1 - seg(t, 0, 0.4) : 0;
+  // dim behind the title screen, fade in from black, and fade out at the end of the loop
+  let fade = story < INTRO ? 0.5 * (1 - seg(story, INTRO - 0.5, INTRO)) : 0;
+  fade = Math.max(fade, 1 - seg(story, 0, 0.3), seg(t, STORY - 0.4, STORY));
   if (fade > 0) {
     ctx.globalAlpha = fade;
-    px(ctx, "#0b1514", 0, 0, W, H);
+    px(ctx, dark ? "#0b1514" : "#e9f5f1", 0, 0, W, H);
     ctx.globalAlpha = 1;
   }
 }
@@ -311,7 +348,8 @@ const BALLOONS: { a: number; b: number; who: "char" | "pet"; text: string }[] = 
   { a: 19.2, b: 20.4, who: "pet", text: "Watch this." },
 ];
 
-export function balloonAt(t: number): Balloon | null {
+export function balloonAt(raw: number): Balloon | null {
+  const t = sceneTime(raw);
   const b = BALLOONS.find((x) => t >= x.a && t < x.b);
   if (!b) return null;
   const p = b.who === "pet" ? petPos(t) : { x: charX(t), y: charY(t) };
@@ -348,7 +386,8 @@ const GROUPS: [number, number, number][] = [
 
 export type CliLine = { out: boolean; text: string };
 
-export function cliAt(t: number): CliLine[] {
+export function cliAt(raw: number): CliLine[] {
+  const t = sceneTime(raw);
   const g = GROUPS.find(([, a, b]) => t >= a && t < b);
   if (!g) return [];
   const lines: CliLine[] = [];
@@ -367,5 +406,34 @@ export function cliAt(t: number): CliLine[] {
 export const TRANSCRIPT =
   "A pixel-art loop. A developer and a small bot pet start a new repo with hikma init, find a skill and install it, create a new skill called walking-above-holes and push it to a registry, fall into a hole, and respawn on a new laptop where hikma sync restores their skills.";
 
+// ── Stages ───────────────────────────────────────────────────────────────────
+
+export type Stage = { step: string; label: string; start: number };
+
+// `start` is in real seconds into the loop, so a click can seek straight to it.
+const at = (sceneStart: number) => (sceneStart + INTRO) * SLOW;
+
+export const STAGES: Stage[] = [
+  { step: "1", label: "hikma init", start: 0 },
+  { step: "2", label: "skill install", start: at(2.8) },
+  { step: "3", label: "skill create + push", start: at(7.9) },
+  { step: "4", label: "hikma sync", start: at(14.4) },
+];
+
+export function stageAt(raw: number): number {
+  const r = ((raw % LOOP) + LOOP) % LOOP;
+  let active = 0;
+  STAGES.forEach((st, i) => {
+    if (r >= st.start) active = i;
+  });
+  return active;
+}
+
+// 1 on the title screen, fading to 0 as the story starts.
+export function titleAlpha(raw: number): number {
+  const story = sceneTime(raw) + INTRO;
+  return story < INTRO ? 1 - seg(story, INTRO - 0.5, INTRO) : 0;
+}
+
 // A frame that reads well without motion: the pet tells its plan and the CLI shows create and push.
-export const STILL_T = 12.6;
+export const STILL_T = at(12.6);
