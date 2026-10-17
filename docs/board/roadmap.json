@@ -1916,8 +1916,8 @@
             },
             {
               "id": "E7.1-T5",
-              "title": "Add a council-first convention to Board Rules: the first task of a risky epic is a council run",
-              "status": "todo",
+              "title": "Add a council-first convention to Board Rules: the first task of a risky epic is a council run (done 2026-10-18, in AGENTS.md)",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "process",
@@ -2026,8 +2026,8 @@
             },
             {
               "id": "E7.2-T8",
-              "title": "Remove the old favicon.svg and logo.svg from docs/site/public once nothing links them",
-              "status": "todo",
+              "title": "Remove the old favicon.svg and logo.svg from docs/site/public once nothing links them (done 2026-10-18: nothing linked them; the board viewer has its own favicon)",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs",

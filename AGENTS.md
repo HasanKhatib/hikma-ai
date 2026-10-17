@@ -67,7 +67,7 @@ Non-goals:
 - The roadmap lives in `docs/board/` (agentkan). `next.json` is the current focus; `epics/<ID>.md` holds long-form context. Roadmap detail belongs there, not in this file. Edit the board with the `agentkan` skill and validate after every edit.
 - Keep epic and task IDs stable. Keep `goal` and `exit` to one line in JSON.
 - You propose, the human disposes: do not archive, delete, or mark epics done unless asked.
-- For hard-to-reverse or contested decisions (new commands, lockfile or config schema, writes outside the project, breaking changes, new dependencies), use the `council` skill before building. It is advisory only.
+- For hard-to-reverse or contested decisions (new commands, lockfile or config schema, writes outside the project, breaking changes, new dependencies), use the `council` skill before building. It is advisory only. The first task of a risky epic is a council run, recorded in the epic body, so the decision is made before the code (E6.1-T5 does this for the 1.0 contracts).
 
 ## Git and pull requests
 
