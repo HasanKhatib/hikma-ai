@@ -2034,6 +2034,105 @@
               "planned": null
             }
           ]
+        },
+        {
+          "id": "E7.4",
+          "title": "Completion install and push polish",
+          "emoji": "S",
+          "status": "active",
+          "assignee": "ai+verify",
+          "labels": [
+            "feature",
+            "cli"
+          ],
+          "planned": null,
+          "goal": "Shell completion installs with one yes/no, push publishes in one step when you can, and mistakes in arguments say what to type.",
+          "exit": "hikma completion installs for bash, zsh, fish, and PowerShell and is verified on macOS, Linux, and Windows, and push, adopt, and error messages behave as documented.",
+          "body": "epics/E7.4.md",
+          "tasks": [
+            {
+              "id": "E7.4-T1",
+              "title": "Install shell completion with hikma completion (detects the shell, shows the file it changes, asks first) plus --install and --yes",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.4-T2",
+              "title": "Make completion install safe: skip a missing hikma, skip commented lines, use .bash_profile on macOS",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.4-T3",
+              "title": "Fix completion output and zsh docs: write to the command output, never to fpath[1]; the Homebrew formula installs completions",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "fix",
+                "docs"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.4-T4",
+              "title": "Make skill push commit straight to the default branch with write access, keep --pr for a pull request, state the outcome in the confirmation, and require --pr with --codeowners",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.4-T5",
+              "title": "Report unfilled template placeholders on push as warnings, and make adopt explain a missing gh skill provenance",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.4-T6",
+              "title": "Say what is wrong and what to type for mistyped arguments, commands, and flags, with a did-you-mean suggestion",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.4-T7",
+              "title": "Check completion install by hand on bash, fish, PowerShell, and a fresh macOS zsh, and rerun it to confirm it does nothing twice",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "verify"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.4-T8",
+              "title": "Run the council on the direct-push default: it changes behavior for everyone with write access, and no council run was recorded",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "process"
+              ],
+              "planned": null
+            }
+          ]
         }
       ]
     }
