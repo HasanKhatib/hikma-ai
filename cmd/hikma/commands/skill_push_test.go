@@ -330,3 +330,20 @@ func TestReadPushFilesSkipsGitAndKeepsExecBit(t *testing.T) {
 		}
 	}
 }
+
+func TestPushCodeownersRequiresPR(t *testing.T) {
+	cmd := Root()
+	cmd.SetArgs([]string{"skill", "push", "alpha", "--codeowners"})
+	cmd.SetOut(&bytes.Buffer{})
+	cmd.SetErr(&bytes.Buffer{})
+	err := cmd.Execute()
+	if err == nil || !strings.Contains(err.Error(), "add --pr") {
+		t.Fatalf("want an error asking for --pr, got %v", err)
+	}
+}
+
+func TestDescribePushWithPRFlagNeedsNoNetwork(t *testing.T) {
+	if got := describePush(config.Registry{}, true); !strings.Contains(got, "pull request") {
+		t.Errorf("got %q", got)
+	}
+}

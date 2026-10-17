@@ -19,7 +19,7 @@ Requires the GitHub CLI (`gh`), signed in. The registry must be a GitHub `owner/
    ? Push to owner/repo? (y/N)
    ```
 
-3. **With write access, the skill is committed straight to the registry's default branch.** No branch, no pull request: the registry is yours, so publishing is one step. The confirmation shows this before anything is written. If the branch is protected and rejects the commit, Hikma says so and suggests `--pr`.
+3. **With write access, the skill is committed straight to the registry's default branch.** No branch, no pull request: the registry is yours, so publishing is one step. The confirmation says so plainly ("committed straight to the default branch, with no review") before anything is written. If the branch is protected and rejects the commit, Hikma says so and suggests `--pr`.
 4. **Without write access**, Hikma forks the registry, pushes a `skill/<name>` branch to your fork, and opens a pull request against the registry.
 5. **With `--pr`**, you get the pull request flow even with write access, for a registry where changes are reviewed. A `skill/<name>` branch is pushed to the registry and a pull request is opened.
 
@@ -35,7 +35,7 @@ Nothing is force-pushed:
 |---|---|
 | `-y`, `--yes` | Skip the confirmation prompt (required without a terminal) |
 | `--pr` | Open a pull request even if you can write to the registry |
-| `--codeowners` | Also add the skill owner to `.github/CODEOWNERS` in the registry |
+| `--codeowners` | Also add the skill owner to `.github/CODEOWNERS` in the registry. Requires `--pr`, since it changes who reviews |
 | `--registry <source>` | Registry to publish to, for this command |
 | `--agent <list>` | Which agent's folder to read the skill from |
 

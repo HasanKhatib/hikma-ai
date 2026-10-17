@@ -207,15 +207,11 @@ func printActiveSelection(selection config.Selection, isOverride bool) {
 }
 
 // confirmPush shows the target registry and asks the user to confirm.
-func confirmPush(cmd *cobra.Command, name, skillDir string, r config.Registry, origin string, assumeYes, viaPR bool) error {
+func confirmPush(cmd *cobra.Command, name, skillDir string, r config.Registry, origin string, assumeYes bool, how string) error {
 	out := cmd.OutOrStdout()
 	fmt.Fprintf(out, "\nYou are pushing to registry: %s (%s)\n", r.FullName(), origin)
 	fmt.Fprintf(out, "  skill: %s (%s/)\n", name, skillDir)
-	if viaPR {
-		fmt.Fprintln(out, "  how:   as a pull request (--pr)")
-	} else {
-		fmt.Fprintln(out, "  how:   committed to the default branch if you have write access, otherwise a pull request from your fork (--pr always opens one)")
-	}
+	fmt.Fprintf(out, "  how:   %s\n", how)
 	if assumeYes {
 		return nil
 	}

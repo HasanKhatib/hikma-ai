@@ -417,6 +417,23 @@ func readSkillOwner(skillDir string) (string, error) {
 	return doc.Metadata.Team, nil
 }
 
+// describePush says what this push will do, so the confirmation is never
+// vague about skipping review. It asks GitHub whether you can write to the
+// registry; if that check fails, the later push reports the real error.
+func describePush(r config.Registry, viaPR bool) string {
+	if viaPR {
+		return "as a pull request (--pr)"
+	}
+	canPush, err := ghGet("repos/"+r.FullName(), ".permissions.push")
+	switch {
+	case err != nil:
+		return "committed to the default branch if you have write access (no review), otherwise a pull request from your fork; add --pr to always open one"
+	case canPush == "true":
+		return "committed straight to the default branch, with no review (add --pr for a pull request)"
+	}
+	return "as a pull request from your fork (you have no write access)"
+}
+
 func newSkillPushCmd(flagRegistry *string) *cobra.Command {
 	var flagAgent string
 	var assumeYes, withCodeowners, viaPR bool
@@ -433,6 +450,9 @@ it is pushed to your fork and a pull request is opened. Nothing is force-pushed.
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if withCodeowners && !viaPR {
+				return fmt.Errorf("--codeowners changes who must review the registry, so it has to go through a pull request: add --pr")
+			}
 			name := normalizeSkillName(args[0])
 			if err := checkSkillName(name); err != nil {
 				return err
@@ -468,7 +488,7 @@ it is pushed to your fork and a pull request is opened. Nothing is force-pushed.
 				fmt.Fprintln(out, ui.Yellow(out, "Validating...  warnings only, continuing.")+" 'hikma registry validate' in the registry's CI treats unfilled placeholders as errors.")
 			}
 
-			if err := confirmPush(cmd, name, skillDir, registry, origin, assumeYes, viaPR); err != nil {
+			if err := confirmPush(cmd, name, skillDir, registry, origin, assumeYes, describePush(registry, viaPR)); err != nil {
 				return err
 			}
 
