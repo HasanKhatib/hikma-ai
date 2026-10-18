@@ -4,7 +4,7 @@ project_name: hikma
 
 before:
   hooks:
-    - go test ./...
+    - go test -short ./...
 
 builds:
   - id: hikma

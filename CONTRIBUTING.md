@@ -9,7 +9,8 @@ Run these before opening a pull request (CI runs them on Linux, macOS, and Windo
 ```bash
 gofmt -w cmd internal
 go vet ./...
-go test ./...
+go test -short ./...                     # the main suite; CI runs it on every change
+go test ./e2e                            # after any change to the menu, prompts, or color: drives the real binary in a pty
 go mod tidy          # go.mod and go.sum must not change
 bash scripts/test-install.sh   # if you touched scripts/
 npx agentkan validate docs/board   # if you touched docs/board
@@ -22,7 +23,9 @@ npx agentkan validate docs/board   # if you touched docs/board
 
 ```bash
 task ci               # everything CI runs: lint, tidy check, tests, build, board, docs
-task test             # Go tests
+task test             # Go tests, without the terminal tests
+task test:terminal    # the pty tests that drive the real menu and color
+task docs:e2e         # docs site in real browsers and phone profiles; manual, not part of CI (run the Docs e2e workflow from the Actions tab)
 task run -- skill list   # build and run hikma with arguments
 task docs:dev         # docs with live reload at http://localhost:5173/hikma-ai/
 task docs:preview     # production build served like GitHub Pages at http://localhost:4180/hikma-ai/
@@ -38,6 +41,7 @@ Hikma AI is the CLI repository only. Do not add a top-level `skills/` registry f
 
 - Command tests run the CLI in-process against a temporary git repository; see `cmd/hikma/commands/skill_install_test.go`.
 - Calls to the `gh` CLI go through one function (`ghRun`) and are tested with a fake GitHub; see `skill_push_test.go`.
+- `e2e/` runs the real binary in a pseudo-terminal. Keep it to what needs a real terminal (the menu draws and exits, color follows the terminal); anything a fake `Prompter` can cover belongs in a command test. CI runs it in its own `Terminal` workflow, apart from `go test -short`, and the release hook skips it.
 - Config tests isolate `HOME`, `XDG_CONFIG_HOME`, and `APPDATA` so they never touch your real configuration.
 
 ## Pull requests

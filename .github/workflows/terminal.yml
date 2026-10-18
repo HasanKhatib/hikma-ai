@@ -1,0 +1,36 @@
+name: Terminal
+
+# Drives the real hikma binary through a pseudo-terminal (a pty on Linux and
+# macOS, ConPTY on Windows): the menu draws and exits, and color follows the
+# terminal. These tests wait on a live terminal, so they run apart from the
+# main CI job and only when the code they cover changes.
+
+on:
+  pull_request:
+    paths: ["cmd/**", "internal/**", "e2e/**", "go.mod", "go.sum", ".github/workflows/terminal.yml"]
+  push:
+    branches: [main]
+    paths: ["cmd/**", "internal/**", "e2e/**", "go.mod", "go.sum", ".github/workflows/terminal.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: terminal-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  terminal:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - run: go test -count=1 ./e2e

@@ -27,6 +27,7 @@ jobs:
     if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
     strategy:
       fail-fast: false
       matrix:
@@ -37,13 +38,18 @@ jobs:
     steps:
       - name: Work out the tag
         id: tag
+        env:
+          INPUT_TAG: ${{ inputs.tag }}
+          RUN_TAG: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}
         run: |
-          tag="${{ inputs.tag || (github.event_name == 'workflow_run' && github.event.workflow_run.head_branch) || '' }}"
+          tag="${INPUT_TAG:-$RUN_TAG}"
           latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
           [ -n "$tag" ] || tag=$latest
-          echo "tag=$tag" >> "$GITHUB_OUTPUT"
-          echo "version=${tag#v}" >> "$GITHUB_OUTPUT"
-          echo "is_latest=$([ "$tag" = "$latest" ] && echo true || echo false)" >> "$GITHUB_OUTPUT"
+          {
+            echo "tag=$tag"
+            echo "version=${tag#v}"
+            echo "is_latest=$([ "$tag" = "$latest" ] && echo true || echo false)"
+          } >> "$GITHUB_OUTPUT"
           echo "Verifying $tag (latest release: $latest)"
 
       - name: Install with the install script and check the attestation

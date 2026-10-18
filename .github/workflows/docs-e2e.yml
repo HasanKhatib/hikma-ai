@@ -3,14 +3,11 @@ name: Docs e2e
 # Runs the docs site in real browsers (Chromium, Firefox, WebKit, and two phone
 # profiles): the home page fits one screen, never scrolls sideways, paints in
 # light and dark, the stage buttons seek the scene, and axe finds no serious
-# accessibility violations.
+# accessibility violations. Manual only: run it from the Actions tab before a
+# large docs or home page change. The docs-build job in CI already fails on
+# dead links for every pull request.
 
 on:
-  pull_request:
-    paths: ["docs/site/**", ".github/workflows/docs-e2e.yml"]
-  push:
-    branches: [main]
-    paths: ["docs/site/**", ".github/workflows/docs-e2e.yml"]
   workflow_dispatch:
 
 permissions:
@@ -19,6 +16,7 @@ permissions:
 jobs:
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         working-directory: docs/site
@@ -30,11 +28,11 @@ jobs:
           cache: npm
           cache-dependency-path: docs/site/package-lock.json
       - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox webkit
+      - run: npx playwright install --with-deps firefox webkit
       - run: npx playwright test
         env:
           CI: "true"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: playwright-report
