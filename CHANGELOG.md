@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- `hikma upgrade` now upgrades hikma instead of printing instructions. It shows the plan (`brew upgrade` for a Homebrew install, otherwise the install script, which checks the checksum and attestation), asks first, and replaces the binary where it is. `--yes` skips the question; without a terminal it prints the plan and exits non-zero. The old `hikma update` command is now `hikma upgrade`.
+
 ## [1.0.0] - 2026-10-18
 
 The first stable release. From here, commands, flags, exit codes, JSON documents, and the lockfile and config schemas follow the [versioning policy](https://hasankhatib.github.io/hikma-ai/reference/policy).

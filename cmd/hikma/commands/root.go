@@ -49,7 +49,7 @@ the common tasks and prints the command it ran.`,
 		newSkillCmd(),
 		newRegistryCmd(),
 		newSyncCmd(),
-		newUpdateCmd(),
+		newUpgradeCmd(),
 		newCompletionCmd(),
 	)
 

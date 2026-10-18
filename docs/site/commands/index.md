@@ -18,7 +18,7 @@
 | [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
 | [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry |
 | [`hikma completion`](/commands/completion) | Generate shell completions |
-| `hikma update` | Print how to upgrade hikma for the way you installed it |
+| [`hikma upgrade`](/commands/upgrade) | Upgrade hikma itself, for the way you installed it |
 
 ## Sources
 
