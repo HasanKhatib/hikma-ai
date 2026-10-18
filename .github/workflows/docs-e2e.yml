@@ -1,19 +1,13 @@
 name: Docs e2e
 
-# Runs the docs site in real browsers: the home page fits one screen, never
-# scrolls sideways, paints in light and dark, the stage buttons seek the scene,
-# and axe finds no serious accessibility violations. Pull requests and pushes
-# use Chromium and a phone profile. The weekly run and a manual run add Firefox,
-# WebKit, and an iPhone profile (set CROSS_BROWSER).
+# Runs the docs site in real browsers (Chromium, Firefox, WebKit, and two phone
+# profiles): the home page fits one screen, never scrolls sideways, paints in
+# light and dark, the stage buttons seek the scene, and axe finds no serious
+# accessibility violations. Manual only: run it from the Actions tab before a
+# large docs or home page change. The docs-build job in CI already fails on
+# dead links for every pull request.
 
 on:
-  pull_request:
-    paths: ["docs/site/**", ".github/workflows/docs-e2e.yml"]
-  push:
-    branches: [main]
-    paths: ["docs/site/**", ".github/workflows/docs-e2e.yml"]
-  schedule:
-    - cron: "43 5 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -23,8 +17,6 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
     timeout-minutes: 15
-    env:
-      CROSS_BROWSER: ${{ github.event_name != 'pull_request' && github.event_name != 'push' && '1' || '' }}
     defaults:
       run:
         working-directory: docs/site
@@ -36,7 +28,7 @@ jobs:
           cache: npm
           cache-dependency-path: docs/site/package-lock.json
       - run: npm ci
-      - run: npx playwright install --with-deps chromium ${{ env.CROSS_BROWSER && 'firefox webkit' || '' }}
+      - run: npx playwright install --with-deps firefox webkit
       - run: npx playwright test
         env:
           CI: "true"

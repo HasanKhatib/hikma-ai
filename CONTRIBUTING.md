@@ -25,7 +25,7 @@ npx agentkan validate docs/board   # if you touched docs/board
 task ci               # everything CI runs: lint, tidy check, tests, build, board, docs
 task test             # Go tests, without the terminal tests
 task test:terminal    # the pty tests that drive the real menu and color
-task docs:e2e         # docs site in Chromium and a phone profile (CROSS_BROWSER=1 adds Firefox and WebKit)
+task docs:e2e         # docs site in real browsers and phone profiles; manual, not part of CI (run the Docs e2e workflow from the Actions tab)
 task run -- skill list   # build and run hikma with arguments
 task docs:dev         # docs with live reload at http://localhost:5173/hikma-ai/
 task docs:preview     # production build served like GitHub Pages at http://localhost:4180/hikma-ai/
