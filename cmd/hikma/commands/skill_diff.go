@@ -71,7 +71,7 @@ Pass --patch to print the file contents that differ. --json prints one document
 						return fmt.Errorf("%q was installed by gh skill and is not tracked by hikma; run 'hikma skill adopt %s' first", name, name)
 					}
 				}
-				return fmt.Errorf("%q is not installed by hikma for the selected agents (no entry in .hikma/lock.json)", name)
+				return fmt.Errorf("%q is not installed by hikma for the selected agents (no entry in %s)\nrun 'hikma skill list --installed' to see what is installed", name, sc.lockName())
 			}
 
 			u := &updater{sc: sc, out: out, errOut: cmd.ErrOrStderr(), lf: lf, checkouts: map[string]*openCheckout{}}

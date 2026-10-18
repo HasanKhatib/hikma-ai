@@ -173,11 +173,11 @@ func newSkillListCmd(flagRegistry *string) *cobra.Command {
 		Args:  cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if global && !installed {
-				return fmt.Errorf("--global applies to --installed")
+				return usageError(fmt.Errorf("--global only applies with --installed: add --installed, or drop --global"))
 			}
 			if installed {
 				if len(args) > 0 {
-					return fmt.Errorf("--installed lists this repository's skills and takes no source")
+					return usageError(fmt.Errorf("--installed lists this repository's skills and takes no source: drop %q, or drop --installed to list a source", args[0]))
 				}
 				return listInstalled(cmd, asJSON, global)
 			}
@@ -413,8 +413,7 @@ func installSkill(sc scope, out io.Writer, src source.Source, co source.Checkout
 	for _, t := range targets {
 		dir := sc.skillDir(t, skill.Name)
 		if _, err := os.Stat(dir); err == nil && !force {
-			ui.UserError("%s is already installed at %s/\n  use --force to reinstall", skill.Name, dir)
-			return fmt.Errorf("already installed")
+			return fmt.Errorf("%s is already installed at %s/\n  use --force to reinstall", skill.Name, dir)
 		}
 		if err := requireSkillFolder(dir); err != nil {
 			return err
@@ -515,8 +514,9 @@ func newSkillUpdateCmd() *cobra.Command {
 	var flagAgent string
 
 	cmd := &cobra.Command{
-		Use:   "update [<name>]",
-		Short: "Update installed skills from the source they were installed from",
+		Annotations: map[string]string{ownArgErrors: "true"},
+		Use:         "update [<name>]",
+		Short:       "Update installed skills from the source they were installed from",
 		Long: `Update skills recorded in .hikma/lock.json. Each skill is updated from the
 source it was installed from, which may differ from your configured registry.
 Local edits are detected by file hash and block the update unless --force is used.`,
@@ -525,13 +525,13 @@ Local edits are detected by file hash and block the update unless --force is use
 				return fmt.Errorf("missing required argument: <name>\n\nUsage:\n  hikma skill update <name>\n  hikma skill update --all")
 			}
 			if all && len(args) > 0 {
-				return fmt.Errorf("--all and a skill name are mutually exclusive")
+				return usageError(fmt.Errorf("--all and a skill name are mutually exclusive: pass one or the other"))
 			}
 			if all && flagAgent != "" {
-				return fmt.Errorf("--all cannot be combined with --agent")
+				return usageError(fmt.Errorf("--all cannot be combined with --agent: name a skill to limit the agents, or drop --agent"))
 			}
 			if len(args) > 1 {
-				return fmt.Errorf("accepts at most one skill name")
+				return fmt.Errorf("update takes one skill name, got %d: name one, or use --all", len(args))
 			}
 			return nil
 		},
@@ -601,7 +601,7 @@ Local edits are detected by file hash and block the update unless --force is use
 				}
 			}
 			if skipped > 0 && !all {
-				return fmt.Errorf("update failed")
+				return fmt.Errorf("%d skill(s) were skipped; see the messages above", skipped)
 			}
 			return nil
 		},

@@ -10,7 +10,6 @@ import (
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/preflight"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
-	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
 )
 
@@ -63,18 +62,17 @@ func newSkillCreateCmd() *cobra.Command {
 			isAgentOverride := flagAgent != ""
 			selection, err := config.ResolveSelection(flagAgent)
 			if err != nil {
-				return fmt.Errorf("error: %w\nrun 'hikma doctor' to check your environment", err)
+				return fmt.Errorf("%w\nrun 'hikma doctor' to check your environment", err)
 			}
 			printActiveSelection(selection, isAgentOverride)
 
 			targetDir, err := resolveSkillDirForAgent(projectScope(), name, flagAgent)
 			if err != nil {
-				return fmt.Errorf("error: %w", err)
+				return err
 			}
 
 			if _, err := os.Stat(targetDir); err == nil {
-				ui.UserError("%s already exists at %s/\n  choose a different name or remove the existing directory", name, targetDir)
-				return fmt.Errorf("already exists")
+				return fmt.Errorf("%s already exists at %s/\n  choose a different name or remove the existing directory", name, targetDir)
 			}
 
 			// Resolve author from gh; flags override resolved values.

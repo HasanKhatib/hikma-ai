@@ -308,9 +308,9 @@ install'.`,
 			}
 			switch {
 			case blocked > 0:
-				return fmt.Errorf("%d install(s) were kept", blocked)
+				return fmt.Errorf("%d install(s) were kept; use --force to remove them", blocked)
 			case removed == 0:
-				return fmt.Errorf("%q is not installed for the selected agents", name)
+				return fmt.Errorf("%q is not installed for the selected agents\nrun 'hikma skill list --installed' to see what is installed", name)
 			}
 			return nil
 		},
