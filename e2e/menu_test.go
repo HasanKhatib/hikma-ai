@@ -26,6 +26,7 @@ func TestMenuQuitExitsCleanly(t *testing.T) {
 	sb := newSandbox(t)
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
+	tm.settle()
 	tm.choose("Quit", menuWait)
 	exited, err := tm.waitDone(10 * time.Second)
 	if !exited {
@@ -45,6 +46,7 @@ func TestMenuPublishPicksALocalSkillAndPrintsTheCommand(t *testing.T) {
 	sb.writeSkill(t, "alpha")
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
+	tm.settle()
 	tm.choose("Publish a skill to your registry", menuWait)
 	tm.waitFor("Skill to publish:", menuWait)
 	tm.waitFor("alpha", menuWait)
@@ -65,6 +67,7 @@ func TestMenuSetRegistryWritesConfig(t *testing.T) {
 	sb := newSandbox(t)
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
+	tm.settle()
 	tm.choose("Set your registry", menuWait)
 	tm.waitFor("Registry (owner/repo):", menuWait)
 	tm.settle()

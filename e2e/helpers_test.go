@@ -30,10 +30,25 @@ const (
 	ctrlC = "\x03"
 )
 
-// settle gives a freshly drawn prompt time to start reading input. On Linux a
-// key sent the instant the text appears can be dropped while the program is
-// still switching the terminal to raw mode.
-func (tm *term) settle() { time.Sleep(500 * time.Millisecond) }
+// settle waits for the screen to go quiet, then a little longer. A freshly drawn
+// prompt may not be reading input yet: on a Linux pty a key sent while the program
+// is still switching the terminal to raw mode can be dropped, and a loaded CI
+// runner stretches that window. Quiet output means the program has finished
+// starting up.
+func (tm *term) settle() {
+	last, since := -1, time.Now()
+	deadline := time.Now().Add(8 * time.Second)
+	for time.Now().Before(deadline) {
+		n := len(tm.output())
+		if n != last {
+			last, since = n, time.Now()
+		} else if time.Since(since) > 400*time.Millisecond {
+			break
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+	time.Sleep(300 * time.Millisecond)
+}
 
 // press sends keys one at a time with a short gap, like a person typing, so no
 // key arrives in the same read as the last.
