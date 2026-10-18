@@ -1690,7 +1690,7 @@
             {
               "id": "E6.1-T5",
               "title": "Run the council on the 1.0 contract surface (config, lockfile, JSON, exit codes, deprecation) before building any of it",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "process"
@@ -2326,7 +2326,7 @@
             {
               "id": "E7.5-T3",
               "title": "After E7.2, E7.3, and E7.4 close: move Unreleased to 0.5.0 in CHANGELOG, tag v0.5.0, and let goreleaser publish (the CHANGELOG now has a 0.5.0 section; tagging is the owner's call: git tag v0.5.0 && git push origin v0.5.0)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release"
@@ -2336,7 +2336,7 @@
             {
               "id": "E7.5-T4",
               "title": "Check brew install and the install script on macOS, Linux, and Windows after the release runs (automated: the Verify release workflow runs after the Release workflow and was proven on v0.4.0 on all three OSes; confirm it is green after the v0.5.0 tag)",
-              "status": "todo",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "release",
