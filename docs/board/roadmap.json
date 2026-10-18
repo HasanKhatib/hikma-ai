@@ -1748,7 +1748,7 @@
             {
               "id": "E6.2-T1",
               "title": "End-to-end test: init, install, push, update against a throwaway GitHub repo",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "test"
@@ -1789,7 +1789,7 @@
             {
               "id": "E6.2-T5",
               "title": "Re-check the per-scope skills folders and the same-name precedence for each agent before 1.0 (agent CLIs change fast); record versions in E4.2.md",
-              "status": "todo",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "verify",

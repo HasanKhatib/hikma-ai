@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Exit codes are now a documented contract: `0` success, `1` failure, `2` wrong usage (unknown command or flag, missing argument), `3` installed skills differ from the lockfile (`skill verify`, `sync --frozen`). They were `0` and `1` only. A new reference page lists them and every JSON document.
 
 ### Changed
+- The install warning for an agent that reads another agent's folder now says it "may use either copy" instead of "may list each skill twice": Copilot and OpenCode list one copy.
 - Errors now print once, as `error: <message>`, and say what to do next. Before, some failures (already installed, already exists, skill not found locally) printed their message and then a second short line. Mistakes in how flags combine (`--all` with a name, `--global` without `--installed`) exit `2`. "Not installed" errors name the lockfile for the scope you used and point to `hikma skill list --installed`.
 - Every `--json` document is now an object with a `version` field instead of a bare array or object: `skill list` is `{ "version": 1, "skills": [...] }`, `skill info` is `{ "version": 1, "skill": {...} }`, `skill list --installed` is `{ "version": 1, "skills": [...] }`, and `config list` is `{ "version": 1, "entries": [...] }`. Scripts that read the old arrays need a one-line change.
 - A lockfile or config file written by a newer `hikma` is now refused with an error that says to upgrade, and is never rewritten. Before, an older `hikma` silently rewrote a newer lockfile. Config files now carry a `version` field, added the next time `hikma` writes them; a file without one is read as version 1.
@@ -31,6 +32,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Bash completion installs into `~/.bashrc` on Linux and Windows even when that file does not exist yet (it used to fall back to `~/.bash_profile`, which interactive shells there never read). macOS still uses `~/.bash_profile`.
 
 ### Changed
+- The install warning for an agent that reads another agent's folder now says it "may use either copy" instead of "may list each skill twice": Copilot and OpenCode list one copy.
 - `hikma skill push` commits straight to the registry's default branch when you have write access, instead of opening a pull request. Use `--pr` for the pull request flow. Without write access it still forks and opens a pull request. If the default branch is protected, the error suggests `--pr`. The confirmation states which of the two will happen, and `--codeowners` requires `--pr`. This changes the default for anyone with write access. When the default branch has a rule that requires pull requests, `skill push` opens one on its own and says why, instead of failing the commit.
 - `hikma doctor`, `skill verify`, and `skill list --installed` use color in a terminal: `ok` green, `FAIL` red, `warn` yellow, fix hints and table headings dim, and the status column colored (modified yellow, missing red, untracked dim). Output stays plain when piped or under `NO_COLOR`.
 - Warnings are yellow and `FAIL`/errors red in a terminal. `NO_COLOR` turns it off, and piped output stays plain.
@@ -45,11 +47,13 @@ All notable changes to this project are documented here. The format follows [Kee
 - A warning, never a block, when a skill name is installed at both project and global scope: on install, in `list --installed` (which now has a scope column), in `sync`, and in `doctor`.
 
 ### Changed
+- The install warning for an agent that reads another agent's folder now says it "may use either copy" instead of "may list each skill twice": Copilot and OpenCode list one copy.
 - `skill update` now rejects lockfile entries whose path is not a clean `<agent skills folder>/<name>`, as `sync` already did.
 
 ## [0.3.0] - 2026-10-12
 
 ### Changed
+- The install warning for an agent that reads another agent's folder now says it "may use either copy" instead of "may list each skill twice": Copilot and OpenCode list one copy.
 - Homebrew now installs a formula instead of a cask. Run `brew uninstall --cask hikma` once if you installed the cask, then `brew install HasanKhatib/tap/hikma`.
 - `hikma skill update --force` now restores a skill you edited even when upstream has not changed; before, it reported "up to date" and kept your edits.
 - `hikma skill update` asks before applying an update that changes `scripts/`. Without a terminal it refuses until you pass `--yes`.
@@ -68,6 +72,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [0.2.0] - 2026-10-10
 
 ### Changed
+- The install warning for an agent that reads another agent's folder now says it "may use either copy" instead of "may list each skill twice": Copilot and OpenCode list one copy.
 - `hikma init --agent claude` writes only `AGENTS.md`; Claude Code reads it when there is no `CLAUDE.md`. The generated `CLAUDE.md` stub is gone.
 - `skill create` generates a SKILL.md that follows the Agent Skills spec: `metadata` holds only string `owner` and `team`, and the placeholder `compatibility`, `email`, `policy`, and `last_validated` fields are removed.
 - `registry validate` checks the Agent Skills spec: name and description length, `compatibility` length, string-only `metadata`, and warns on fields outside the spec, non-spec names, and SKILL.md files over 500 lines.

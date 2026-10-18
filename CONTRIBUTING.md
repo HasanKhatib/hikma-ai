@@ -42,6 +42,7 @@ Hikma AI is the CLI repository only. Do not add a top-level `skills/` registry f
 - Command tests run the CLI in-process against a temporary git repository; see `cmd/hikma/commands/skill_install_test.go`.
 - Calls to the `gh` CLI go through one function (`ghRun`) and are tested with a fake GitHub; see `skill_push_test.go`.
 - `e2e/` runs the real binary in a pseudo-terminal. Keep it to what needs a real terminal (the menu draws and exits, color follows the terminal); anything a fake `Prompter` can cover belongs in a command test. CI runs it in its own `Terminal` workflow, apart from `go test -short`, and the release hook skips it.
+- `e2e/github_test.go` runs create, push, install, verify, update against a real throwaway registry. It is skipped unless `HIKMA_E2E_REPO=owner/repo` and `GH_TOKEN` are set; the manual `GitHub e2e` workflow runs it on three OSes once the `E2E_REGISTRY` variable and `E2E_GITHUB_TOKEN` secret exist (the workflow file explains the setup).
 - `TestGhSkillInterop` runs the real `gh skill install` and is skipped unless `HIKMA_GH_CANARY=1`; the `Canary` workflow runs it weekly against the newest gh, because `gh skill` is a preview and may change.
 - Config tests isolate `HOME`, `XDG_CONFIG_HOME`, and `APPDATA` so they never touch your real configuration.
 

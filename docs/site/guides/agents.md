@@ -8,7 +8,7 @@ Each agent reads instructions and skills from its own places. `hikma init` and `
 |---|---|---|
 | `claude` (Claude Code) | `AGENTS.md`, or `CLAUDE.md` if the repo has one | `.claude/skills` |
 | `codex` | `AGENTS.md` | `.agents/skills` |
-| `copilot` (GitHub Copilot) | `AGENTS.md`, `.github/copilot-instructions.md` | `.agents/skills` (also reads `.github/skills` and `.claude/skills`) |
+| `copilot` (GitHub Copilot) | `AGENTS.md`, `.github/copilot-instructions.md` | `.agents/skills` (also reads `.github/skills` and, in a project, `.claude/skills`; it does not read `~/.claude/skills`) |
 | `opencode` | `AGENTS.md` | `.agents/skills` (also reads `.opencode/skills` and `.claude/skills`) |
 
 Hikma uses `.agents/skills` for Codex, Copilot, and OpenCode so they share one copy, and `.claude/skills` for Claude Code.
@@ -25,7 +25,7 @@ Claude Code reads `AGENTS.md` (version 2.1.277 and later) when the repository ha
 
 Pick the agents your team uses. With one agent, skills go to that agent's folder. With several, `hikma skill install` writes to each distinct folder, so `claude,codex` gives you a copy in `.claude/skills` and one in `.agents/skills`. Hikma tracks both in `.hikma/lock.json` and updates them together.
 
-Copilot and OpenCode also load skills from `.claude/skills`. If you pick one of them together with `claude`, a skill is written to both `.claude/skills` and `.agents/skills`, and that agent may list it twice. Hikma prints a warning and installs anyway. `claude,codex` does not warn, because Codex reads only `.agents/skills`.
+Copilot and OpenCode also load skills from `.claude/skills`. If you pick one of them together with `claude`, a skill is written to both `.claude/skills` and `.agents/skills`, and that agent may use either copy. Hikma prints a warning and installs anyway. `claude,codex` does not warn, because Codex reads only `.agents/skills`.
 
 If someone on a Claude project also tries Codex, run `hikma skill install` with `--agent codex` for that install; the skill lands in `.agents/skills`.
 
@@ -114,9 +114,9 @@ When a skill name is installed in the project and globally, Hikma warns and carr
 | Agent | What is known |
 |---|---|
 | Claude Code | [Documented](https://code.claude.com/docs/en/skills): both are listed, tagged user and project, and the slash command runs the personal copy. Not verified: which copy the model picks on its own |
-| Codex | Both are listed, with no documented winner ([openai/codex#9930](https://github.com/openai/codex/issues/9930)). On 0.133.0 the project copy is listed first |
-| OpenCode | Non-deterministic ([anomalyco/opencode#53119](https://github.com/anomalyco/opencode/issues/53119)). On 1.19.0 it listed one copy, and with a project and a global copy repeated runs of `opencode debug skill` returned either one |
-| Copilot | Not documented. Check with `/skills info NAME` |
+| Codex | Both are listed, with no documented winner ([openai/codex#9930](https://github.com/openai/codex/issues/9930)). On 0.163.0 the project copy is listed first in 3 of 3 runs |
+| OpenCode | Non-deterministic ([anomalyco/opencode#53119](https://github.com/anomalyco/opencode/issues/53119)). On 1.19.3 it lists one copy, and repeated runs of `opencode debug skill` return either one: with a project and a global copy in `.agents/skills` 11 of 12 runs returned the project copy; with project copies in `.agents/skills` and `.claude/skills` 8 returned `.agents` and 4 `.claude` |
+| Copilot | Not documented. On 1.0.98 `copilot skill list` shows one copy: the project copy over the personal one (5 of 5 runs), and within a project `.agents/skills` over `.claude/skills` (3 of 3). Check yours with `copilot skill list` |
 
 If it matters, rename one of the two. `sync` also flags a project lockfile entry that shares a name with a global skill, since a project skill with that name could inherit permissions you granted the one you trust.
 

@@ -386,7 +386,7 @@ func printTargets(w io.Writer, targets []config.Selection, override bool) {
 }
 
 // warnOverlappingTargets notes when one agent loads from two of the folders a
-// skill is written to, so it sees the skill twice. The install still proceeds.
+// skill is written to, so it may use either copy. The install still proceeds.
 func warnOverlappingTargets(w io.Writer, targets []config.Selection) {
 	dirs := map[string]bool{}
 	for _, t := range targets {
@@ -398,7 +398,7 @@ func warnOverlappingTargets(w io.Writer, targets []config.Selection) {
 			pair := t.Layout.SkillsDir + "|" + other
 			if dirs[other] && other != t.Layout.SkillsDir && !warned[pair] {
 				warned[pair] = true
-				fmt.Fprintf(w, "%s skills are written to both %s and %s, and an agent you selected reads both, so it may list each skill twice\n", ui.Warning(w), t.Layout.SkillsDir, other)
+				fmt.Fprintf(w, "%s skills are written to both %s and %s, and an agent you selected reads both, so it may use either copy\n", ui.Warning(w), t.Layout.SkillsDir, other)
 			}
 		}
 	}

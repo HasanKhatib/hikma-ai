@@ -1,10 +1,8 @@
 {
   "updated": "2026-10-18",
-  "next": "E6.2-T1",
-  "note": "v0.5.0 is released and the 1.0 contracts are built and documented (E6.1 done; T7 waits for a first deprecation). E6.2 is done except T1 and T5, and the docs audit (E6.3-T1) is done. What is left before 1.0 needs you: T1, the end-to-end test against a throwaway GitHub repo (create a repo and store a fine-grained token as a secret, then I write the test); T5, re-checking each agent's skill folders; then cut v1.0.0-rc.1 (E6.3-T2), after which I tag v1.0.0 (E6.3-T3). Work goes on a branch and a pull request; push to main only when the owner asks.",
+  "next": "E6.3-T2",
+  "note": "v0.5.0 is released. E6.1 is done (T7 waits for a first deprecation), E6.2 is done (the GitHub round trip passes locally against a throwaway registry; running it in CI needs the E2E_REGISTRY variable and E2E_GITHUB_TOKEN secret, see the workflow file), and the docs audit is done. What is left: cut v1.0.0-rc.1, install it with brew and the script, and run the round trip against it (E6.3-T2), then tag v1.0.0 and check the tap and signatures (E6.3-T3). Work goes on a branch and a pull request; push to main only when the owner asks.",
   "criticalPath": [
-    "E6.2-T1",
-    "E6.2-T5",
     "E6.3-T2",
     "E6.3-T3"
   ],
