@@ -10,6 +10,8 @@ import (
 
 // Config holds user-level hikma configuration.
 type Config struct {
+	// Version is the config schema. A missing version means 1.
+	Version  int    `json:"version,omitempty"`
 	Agent    Agent  `json:"agent,omitempty"`
 	Registry string `json:"registry,omitempty"`
 	Naming   string `json:"naming,omitempty"`
@@ -18,6 +20,9 @@ type Config struct {
 	// CustomAgents defines user-defined agents, keyed by name.
 	CustomAgents map[string]CustomAgent `json:"customAgents,omitempty"`
 }
+
+// Version is the config schema this build reads and writes.
+const Version = 1
 
 // Registry is the normalized GitHub registry identity.
 type Registry struct {

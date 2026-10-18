@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- A lockfile or config file written by a newer `hikma` is now refused with an error that says to upgrade, and is never rewritten. Before, an older `hikma` silently rewrote a newer lockfile. Config files now carry a `version` field, added the next time `hikma` writes them; a file without one is read as version 1.
+
 ## [0.5.0] - 2026-10-18
 
 ### Added

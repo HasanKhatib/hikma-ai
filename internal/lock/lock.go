@@ -10,7 +10,31 @@ import (
 	"sort"
 )
 
-const version = 1
+// Version is the lockfile schema this build reads and writes.
+const Version = 1
+
+const version = Version
+
+// TooNewError means the lockfile was written by a newer hikma. It is never
+// rewritten: saving would drop fields this build does not know about.
+type TooNewError struct {
+	Path  string
+	Found int
+}
+
+func (e *TooNewError) Error() string {
+	return fmt.Sprintf("%s has lockfile version %d, but this hikma understands up to version %d; upgrade hikma (the file was not changed)", e.Path, e.Found, Version)
+}
+
+func checkVersion(path string, found int) error {
+	if found > Version {
+		return &TooNewError{Path: path, Found: found}
+	}
+	if found < 0 {
+		return fmt.Errorf("%s has an invalid lockfile version %d", path, found)
+	}
+	return nil
+}
 
 // Entry describes one installed skill.
 type Entry struct {
@@ -44,16 +68,31 @@ func Load(root string) (File, error) {
 	if err := json.Unmarshal(data, &f); err != nil {
 		return File{}, fmt.Errorf("parse %s: %w", Path(root), err)
 	}
+	if err := checkVersion(Path(root), f.Version); err != nil {
+		return File{}, err
+	}
 	if f.Skills == nil {
 		f.Skills = map[string]Entry{}
 	}
+	// A missing version means 1, the first schema.
 	f.Version = version
 	return f, nil
 }
 
-// Save writes the lockfile under root.
+// Save writes the lockfile under root. It refuses to overwrite a newer one.
 func Save(root string, f File) error {
 	f.Version = version
+	// Never overwrite a file a newer hikma wrote, even if the caller skipped Load.
+	if data, err := os.ReadFile(Path(root)); err == nil {
+		var existing struct {
+			Version int `json:"version"`
+		}
+		if json.Unmarshal(data, &existing) == nil {
+			if err := checkVersion(Path(root), existing.Version); err != nil {
+				return err
+			}
+		}
+	}
 	if err := os.MkdirAll(filepath.Dir(Path(root)), 0o755); err != nil {
 		return fmt.Errorf("create lockfile directory: %w", err)
 	}

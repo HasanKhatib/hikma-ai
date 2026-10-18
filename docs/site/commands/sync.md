@@ -92,6 +92,10 @@ Every install is recorded in `.hikma/lock.json`. Commit it.
 
 The lockfile is separate from the skill. Hikma does not modify `SKILL.md`.
 
+### Versions
+
+`version` is the lockfile schema, a plain integer. A lockfile without one is version 1. If the file has a newer version than your `hikma` understands, every command that reads it stops with an error that tells you to upgrade, and the file is never rewritten, so a newer hikma's data is not lost. Commands that only read (`skill verify`, `skill list`, `skill diff`, `doctor`) never write it.
+
 ### Why it matters
 
 - **Updates use the right source.** `skill update` fetches each skill from its recorded source, which can be different from your configured registry.
