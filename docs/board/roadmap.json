@@ -1768,7 +1768,7 @@
             {
               "id": "E6.2-T3",
               "title": "Audit error messages for consistency and actionable fixes",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "ux"

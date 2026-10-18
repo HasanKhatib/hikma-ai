@@ -496,8 +496,7 @@ it is pushed to your fork and a pull request is opened. Nothing is force-pushed.
 				return err
 			}
 			if !dirExists(skillDir) {
-				ui.UserError("skill '%s' not found at %s/\n  run 'hikma skill create %s' to scaffold it first", name, skillDir, name)
-				return fmt.Errorf("skill not found locally")
+				return fmt.Errorf("skill '%s' not found at %s/\n  run 'hikma skill create %s' to scaffold it first", name, skillDir, name)
 			}
 
 			fmt.Fprintf(out, "Validating %s...\n", name)

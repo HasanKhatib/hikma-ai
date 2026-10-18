@@ -208,3 +208,44 @@ func TestExitErrorUnwraps(t *testing.T) {
 		t.Error("usageError(nil) must be nil")
 	}
 }
+
+func TestErrorsSayWhatToDoAndAreReportedOnce(t *testing.T) {
+	reg := registryRepo(t)
+	project(t)
+	if out, err := run(t, "skill", "install", reg, "alpha", "--agent", "claude"); err != nil {
+		t.Fatalf("install: %v\n%s", err, out)
+	}
+	for _, tc := range []struct {
+		name string
+		args []string
+		want []string
+		code int
+	}{
+		{"already installed", []string{"skill", "install", reg, "alpha", "--agent", "claude"}, []string{"already installed", "use --force"}, ExitFailure},
+		{"already scaffolded", []string{"skill", "create", "alpha", "--agent", "claude", "--description", "x", "--team", "t"}, []string{"already exists", "choose a different name"}, ExitFailure},
+		{"not installed, project", []string{"skill", "verify", "nope"}, []string{"no entry in .hikma/lock.json", "hikma skill list --installed"}, ExitFailure},
+		{"not installed, global", []string{"skill", "verify", "nope", "--global"}, []string{"no entry in ~/.hikma/lock.json"}, ExitFailure},
+		{"global without installed", []string{"skill", "list", "--global"}, []string{"--installed"}, ExitUsage},
+		{"all with a name", []string{"skill", "update", "alpha", "--all"}, []string{"one or the other"}, ExitUsage},
+	} {
+		t.Run(tc.name, func(t *testing.T) {
+			stdout, stderr, err := runSplit(t, tc.args...)
+			if err == nil {
+				t.Fatalf("expected an error\n%s", stdout)
+			}
+			for _, w := range tc.want {
+				if !strings.Contains(err.Error(), w) {
+					t.Errorf("error %q lacks %q", err.Error(), w)
+				}
+			}
+			if ExitCode(err) != tc.code {
+				t.Errorf("ExitCode = %d, want %d", ExitCode(err), tc.code)
+			}
+			// The command returns the message and main prints it once; the command must not print it too.
+			first, _, _ := strings.Cut(err.Error(), "\n")
+			if strings.Contains(stdout+stderr, first) {
+				t.Errorf("message also printed by the command:\n%s%s", stdout, stderr)
+			}
+		})
+	}
+}

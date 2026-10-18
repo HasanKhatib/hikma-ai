@@ -1,9 +1,10 @@
 {
   "updated": "2026-10-18",
-  "next": "E6.2-T3",
-  "note": "v0.5.0 is released. E6.1 is done except T7, which waits for the first real deprecation: lockfile and config versions with a too-new-file error, exit codes 0/1/2/3, versioned --json, and the Reference docs (output, configuration, flags, policy). Next is E6.2 hardening: the error-message audit (T3), Git Bash and completion cases (T2), the gh skill canary (T4), then the end-to-end test against a throwaway GitHub repo (T1, needs a token you provide as a secret) and the agent folder re-check (T5, yours). Then E6.3: docs audit (T1), rc (T2, yours), tag (T3). Work goes on a branch and a pull request; push to main only when the owner asks.",
+  "next": "E6.2-T2",
+  "note": "v0.5.0 is released. E6.1 is done except T7, which waits for the first real deprecation: lockfile and config versions with a too-new-file error, exit codes 0/1/2/3, versioned --json, and the Reference docs (output, configuration, flags, policy). The error-message audit (E6.2-T3) is done. Next is E6.2 hardening: Git Bash and completion cases (T2), the gh skill canary (T4), then the end-to-end test against a throwaway GitHub repo (T1, needs a token you provide as a secret) and the agent folder re-check (T5, yours). Then E6.3: docs audit (T1), rc (T2, yours), tag (T3). Work goes on a branch and a pull request; push to main only when the owner asks.",
   "criticalPath": [
-    "E6.2-T3",
+    "E6.2-T2",
+    "E6.2-T4",
     "E6.2-T1",
     "E6.3-T1",
     "E6.3-T2"

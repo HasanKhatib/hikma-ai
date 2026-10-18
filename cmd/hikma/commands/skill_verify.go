@@ -58,7 +58,7 @@ could not run. --json prints one document (see the docs) on stdout.`,
 					}
 				}
 				if len(keys) == 0 {
-					return fmt.Errorf("%q is not installed by hikma for the selected agents (no entry in .hikma/lock.json)", name)
+					return fmt.Errorf("%q is not installed by hikma for the selected agents (no entry in %s)\nrun 'hikma skill list --installed' to see what is installed", name, sc.lockName())
 				}
 			}
 			if len(keys) == 0 {

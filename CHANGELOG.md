@@ -10,6 +10,7 @@ All notable changes to this project are documented here. The format follows [Kee
 - Exit codes are now a documented contract: `0` success, `1` failure, `2` wrong usage (unknown command or flag, missing argument), `3` installed skills differ from the lockfile (`skill verify`, `sync --frozen`). They were `0` and `1` only. A new reference page lists them and every JSON document.
 
 ### Changed
+- Errors now print once, as `error: <message>`, and say what to do next. Before, some failures (already installed, already exists, skill not found locally) printed their message and then a second short line. Mistakes in how flags combine (`--all` with a name, `--global` without `--installed`) exit `2`. "Not installed" errors name the lockfile for the scope you used and point to `hikma skill list --installed`.
 - Every `--json` document is now an object with a `version` field instead of a bare array or object: `skill list` is `{ "version": 1, "skills": [...] }`, `skill info` is `{ "version": 1, "skill": {...} }`, `skill list --installed` is `{ "version": 1, "skills": [...] }`, and `config list` is `{ "version": 1, "entries": [...] }`. Scripts that read the old arrays need a one-line change.
 - A lockfile or config file written by a newer `hikma` is now refused with an error that says to upgrade, and is never rewritten. Before, an older `hikma` silently rewrote a newer lockfile. Config files now carry a `version` field, added the next time `hikma` writes them; a file without one is read as version 1.
 
