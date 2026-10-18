@@ -199,7 +199,13 @@ func newSkillListCmd(flagRegistry *string) *cobra.Command {
 				return err
 			}
 			if asJSON {
-				return printJSON(skills)
+				if skills == nil {
+					skills = []source.Skill{}
+				}
+				return printJSON(cmd.OutOrStdout(), struct {
+					Version int            `json:"version"`
+					Skills  []source.Skill `json:"skills"`
+				}{jsonVersion, skills})
 			}
 			printSkillTable(cmd.OutOrStdout(), skills)
 			return nil
@@ -243,7 +249,10 @@ func newSkillInfoCmd(flagRegistry *string) *cobra.Command {
 				return fmt.Errorf("skill %q not found in %s", name, src.Display)
 			}
 			if asJSON {
-				return printJSON(skill)
+				return printJSON(cmd.OutOrStdout(), struct {
+					Version int          `json:"version"`
+					Skill   source.Skill `json:"skill"`
+				}{jsonVersion, skill})
 			}
 			w := cmd.OutOrStdout()
 			fmt.Fprintf(w, "Name:        %s\n", skill.Name)

@@ -1669,7 +1669,7 @@
             {
               "id": "E6.1-T3",
               "title": "Define and document JSON output schemas for the commands that have --json today, decide which others need it (verify, diff, doctor, sync), and define exit codes (0 ok, 1 failure, 2 usage, a distinct code for verify mismatch)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs"

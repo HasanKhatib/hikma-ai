@@ -91,7 +91,7 @@ func TestDiffOneReadsFolderFromScopeRoot(t *testing.T) {
 	var out bytes.Buffer
 	u := &updater{sc: sc, out: &out, errOut: &out, lf: lf, checkouts: map[string]*openCheckout{}}
 	defer u.close()
-	if err := diffOne(u, ".claude/skills/alpha", false); err != nil {
+	if _, err := diffOne(u, ".claude/skills/alpha", false); err != nil {
 		t.Fatalf("diffOne: %v\n%s", err, out.String())
 	}
 	if strings.Contains(out.String(), "folder is missing") || !strings.Contains(out.String(), "Local edits:\n  none") {

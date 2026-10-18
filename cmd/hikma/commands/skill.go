@@ -1,7 +1,6 @@
 package commands
 
 import (
-	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -154,16 +153,6 @@ func normalizeSkillName(input string) string {
 	}
 
 	return name
-}
-
-// printJSON marshals v to indented JSON and prints it.
-func printJSON(v any) error {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return fmt.Errorf("marshal JSON: %w", err)
-	}
-	fmt.Println(string(data))
-	return nil
 }
 
 // preflightError formats preflight failures into a single error.

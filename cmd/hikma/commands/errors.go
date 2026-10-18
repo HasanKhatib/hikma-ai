@@ -21,7 +21,7 @@ func friendlyErrors(root *cobra.Command) {
 				msg += fmt.Sprintf(" (did you mean --%s?)", s)
 			}
 		}
-		return fmt.Errorf("%s\nUsage: %s\nRun '%s --help' to see the flags", msg, c.UseLine(), c.CommandPath())
+		return usageError(fmt.Errorf("%s\nUsage: %s\nRun '%s --help' to see the flags", msg, c.UseLine(), c.CommandPath()))
 	})
 	var wrap func(c *cobra.Command)
 	wrap = func(c *cobra.Command) {
@@ -33,6 +33,9 @@ func friendlyErrors(root *cobra.Command) {
 			}
 		case c.Args != nil && !c.HasSubCommands() && c.Annotations[ownArgErrors] != "true":
 			c.Args = friendlyArgs(c.Args)
+		case c.Args != nil && !c.HasSubCommands():
+			inner := c.Args
+			c.Args = func(c *cobra.Command, args []string) error { return usageError(inner(c, args)) }
 		}
 		for _, sub := range c.Commands() {
 			wrap(sub)
@@ -58,7 +61,7 @@ func unknownSubcommand(c *cobra.Command, args []string) error {
 	if s := closest(args[0], names); s != "" {
 		msg += fmt.Sprintf(". Did you mean '%s %s'?", c.CommandPath(), s)
 	}
-	return fmt.Errorf("%s\nRun '%s --help' to list the commands", msg, c.CommandPath())
+	return usageError(fmt.Errorf("%s\nRun '%s --help' to list the commands", msg, c.CommandPath()))
 }
 
 func friendlyArgs(inner cobra.PositionalArgs) cobra.PositionalArgs {
@@ -79,7 +82,7 @@ func friendlyArgs(inner cobra.PositionalArgs) cobra.PositionalArgs {
 		default:
 			what = fmt.Sprintf("wrong number of arguments (got %d)", len(args))
 		}
-		return fmt.Errorf("%s for '%s'\nUsage: %s\nRun '%s --help' for examples", what, c.CommandPath(), c.UseLine(), c.CommandPath())
+		return usageError(fmt.Errorf("%s for '%s'\nUsage: %s\nRun '%s --help' for examples", what, c.CommandPath(), c.UseLine(), c.CommandPath()))
 	}
 }
 
