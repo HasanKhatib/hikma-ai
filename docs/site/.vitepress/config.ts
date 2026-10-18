@@ -76,6 +76,10 @@ export default defineConfig({
         ],
       },
       {
+        text: "Reference",
+        items: [{ text: "Exit codes and JSON", link: "/reference/output" }],
+      },
+      {
         text: "Guides",
         items: [
           { text: "Overview", link: "/guides/" },

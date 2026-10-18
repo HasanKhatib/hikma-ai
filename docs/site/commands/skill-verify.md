@@ -3,7 +3,7 @@
 Check that installed skills still match the hashes in `.hikma/lock.json`.
 
 ```bash
-hikma skill verify [<name>] [--agent <list>] [--global]
+hikma skill verify [<name>] [--agent <list>] [--global] [--json]
 ```
 
 It re-hashes the installed files and compares them with the [lockfile](/commands/sync#the-lockfile). It works offline, changes nothing, and exits non-zero when any skill differs, so it fits a CI check or a pre-commit hook. Without a name it checks every skill in the lockfile.
@@ -21,11 +21,14 @@ $ hikma skill verify
 
 A skill whose folder is missing is reported too; [`hikma sync`](/commands/sync) restores it.
 
+It exits `0` when everything matches, `3` when a skill differs, and `1` when the check could not run, so CI can tell drift from breakage. See [Exit codes and JSON](/reference/output).
+
 ## Options
 
 | Flag | Description |
 |---|---|
 | `--agent <list>` | Limit to these agents' folders |
+| `--json` | Print one JSON document on stdout. See [Exit codes and JSON](/reference/output) |
 | `-g`, `--global` | Check your home directory against `~/.hikma/lock.json`. See [Global installs](/guides/agents#global-installs) |
 
 ## Verify, diff, or sync

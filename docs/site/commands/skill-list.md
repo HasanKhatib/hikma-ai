@@ -15,7 +15,7 @@ deploy-helper              Deploy a service and check health after rollout     p
 release-notes              Draft release notes from merged pull requests       docs
 ```
 
-`--json` prints the skills as JSON and sends status messages to stderr, so the output is safe to pipe.
+`--json` prints `{ "version": 1, "skills": [...] }` and sends status messages to stderr, so the output is safe to pipe. See [Exit codes and JSON](/reference/output).
 
 ## What is installed here
 
@@ -23,7 +23,7 @@ release-notes              Draft release notes from merged pull requests       d
 hikma skill list --installed [--global] [--json]
 ```
 
-Shows the skills in this repository's agent folders and in your home directory, and where each came from, using [`.hikma/lock.json`](/commands/sync#the-lockfile) and `~/.hikma/lock.json`. A name installed at both scopes is marked, because agents differ on which copy they use ([Global installs](/guides/agents#global-installs)). `--global` lists only your home directory's skills.
+Shows the skills in this repository's agent folders and in your home directory, and where each came from, using [`.hikma/lock.json`](/commands/sync#the-lockfile) and `~/.hikma/lock.json`. A name installed at both scopes is marked, because agents differ on which copy they use ([Global installs](/guides/agents#global-installs)). `--global` lists only your home directory's skills. With `--json`, the document is `{ "version": 1, "skills": [...] }` with a `status` of `ok`, `modified`, `missing`, or `untracked`.
 
 ```text
 SCOPE     PATH                                        STATUS      SOURCE

@@ -57,6 +57,7 @@ CI runs the checks in [CONTRIBUTING.md](CONTRIBUTING.md) on Linux, macOS, and Wi
 ## How Hikma works
 
 - A skill source is a GitHub `owner/repo`, any git URL, or a local path. Reading skills needs only `git`.
+- Scripts and CI can rely on documented exit codes (`3` means installed skills differ from the lockfile) and versioned `--json` output: see [Exit codes and JSON](https://hasankhatib.github.io/hikma-ai/reference/output).
 - Installs are recorded in `.hikma/lock.json` with the source, commit, and file hashes. `hikma sync` restores them on a fresh clone; `hikma skill update` stops on local edits.
 - `hikma skill push` always shows the target registry and asks before writing. Nothing is force-pushed.
 - Agent layouts are data in one table, so adding an agent never touches command code.

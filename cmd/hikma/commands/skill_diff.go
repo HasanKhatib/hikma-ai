@@ -18,7 +18,7 @@ import (
 func newSkillDiffCmd() *cobra.Command {
 	var flagAgent string
 	var global bool
-	var patch bool
+	var patch, asJSON bool
 	cmd := &cobra.Command{
 		Use:   "diff <name>",
 		Short: "Show local edits and upstream changes for an installed skill",
@@ -27,7 +27,8 @@ func newSkillDiffCmd() *cobra.Command {
 Local edits are files that differ from what was installed. Upstream changes are
 what 'hikma skill update' would bring in from the recorded source. Files changed
 on both sides are marked, since an update would overwrite your edits to them.
-Pass --patch to print the file contents that differ.`,
+Pass --patch to print the file contents that differ. --json prints one document
+(see the docs) on stdout instead, and cannot be combined with --patch.`,
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) != 1 {
 				return fmt.Errorf("missing required argument: <name>\n\nUsage:\n  hikma skill diff <name> [--patch]")
@@ -36,6 +37,12 @@ Pass --patch to print the file contents that differ.`,
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if asJSON {
+				if patch {
+					return usageError(fmt.Errorf("--json cannot be combined with --patch"))
+				}
+				out = io.Discard
+			}
 			name := strings.TrimPrefix(strings.TrimSpace(args[0]), "@")
 			if err := config.CheckSkillName(config.NamingLoose, name); err != nil {
 				return err
@@ -69,13 +76,22 @@ Pass --patch to print the file contents that differ.`,
 
 			u := &updater{sc: sc, out: out, errOut: cmd.ErrOrStderr(), lf: lf, checkouts: map[string]*openCheckout{}}
 			defer u.close()
+			rows := []diffRow{}
 			for i, key := range keys {
 				if i > 0 {
 					fmt.Fprintln(out)
 				}
-				if err := diffOne(u, key, patch); err != nil {
+				row, err := diffOne(u, key, patch)
+				if err != nil {
 					return err
 				}
+				rows = append(rows, row)
+			}
+			if asJSON {
+				return printJSON(cmd.OutOrStdout(), struct {
+					Version int       `json:"version"`
+					Skills  []diffRow `json:"skills"`
+				}{jsonVersion, rows})
 			}
 			return nil
 		},
@@ -88,6 +104,7 @@ Pass --patch to print the file contents that differ.`,
 	}
 	cmd.Flags().BoolVarP(&global, "global", "g", false, "use your home directory instead of this project (~/.hikma/lock.json)")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "print the result as JSON on stdout")
 	cmd.Flags().BoolVar(&patch, "patch", false, "print the contents that differ")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp
@@ -95,8 +112,35 @@ Pass --patch to print the file contents that differ.`,
 	return cmd
 }
 
-func diffOne(u *updater, key string, patch bool) error {
+// diffRow is one skill in the --json document of 'hikma skill diff'.
+type diffRow struct {
+	Path       string      `json:"path"`
+	Name       string      `json:"name"`
+	Source     string      `json:"source"`
+	Commit     string      `json:"commit,omitempty"`
+	Missing    bool        `json:"missing"`
+	LocalEdits diffChanges `json:"localEdits"`
+	Upstream   diffUpdate  `json:"upstream"`
+}
+
+type diffChanges struct {
+	Added    []string `json:"added"`
+	Modified []string `json:"modified"`
+	Removed  []string `json:"removed"`
+}
+
+type diffUpdate struct {
+	Commit         string   `json:"commit"`
+	UpToDate       bool     `json:"upToDate"`
+	ScriptsChanged bool     `json:"scriptsChanged"`
+	Added          []string `json:"added"`
+	Modified       []string `json:"modified"`
+	Removed        []string `json:"removed"`
+}
+
+func diffOne(u *updater, key string, patch bool) (diffRow, error) {
 	e := u.lf.Skills[key]
+	row := diffRow{Path: key, Name: e.Name, Source: e.Source, Commit: e.Commit}
 	localDir := u.sc.path(key)
 	fmt.Fprintf(u.out, "%s (%s%s)\n", key, e.Source, atCommit(e))
 
@@ -104,14 +148,16 @@ func diffOne(u *updater, key string, patch bool) error {
 	var localAdded, localMod, localRem []string
 	if _, err := os.Stat(localDir); err != nil {
 		missing = true
+		row.Missing = true
 		fmt.Fprintln(u.out, "  the folder is missing; 'hikma sync' restores it")
 	} else {
 		current, err := source.HashDir(localDir)
 		if err != nil {
-			return err
+			return row, err
 		}
 		localAdded, localMod, localRem = source.DiffFiles(e.Files, current)
 	}
+	row.LocalEdits = diffChanges{strs(localAdded), strs(localMod), strs(localRem)}
 	edited := map[string]bool{}
 	for _, g := range [][]string{localAdded, localMod, localRem} {
 		for _, f := range g {
@@ -131,27 +177,28 @@ func diffOne(u *updater, key string, patch bool) error {
 
 	c, err := u.checkout(e)
 	if err != nil {
-		return fmt.Errorf("check upstream for %s: %w", e.Name, err)
+		return row, fmt.Errorf("check upstream for %s: %w", e.Name, err)
 	}
 	skills, err := discoverSkills(c.src, c.co)
 	if err != nil {
-		return err
+		return row, err
 	}
 	skill, ok := source.Find(skills, e.Name)
 	if !ok {
-		return fmt.Errorf("skill %q no longer exists in %s", e.Name, c.src.Display)
+		return row, fmt.Errorf("skill %q no longer exists in %s", e.Name, c.src.Display)
 	}
 	srcDir := filepath.Join(c.co.Dir, filepath.FromSlash(skill.Rel))
 	incoming, err := source.HashDir(srcDir)
 	if err != nil {
-		return err
+		return row, err
 	}
 	added, modified, removed := source.DiffFiles(e.Files, incoming)
+	row.Upstream = diffUpdate{Commit: c.co.Commit, UpToDate: len(added)+len(modified)+len(removed) == 0, ScriptsChanged: touchesScripts(added, modified, removed), Added: strs(added), Modified: strs(modified), Removed: strs(removed)}
 
 	fmt.Fprintf(u.out, "Upstream changes (%s @ %s):\n", c.src.Display, shortCommit(c.co.Commit))
 	if len(added)+len(modified)+len(removed) == 0 {
 		fmt.Fprintln(u.out, "  none, up to date")
-		return nil
+		return row, nil
 	}
 	printMarked(u.out, "added", added, edited)
 	printMarked(u.out, "modified", modified, edited)
@@ -160,9 +207,9 @@ func diffOne(u *updater, key string, patch bool) error {
 		fmt.Fprintf(u.out, "  %s scripts/ changed - review before updating\n", ui.Warning(u.out))
 	}
 	if patch && !missing {
-		return printPatch(u.out, localDir, srcDir, append(append(append([]string{}, added...), modified...), removed...))
+		return row, printPatch(u.out, localDir, srcDir, append(append(append([]string{}, added...), modified...), removed...))
 	}
-	return nil
+	return row, nil
 }
 
 func printMarked(w io.Writer, label string, files []string, edited map[string]bool) {

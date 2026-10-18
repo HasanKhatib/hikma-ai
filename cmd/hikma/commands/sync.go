@@ -16,7 +16,7 @@ import (
 )
 
 func newSyncCmd() *cobra.Command {
-	var force, yes, dryRun, frozen, global bool
+	var force, yes, dryRun, frozen, global, asJSON bool
 	cmd := &cobra.Command{
 		Use:   "sync",
 		Short: "Restore every skill recorded in .hikma/lock.json",
@@ -35,20 +35,28 @@ folders are rejected.
 
 With --frozen, sync must reproduce the lockfile exactly and fails, changing
 nothing, if it cannot: a skill with local changes, an entry not pinned to a
-commit, or a source that cannot be fetched at its recorded commit. Use it in CI.`,
+commit, or a source that cannot be fetched at its recorded commit. Use it in CI. A frozen sync that finds drift exits 3.
+
+With --json, the plan and the result print as one document (see the docs) on
+stdout and progress goes to stderr. It never prompts, so it needs --yes or
+--dry-run.`,
 		Args: cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			sc, err := scopeFor(global)
 			if err != nil {
 				return err
 			}
-			return runSync(cmd, sc, force, yes, dryRun, frozen)
+			if asJSON && !yes && !dryRun {
+				return usageError(fmt.Errorf("--json never prompts: add --yes to restore, or --dry-run to only show the plan"))
+			}
+			return runSync(cmd, sc, force, yes, dryRun, frozen, asJSON)
 		},
 	}
 	cmd.Flags().BoolVarP(&global, "global", "g", false, "restore your home directory's skills from ~/.hikma/lock.json")
 	cmd.Flags().BoolVar(&force, "force", false, "overwrite skills that have local changes")
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "skip the confirmation prompt")
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show what would be restored without changing anything")
+	cmd.Flags().BoolVar(&asJSON, "json", false, "print the plan and result as JSON on stdout (needs --yes or --dry-run)")
 	cmd.Flags().BoolVar(&frozen, "frozen", false, "fail on any drift instead of skipping: for CI (needs --yes)")
 	return cmd
 }
@@ -106,14 +114,38 @@ func sameFiles(a, b map[string]string) bool {
 	return len(added)+len(modified)+len(removed) == 0
 }
 
-func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen bool) error {
+// syncDoc is the --json document of 'hikma sync'.
+type syncDoc struct {
+	Version int       `json:"version"`
+	OK      bool      `json:"ok"`
+	DryRun  bool      `json:"dryRun"`
+	Skills  []syncRow `json:"skills"`
+}
+
+type syncRow struct {
+	Path   string `json:"path"`
+	Name   string `json:"name"`
+	Source string `json:"source"`
+	Commit string `json:"commit,omitempty"`
+	State  string `json:"state"`  // before the sync: ok, restore, or modified
+	Result string `json:"result"` // up-to-date, planned, restored, skipped, failed, or not-run
+	Error  string `json:"error,omitempty"`
+}
+
+func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen, asJSON bool) (retErr error) {
 	out := cmd.OutOrStdout()
+	if asJSON {
+		out = cmd.ErrOrStderr()
+	}
 	lf, err := sc.loadLock()
 	if err != nil {
 		return err
 	}
 	keys := lf.Keys()
 	if len(keys) == 0 {
+		if asJSON {
+			return printJSON(cmd.OutOrStdout(), syncDoc{Version: jsonVersion, OK: true, DryRun: dryRun, Skills: []syncRow{}})
+		}
 		fmt.Fprintln(out, "No skills recorded in .hikma/lock.json.")
 		return nil
 	}
@@ -151,12 +183,30 @@ func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen bool) erro
 		return fmt.Errorf("%d lockfile entr(ies) refused; nothing was changed", len(invalid))
 	}
 
+	results := map[string]string{}
+	failureMsg := map[string]string{}
+	if asJSON {
+		defer func() {
+			doc := syncDoc{Version: jsonVersion, OK: retErr == nil, DryRun: dryRun, Skills: []syncRow{}}
+			for _, it := range items {
+				res := results[it.key]
+				if res == "" {
+					res = "not-run"
+				}
+				doc.Skills = append(doc.Skills, syncRow{Path: it.key, Name: it.entry.Name, Source: it.entry.Source, Commit: it.entry.Commit, State: string(it.state), Result: res, Error: failureMsg[it.key]})
+			}
+			if err := printJSON(cmd.OutOrStdout(), doc); err != nil && retErr == nil {
+				retErr = err
+			}
+		}()
+	}
+
 	if frozen {
 		if problems := frozenProblems(items, force); len(problems) > 0 {
 			for _, msg := range problems {
 				fmt.Fprintf(cmd.ErrOrStderr(), "  drift    %s\n", msg)
 			}
-			return fmt.Errorf("frozen: %d problem(s) with .hikma/lock.json; nothing was changed", len(problems))
+			return mismatchError(fmt.Errorf("frozen: %d problem(s) with .hikma/lock.json; nothing was changed", len(problems)))
 		}
 	}
 
@@ -185,6 +235,9 @@ func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen bool) erro
 		}
 	}
 	if len(work) == 0 && upToDate == len(items) {
+		for _, it := range items {
+			results[it.key] = "up-to-date"
+		}
 		fmt.Fprintf(out, "All %d skill(s) are up to date.\n", len(items))
 		return nil
 	}
@@ -195,6 +248,14 @@ func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen bool) erro
 	}
 
 	if dryRun {
+		for _, it := range items {
+			results[it.key] = "planned"
+			if it.state == syncOK {
+				results[it.key] = "up-to-date"
+			} else if it.state == syncModified && !force {
+				results[it.key] = "skipped"
+			}
+		}
 		fmt.Fprintln(out, "\nDry run - nothing was changed.")
 		return nil
 	}
@@ -226,17 +287,25 @@ func runSync(cmd *cobra.Command, sc scope, force, yes, dryRun, frozen bool) erro
 	for _, it := range work {
 		if err := restoreItem(sc, out, it, checkouts); err != nil {
 			fmt.Fprintf(cmd.ErrOrStderr(), "  failed   %s: %v\n", it.key, err)
+			results[it.key], failureMsg[it.key] = "failed", err.Error()
 			failures++
 			continue
 		}
 		fmt.Fprintf(out, "  restored %s\n", it.key)
+		results[it.key] = "restored"
 		restored++
 	}
 
+	for _, it := range items {
+		if it.state == syncOK {
+			results[it.key] = "up-to-date"
+		}
+	}
 	skipped := 0
 	for _, it := range items {
 		if it.state == syncModified && !force {
 			skipped++
+			results[it.key] = "skipped"
 			fmt.Fprintf(out, "  skipped  %s (local changes; use --force to overwrite)\n", it.key)
 		}
 	}

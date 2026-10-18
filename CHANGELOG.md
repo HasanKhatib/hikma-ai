@@ -4,7 +4,12 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `--json` on `skill verify`, `skill diff`, and `sync`. Each prints one versioned document on stdout, with progress on stderr. `sync --json` never prompts, so it needs `--yes` or `--dry-run`.
+- Exit codes are now a documented contract: `0` success, `1` failure, `2` wrong usage (unknown command or flag, missing argument), `3` installed skills differ from the lockfile (`skill verify`, `sync --frozen`). They were `0` and `1` only. A new reference page lists them and every JSON document.
+
 ### Changed
+- Every `--json` document is now an object with a `version` field instead of a bare array or object: `skill list` is `{ "version": 1, "skills": [...] }`, `skill info` is `{ "version": 1, "skill": {...} }`, `skill list --installed` is `{ "version": 1, "skills": [...] }`, and `config list` is `{ "version": 1, "entries": [...] }`. Scripts that read the old arrays need a one-line change.
 - A lockfile or config file written by a newer `hikma` is now refused with an error that says to upgrade, and is never rewritten. Before, an older `hikma` silently rewrote a newer lockfile. Config files now carry a `version` field, added the next time `hikma` writes them; a file without one is read as version 1.
 
 ## [0.5.0] - 2026-10-18

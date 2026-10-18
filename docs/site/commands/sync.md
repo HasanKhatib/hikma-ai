@@ -3,7 +3,7 @@
 Restore every skill recorded in `.hikma/lock.json`.
 
 ```bash
-hikma sync [--yes] [--force] [--dry-run] [--frozen] [--global]
+hikma sync [--yes] [--force] [--dry-run] [--frozen] [--json] [--global]
 ```
 
 Use it on a fresh clone to get exactly the skills the repository was committed with, the way `npm ci` restores dependencies from a lockfile.
@@ -36,10 +36,13 @@ The lockfile comes from the repository you cloned, so `sync` treats it as untrus
 - Entries whose install path is outside the agent skill folders (`.claude/skills/<name>`, `.agents/skills/<name>`) are **refused** before anything is written.
 - Review what you restore: skills can contain scripts your agent may run.
 
+A `--frozen` sync that finds drift exits `3`, so CI can tell drift from a failure. See [Exit codes and JSON](/reference/output).
+
 ## Flags
 
 | Flag | Description |
 |---|---|
+| `--json` | Print the plan and result as one JSON document on stdout; progress goes to stderr. Never prompts, so it needs `--yes` or `--dry-run`. See [Exit codes and JSON](/reference/output) |
 | `-y`, `--yes` | Skip the confirmation prompt |
 | `-g`, `--global` | Restore your home directory's skills from `~/.hikma/lock.json`. See [Global installs](/guides/agents#global-installs) |
 | `--force` | Overwrite skills that have local changes |

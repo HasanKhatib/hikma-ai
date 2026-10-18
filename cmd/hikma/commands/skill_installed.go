@@ -125,7 +125,10 @@ func listInstalled(cmd *cobra.Command, asJSON, global bool) error {
 		if rows == nil {
 			rows = []installedSkill{}
 		}
-		return printJSON(rows)
+		return printJSON(cmd.OutOrStdout(), struct {
+			Version int              `json:"version"`
+			Skills  []installedSkill `json:"skills"`
+		}{jsonVersion, rows})
 	}
 	printInstalledTable(cmd.OutOrStdout(), rows)
 	return nil

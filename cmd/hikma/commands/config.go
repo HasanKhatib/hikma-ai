@@ -229,7 +229,10 @@ func newConfigListCmd() *cobra.Command {
 				for _, c := range custom {
 					rows = append(rows, row{"customAgents." + c.Name, c.Agent.SkillsDir, string(c.Source)})
 				}
-				return printJSON(rows)
+				return printJSON(cmd.OutOrStdout(), struct {
+					Version int   `json:"version"`
+					Entries []row `json:"entries"`
+				}{jsonVersion, rows})
 			}
 			for _, e := range entries {
 				v := e.Value
