@@ -18,6 +18,7 @@
 | [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
 | [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry |
 | [`hikma completion`](/commands/completion) | Generate shell completions |
+| `hikma update` | Print how to upgrade hikma for the way you installed it |
 
 ## Sources
 
@@ -31,8 +32,8 @@ Public sources need only `git`. For private GitHub repositories Hikma falls back
 
 ## Global flags
 
-`hikma skill ...` accepts `--registry <source>` to override the configured registry for one command.
+`--no-input` and `--no-color` work on every command; see [Flags and terminal behavior](/reference/flags). `hikma skill ...` accepts `--registry <source>` to override the configured registry for one command.
 
 ## Exit status
 
-Commands exit non-zero when they fail. `registry validate` exits non-zero when any skill fails validation, so it works as a CI check.
+Commands exit `0` on success, `1` on failure, `2` for wrong usage, and `3` when installed skills differ from the lockfile. `registry validate` exits non-zero when any skill fails validation, so it works as a CI check. See [Exit codes and JSON](/reference/output).

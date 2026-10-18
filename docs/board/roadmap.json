@@ -1816,7 +1816,7 @@
             {
               "id": "E6.3-T1",
               "title": "Audit every page under docs/site against the shipped CLI: commands, flags, output, and examples; fix or remove what is not shipped",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "docs"

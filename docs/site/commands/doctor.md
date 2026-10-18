@@ -7,8 +7,9 @@ hikma doctor
 ```
 
 ```text
-  ok    git installed
   ok    gh installed
+  ok    gh version (2.92.0)
+  ok    git installed
   ok    gh authenticated (your-login)
   ok    agent: claude (skills in .claude/skills)
   ok    registry: owner/repo (user config)
@@ -26,4 +27,4 @@ All required checks passed.
 | A registry is configured | warning only. Not needed when you name a repository explicitly. |
 | A skill name is installed in both the project and your home directory | warning only. Agents differ on which copy they use; see [Global installs](/guides/agents#global-installs). |
 
-`doctor` exits non-zero when a required check fails.
+A warning prints the reason and a `fix:` line, and does not fail the check. `doctor` exits non-zero when a required check fails.
