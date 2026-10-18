@@ -77,7 +77,12 @@ export default defineConfig({
       },
       {
         text: "Reference",
-        items: [{ text: "Exit codes and JSON", link: "/reference/output" }],
+        items: [
+          { text: "Exit codes and JSON", link: "/reference/output" },
+          { text: "Configuration and environment", link: "/reference/configuration" },
+          { text: "Flags and terminal behavior", link: "/reference/flags" },
+          { text: "Versioning and deprecation", link: "/reference/policy" },
+        ],
       },
       {
         text: "Guides",

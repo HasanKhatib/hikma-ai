@@ -1649,7 +1649,7 @@
             {
               "id": "E6.1-T1",
               "title": "Document config keys, precedence, and environment variables",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs"
@@ -1679,7 +1679,7 @@
             {
               "id": "E6.1-T4",
               "title": "Write the semver and deprecation policy",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "docs",
@@ -1721,7 +1721,7 @@
             {
               "id": "E6.1-T8",
               "title": "Publish a reference page for every global flag and environment variable (NO_COLOR, TERM, --no-input, --no-color, --yes, --global) with their precedence",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "docs"
