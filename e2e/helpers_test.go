@@ -90,9 +90,12 @@ func (tm *term) choose(label string, d time.Duration) {
 	tm.t.Fatalf("could not move the cursor to %q in %s; it is on %q; screen:\n%s", label, d, tm.selected(), plain(tm.output()))
 }
 
-// typeText types s and waits until it shows on screen, so Enter does not race the echo.
-func (tm *term) typeText(s string, d time.Duration) {
+// typeText types s after the prompt has settled. It does not wait for the echo: a
+// Windows pseudo-console repaints text character by character with cursor moves in
+// between, so the typed string never shows up whole. The test checks the result
+// (the command the menu prints) instead.
+func (tm *term) typeText(s string, _ time.Duration) {
 	tm.t.Helper()
 	tm.write(s)
-	tm.waitFor(s, d)
+	time.Sleep(300 * time.Millisecond)
 }
