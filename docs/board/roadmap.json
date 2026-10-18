@@ -1837,7 +1837,7 @@
             {
               "id": "E6.3-T3",
               "title": "Move Unreleased to 1.0.0 in CHANGELOG, tag v1.0.0, and check the tap and release signatures",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "release"

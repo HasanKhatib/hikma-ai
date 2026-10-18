@@ -1,10 +1,8 @@
 {
   "updated": "2026-10-18",
-  "next": "E6.3-T3",
-  "note": "v1.0.0-rc.1 is released and verified: Release and Verify release passed, the install script checked the checksum and attestation, and the GitHub round trip passed with the released binary (exit codes 0, 2, and 3 checked). The changelog has a 1.0.0 section. What is left is the tag: git tag v1.0.0 && git push origin v1.0.0 (E6.3-T3, the owner's call because it publishes a stable release and updates the Homebrew tap), then check the tap and signatures. Work goes on a branch and a pull request; push to main only when the owner asks.",
-  "criticalPath": [
-    "E6.3-T3"
-  ],
+  "next": null,
+  "note": "v1.0.0 is released (2026-10-18). Release and Verify release passed, the Homebrew tap formula is at 1.0.0 with a matching sha256, the checksum matches checksums.txt, and the build attestation verifies. Nothing is queued. Deferred by design: E6.1-T7 (deprecation helper, until the first real deprecation) and E7.3-T7 (menu looping, on user demand). Epic and phase statuses are for the owner to close.",
+  "criticalPath": [],
   "risks": [
     "Docs must continue to avoid implying that Hikma AI itself is a canonical skill registry; it is the CLI that works with user-configured registries.",
     "Tests for global installs must never touch the real home directory (E4.2-T8).",
