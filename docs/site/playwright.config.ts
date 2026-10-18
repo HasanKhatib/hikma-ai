@@ -16,10 +16,15 @@ export default defineConfig({
   },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", use: { ...devices["Desktop Safari"] } },
     { name: "phone-chromium", use: { ...devices["Pixel 7"] } },
-    { name: "phone-webkit", use: { ...devices["iPhone 14"] } },
+    // Other engines run weekly and on demand (CROSS_BROWSER=1), not on every change.
+    ...(process.env.CROSS_BROWSER
+      ? [
+          { name: "firefox", use: { ...devices["Desktop Firefox"] } },
+          { name: "webkit", use: { ...devices["Desktop Safari"] } },
+          { name: "phone-webkit", use: { ...devices["iPhone 14"] } },
+        ]
+      : []),
   ],
   webServer: {
     command: `npm run docs:build && npx vitepress preview . --port ${PORT} --strictPort`,

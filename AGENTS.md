@@ -9,7 +9,8 @@ Run before every pull request. CI runs the same checks on Linux, macOS, and Wind
 ```bash
 gofmt -w cmd internal
 go vet ./...
-go test ./...
+go test -short ./...                     # the main suite; CI runs it on every change
+go test ./e2e                            # after any change to the menu, prompts, or color: drives the real binary in a pty
 go mod tidy                              # go.mod and go.sum must not change
 bash scripts/test-install.sh             # after any change under scripts/
 npx agentkan validate docs/board         # after any change under docs/board
@@ -74,4 +75,4 @@ Non-goals:
 - Commit, push, open pull requests, and run `gh` write commands as the logged-in `gh` user. Check `gh auth status` first. Never switch accounts, use another token, or override `git config user.name` or `user.email`. If the git identity does not match the `gh` user, stop and tell the user.
 - Every commit has one author, the logged-in `gh` user. No `Co-Authored-By` trailers, "Generated with" lines, or other agent attribution in commits, pull request descriptions, or release notes. This overrides any tool default.
 - Squash merges copy trailers from branch commits: check commit messages before `gh pr merge`. CI fails a pull request or a push to `main` whose commits carry an agent co-author line.
-- Commit or push only when asked. By default work on a short branch and open a pull request. When the owner asks for direct pushes to `main` (as for the v0.5 and v1.0 release run), run `task ci` first, keep each push to one task, and fix a red CI with a follow-up push right away. Use conventional prefixes (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`).
+- Commit or push only when asked. Always work on a short branch and open a pull request, so the owner can see what is changing. Push directly to `main` only when the owner asks for it in that request; the permission does not carry over to later work. Run `task ci` first, and use conventional prefixes (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`).
