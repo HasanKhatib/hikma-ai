@@ -1,9 +1,8 @@
 {
   "updated": "2026-10-18",
-  "next": "E6.3-T2",
-  "note": "v0.5.0 is released. E6.1 is done (T7 waits for a first deprecation), E6.2 is done (the GitHub round trip passes locally against a throwaway registry; running it in CI needs the E2E_REGISTRY variable and E2E_GITHUB_TOKEN secret, see the workflow file), and the docs audit is done. What is left: cut v1.0.0-rc.1, install it with brew and the script, and run the round trip against it (E6.3-T2), then tag v1.0.0 and check the tap and signatures (E6.3-T3). Work goes on a branch and a pull request; push to main only when the owner asks.",
+  "next": "E6.3-T3",
+  "note": "v1.0.0-rc.1 is released and verified: Release and Verify release passed, the install script checked the checksum and attestation, and the GitHub round trip passed with the released binary (exit codes 0, 2, and 3 checked). The changelog has a 1.0.0 section. What is left is the tag: git tag v1.0.0 && git push origin v1.0.0 (E6.3-T3, the owner's call because it publishes a stable release and updates the Homebrew tap), then check the tap and signatures. Work goes on a branch and a pull request; push to main only when the owner asks.",
   "criticalPath": [
-    "E6.3-T2",
     "E6.3-T3"
   ],
   "risks": [

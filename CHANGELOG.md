@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-10-18
+
+The first stable release. From here, commands, flags, exit codes, JSON documents, and the lockfile and config schemas follow the [versioning policy](https://hasankhatib.github.io/hikma-ai/reference/policy).
+
 ### Added
 - A Reference section in the docs: exit codes and JSON, configuration and environment, flags and terminal behavior, and the versioning and deprecation policy.
 - `--json` on `skill verify`, `skill diff`, and `sync`. Each prints one versioned document on stdout, with progress on stderr. `sync --json` never prompts, so it needs `--yes` or `--dry-run`.
@@ -103,7 +107,8 @@ First public release.
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
 
-[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.5.0...v1.0.0
 [0.5.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.2.0...v0.3.0

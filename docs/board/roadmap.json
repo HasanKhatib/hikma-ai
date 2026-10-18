@@ -1826,7 +1826,7 @@
             {
               "id": "E6.3-T2",
               "title": "Cut v1.0.0-rc.1, install it with brew and the script on macOS, Linux, and Windows, and run the E6.2 end-to-end test against it",
-              "status": "todo",
+              "status": "done",
               "assignee": "me",
               "labels": [
                 "release",
