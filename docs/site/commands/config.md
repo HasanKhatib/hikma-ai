@@ -22,6 +22,10 @@ hikma config remove-agent <name> [--project|--user] [--yes]
 | `naming` | `loose` (default), `kebab-case` | Skill name rule for `create`, `push`, and `registry validate` |
 | `customAgents` | set with `add-agent` | Agents you define for tools Hikma does not know; see [Custom agents](#custom-agents) |
 
+### Config file version
+
+Config files carry a `version` (a plain integer, currently `1`). `hikma` adds it the next time it writes a file, and a file without one is read as version 1. A file with a newer version than your `hikma` understands is refused with an error that tells you to upgrade, and it is never rewritten.
+
 ## Where values come from
 
 From highest to lowest priority:

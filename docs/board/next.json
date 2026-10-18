@@ -1,11 +1,10 @@
 {
   "updated": "2026-10-18",
-  "next": "E6.1-T2",
-  "note": "v0.5.0 is released and Verify release passed on Linux, macOS, and Windows. The 1.0 contracts council ran (E6.1-T5, recorded in the E6.1 epic): build the too-new-file error for the lockfile and config first (E6.1-T2, then T6), then --json and four exit codes on verify, list, diff, and sync (E6.1-T3), then the reference docs (E6.1-T1, T4, T8). E6.1-T7 waits for the first real deprecation. Then E6.2 hardening and E6.3 release. Work goes on a branch and a pull request; push to main only when the owner asks.",
+  "next": "E6.1-T3",
+  "note": "v0.5.0 is released. E6.1-T2 and T6 are done: a lockfile or config from a newer hikma is refused and never rewritten, and config files carry a version. Next: --json and four exit codes (0, 1, 2, 3 for a verify mismatch) on verify, list, diff, and sync (E6.1-T3), then the reference docs (E6.1-T1, T4, T8). E6.1-T7 waits for the first real deprecation. Then E6.2 hardening and E6.3 release. Work goes on a branch and a pull request; push to main only when the owner asks.",
   "criticalPath": [
-    "E6.1-T2",
-    "E6.1-T6",
     "E6.1-T3",
+    "E6.1-T1",
     "E6.3-T2"
   ],
   "risks": [

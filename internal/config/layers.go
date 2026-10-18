@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 	"os"
@@ -125,13 +126,34 @@ func loadFile(path string) (Config, error) {
 	if err := json.Unmarshal(data, &c); err != nil {
 		return Config{}, fmt.Errorf("cannot parse config file %s: %w", path, err)
 	}
+	if err := checkVersion(path, c.Version); err != nil {
+		return Config{}, err
+	}
 	if err := ValidateCustomAgents(c.CustomAgents); err != nil {
 		return Config{}, fmt.Errorf("invalid config file %s: %w", path, err)
 	}
 	return c, nil
 }
 
+// checkVersion refuses a config written by a newer hikma. Such a file is never
+// rewritten: saving would drop fields this build does not know about.
+func checkVersion(path string, found int) error {
+	if found > Version {
+		return &TooNewError{Path: path, Found: found}
+	}
+	if found < 0 {
+		return fmt.Errorf("config file %s has an invalid version %d", path, found)
+	}
+	return nil
+}
+
 func saveFile(path string, c Config) error {
+	// Never overwrite a file a newer hikma wrote, even if the caller skipped the load.
+	var tooNew *TooNewError
+	if _, err := loadFile(path); errors.As(err, &tooNew) {
+		return err
+	}
+	c.Version = Version
 	if err := os.MkdirAll(filepath.Dir(path), 0o755); err != nil {
 		return fmt.Errorf("cannot create config directory: %w", err)
 	}
@@ -360,4 +382,14 @@ func NamingConvention() (string, error) {
 
 func (c Config) isEmpty() bool {
 	return c.Agent == "" && c.Registry == "" && c.Naming == "" && len(c.Agents) == 0 && len(c.CustomAgents) == 0
+}
+
+// TooNewError means the config file was written by a newer hikma.
+type TooNewError struct {
+	Path  string
+	Found int
+}
+
+func (e *TooNewError) Error() string {
+	return fmt.Sprintf("config file %s has version %d, but this hikma understands up to version %d; upgrade hikma (the file was not changed)", e.Path, e.Found, Version)
 }

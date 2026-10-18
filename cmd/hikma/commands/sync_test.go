@@ -190,3 +190,34 @@ func TestSyncWithNoLockfile(t *testing.T) {
 		t.Fatalf("%v\n%s", err, out)
 	}
 }
+
+func TestANewerLockfileIsRefusedAndLeftAlone(t *testing.T) {
+	reg := registryRepo(t)
+	proj := installFromURL(t, reg, "claude")
+	lockPath := lock.Path(proj)
+	data, err := os.ReadFile(lockPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	newer := strings.Replace(string(data), `"version": 1`, `"version": 99`, 1)
+	if newer == string(data) {
+		t.Fatalf("lockfile has no version field:\n%s", data)
+	}
+	if err := os.WriteFile(lockPath, []byte(newer), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{
+		{"sync", "--yes"},
+		{"skill", "verify"},
+		{"skill", "install", fileURL(reg), "alpha", "--agent", "claude", "--force"},
+		{"skill", "remove", "alpha", "--agent", "claude", "--yes"},
+	} {
+		out, err := run(t, args...)
+		if err == nil || !strings.Contains(out+err.Error(), "upgrade hikma") {
+			t.Errorf("%v: want an upgrade error, got err=%v out=%s", args, err, out)
+		}
+		if got, _ := os.ReadFile(lockPath); string(got) != newer {
+			t.Errorf("%v changed the lockfile", args)
+		}
+	}
+}

@@ -1659,7 +1659,7 @@
             {
               "id": "E6.1-T2",
               "title": "Version the lockfile schema and add a migration path",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "design"
@@ -1700,7 +1700,7 @@
             {
               "id": "E6.1-T6",
               "title": "Add a version field to .hikma/config.json (the lockfile already has one) with a migration path and a clear error for a newer file",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai+verify",
               "labels": [
                 "config",
