@@ -58,3 +58,41 @@ func skipShort(t *testing.T) {
 		t.Skip("skipping terminal tests in -short mode")
 	}
 }
+
+// The menu redraws only the lines that change, so a moved cursor shows up as
+// "> Option  Option" without the left bar. Both forms end the label at a double space or line end.
+var cursorLine = regexp.MustCompile(`(?:┃ )?> ([A-Z][^\r\n]*?)(?:  |\r|\n|$)`)
+
+// selected returns the option the menu cursor is on in the latest frame, or "".
+func (tm *term) selected() string {
+	m := cursorLine.FindAllStringSubmatch(plain(tm.output()), -1)
+	if len(m) == 0 {
+		return ""
+	}
+	return strings.TrimSpace(m[len(m)-1][1])
+}
+
+// choose moves down the list until label is under the cursor, then presses Enter.
+// It checks the screen after each key instead of trusting that keys sent early
+// reached the program: on a Linux pty the first ones can be dropped while the
+// program is still setting the terminal up.
+func (tm *term) choose(label string, d time.Duration) {
+	tm.t.Helper()
+	deadline := time.Now().Add(d)
+	for time.Now().Before(deadline) {
+		if tm.selected() == label {
+			tm.press(enter)
+			return
+		}
+		tm.press(down)
+		time.Sleep(150 * time.Millisecond)
+	}
+	tm.t.Fatalf("could not move the cursor to %q in %s; it is on %q; screen:\n%s", label, d, tm.selected(), plain(tm.output()))
+}
+
+// typeText types s and waits until it shows on screen, so Enter does not race the echo.
+func (tm *term) typeText(s string, d time.Duration) {
+	tm.t.Helper()
+	tm.write(s)
+	tm.waitFor(s, d)
+}

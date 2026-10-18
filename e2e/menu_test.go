@@ -8,18 +8,6 @@ import (
 
 const menuWait = 20 * time.Second
 
-func repeat(k string, n int) []string {
-	out := make([]string, n)
-	for i := range out {
-		out[i] = k
-	}
-	return out
-}
-
-func downs5() []string  { return repeat(down, 5) }
-func downs8() []string  { return repeat(down, 8) }
-func downs11() []string { return repeat(down, 11) }
-
 func TestMenuDrawsWithoutTerminalReplies(t *testing.T) {
 	skipShort(t)
 	sb := newSandbox(t)
@@ -38,9 +26,7 @@ func TestMenuQuitExitsCleanly(t *testing.T) {
 	sb := newSandbox(t)
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
-	tm.settle()
-	tm.press(downs11()...) // the twelfth entry is Quit
-	tm.press(enter)
+	tm.choose("Quit", menuWait)
 	exited, err := tm.waitDone(10 * time.Second)
 	if !exited {
 		t.Fatalf("Quit did not exit; screen:\n%s", plain(tm.output()))
@@ -59,16 +45,14 @@ func TestMenuPublishPicksALocalSkillAndPrintsTheCommand(t *testing.T) {
 	sb.writeSkill(t, "alpha")
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
-	tm.settle()
-	tm.press(downs5()...) // Publish a skill to your registry
-	tm.press(enter)
+	tm.choose("Publish a skill to your registry", menuWait)
 	tm.waitFor("Skill to publish:", menuWait)
 	tm.waitFor("alpha", menuWait)
 	tm.settle()
-	tm.press(enter)
+	tm.press(enter) // the picker has one skill, already selected
 	tm.waitFor("Registry to publish to", menuWait)
 	tm.settle()
-	tm.write("acme/skills")
+	tm.typeText("acme/skills", menuWait)
 	tm.press(enter)
 	tm.waitFor("hikma skill push alpha --registry acme/skills", menuWait)
 	if exited, _ := tm.waitDone(30 * time.Second); !exited {
@@ -81,12 +65,10 @@ func TestMenuSetRegistryWritesConfig(t *testing.T) {
 	sb := newSandbox(t)
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
-	tm.settle()
-	tm.press(downs8()...) // Set your registry
-	tm.press(enter)
+	tm.choose("Set your registry", menuWait)
 	tm.waitFor("Registry (owner/repo):", menuWait)
 	tm.settle()
-	tm.write("acme/skills")
+	tm.typeText("acme/skills", menuWait)
 	tm.press(enter)
 	tm.waitFor("hikma config registry acme/skills", menuWait)
 	if exited, err := tm.waitDone(30 * time.Second); !exited || err != nil {
