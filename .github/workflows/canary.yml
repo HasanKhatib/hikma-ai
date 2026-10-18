@@ -1,0 +1,37 @@
+name: Canary
+
+# gh skill is a preview feature and may change without notice. This installs a
+# real skill with the newest gh and checks hikma still recognizes, adopts, and
+# verifies it. It runs weekly and on demand, never on pull requests. A failure
+# means gh changed (or the metadata format did): fix hikma, or record why not.
+
+on:
+  schedule:
+    - cron: "11 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  gh-skill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - name: Update gh to the latest release
+        run: |
+          gh --version
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --only-upgrade gh || true
+          gh --version
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: gh skill interop
+        run: go test -count=1 -v -run TestGhSkillInterop ./cmd/hikma/commands
+        env:
+          HIKMA_GH_CANARY: "1"
+          GH_TOKEN: ${{ github.token }}

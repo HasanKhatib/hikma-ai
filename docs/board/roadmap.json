@@ -1758,7 +1758,7 @@
             {
               "id": "E6.2-T2",
               "title": "Test shell completions and Windows Git Bash behavior (CI already runs ubuntu, macOS, and windows-latest; add Git Bash and completion cases to it)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "test"
@@ -1778,7 +1778,7 @@
             {
               "id": "E6.2-T4",
               "title": "Add a scheduled canary that runs the gh skill interop tests against the latest gh release (gh skill was a public preview in April 2026 and may change)",
-              "status": "todo",
+              "status": "done",
               "assignee": "ai",
               "labels": [
                 "ci",
