@@ -5,6 +5,7 @@ All notable changes to this project are documented here. The format follows [Kee
 ## [Unreleased]
 
 ### Added
+- A Reference section in the docs: exit codes and JSON, configuration and environment, flags and terminal behavior, and the versioning and deprecation policy.
 - `--json` on `skill verify`, `skill diff`, and `sync`. Each prints one versioned document on stdout, with progress on stderr. `sync --json` never prompts, so it needs `--yes` or `--dry-run`.
 - Exit codes are now a documented contract: `0` success, `1` failure, `2` wrong usage (unknown command or flag, missing argument), `3` installed skills differ from the lockfile (`skill verify`, `sync --frozen`). They were `0` and `1` only. A new reference page lists them and every JSON document.
 

@@ -12,6 +12,8 @@ hikma config add-agent <name> [--skills-dir <dir>] [--instruction-file <file>] [
 hikma config remove-agent <name> [--project|--user] [--yes]
 ```
 
+Every setting, file, and environment variable is also listed in [Configuration and environment](/reference/configuration).
+
 ## Keys
 
 | Key | Values | Meaning |
