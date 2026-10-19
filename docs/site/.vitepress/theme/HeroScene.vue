@@ -1,17 +1,20 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { nextTick, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { useData } from "vitepress";
-import { H, LOOP, STAGES, STILL_T, TRANSCRIPT, W, balloonAt, cliAt, drawScene, stageAt, titleAlpha } from "./heroScene";
-import type { Balloon, CliLine } from "./heroScene";
+import { H, LOOP, STAGES, STILL_T, TRANSCRIPT, W, balloonAt, cliAt, drawScene, setView, skyAt, stageAt, titleAt } from "./heroScene";
+import type { Balloon, CliLine, Title } from "./heroScene";
 
 const { isDark } = useData();
 
 const canvas = ref<HTMLCanvasElement | null>(null);
 const root = ref<HTMLElement | null>(null);
+const box = ref<HTMLElement | null>(null);
+const width = ref(W); // logical canvas width: the story's stage plus any extra world a wide window shows
+const sky = ref("#cfe7e1");
 const balloon = ref<Balloon | null>(null);
 const cli = ref<CliLine[]>([]);
 const stage = ref(0);
-const title = ref(1);
+const title = ref<Title>({ alpha: 1, main: "Hikma", sub: "press start" });
 const playing = ref(true);
 const reduced = ref(false);
 
@@ -24,6 +27,8 @@ let ctx: CanvasRenderingContext2D | null = null;
 function paint(t: number) {
   if (!ctx) return;
   drawScene(ctx, t, isDark.value);
+  const color = skyAt(t, isDark.value);
+  if (color !== sky.value) sky.value = color;
   const b = balloonAt(t);
   const prev = balloon.value;
   balloon.value = b && prev && prev.text === b.text && Math.abs(prev.x - b.x) < 0.2 && Math.abs(prev.y - b.y) < 0.2 ? prev : b;
@@ -31,8 +36,10 @@ function paint(t: number) {
   const old = cli.value;
   if (lines.length !== old.length || lines.some((l, i) => l.text !== old[i].text)) cli.value = lines;
   stage.value = stageAt(t);
-  const ta = Math.round(titleAlpha(t) * 20) / 20;
-  if (ta !== title.value) title.value = ta;
+  const ta = titleAt(t);
+  ta.alpha = Math.round(ta.alpha * 20) / 20;
+  const cur = title.value;
+  if (ta.alpha !== cur.alpha || ta.main !== cur.main) title.value = ta;
 }
 
 function frame(now: number) {
@@ -63,12 +70,27 @@ function seek(i: number) {
 }
 
 let observer: IntersectionObserver | undefined;
+let resizer: ResizeObserver | undefined;
+
+// A wide, short window gets a wider world; the canvas keeps square pixels at any size.
+function fit() {
+  const el = box.value;
+  if (!el || !el.clientHeight) return;
+  const next = setView((H * el.clientWidth) / el.clientHeight);
+  if (next === width.value) return;
+  width.value = next;
+  // Changing the canvas size clears it, so repaint once Vue has applied the new width.
+  nextTick(() => paint(clock));
+}
 const onVisibility = () => run();
 
 watch(isDark, () => paint(clock));
 
 onMounted(() => {
   ctx = canvas.value!.getContext("2d");
+  resizer = new ResizeObserver(fit);
+  resizer.observe(box.value!);
+  fit();
   reduced.value = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   // ?t=12.6 freezes the scene at that second, for stills and video frames.
   const frozen = Number(new URLSearchParams(window.location.search).get("t"));
@@ -97,48 +119,54 @@ onMounted(() => {
 onBeforeUnmount(() => {
   cancelAnimationFrame(raf);
   observer?.disconnect();
+  resizer?.disconnect();
   document.removeEventListener("visibilitychange", onVisibility);
 });
 </script>
 
 <template>
   <div class="hk-scene-wrap">
-    <figure ref="root" class="hk-scene" role="group" aria-label="Hikma in a pixel-art loop">
-      <canvas ref="canvas" :width="W" :height="H" role="img" :aria-label="TRANSCRIPT"></canvas>
-      <div v-if="title > 0" class="hk-scene-title" :style="{ opacity: title }" aria-hidden="true">
-        <strong>Hikma</strong>
-        <span>press start</span>
+    <figure ref="root" class="hk-scene" :style="{ background: sky }" role="group" aria-label="Hikma in a pixel-art loop">
+      <div ref="box" class="hk-box">
+        <canvas ref="canvas" :width="width" :height="H" role="img" :aria-label="TRANSCRIPT"></canvas>
+        <div v-if="title.alpha > 0" class="hk-scene-title" :style="{ opacity: title.alpha }" aria-hidden="true">
+          <strong>{{ title.main }}</strong>
+          <span>{{ title.sub }}</span>
+        </div>
+        <div
+          v-if="balloon"
+          class="hk-scene-balloon"
+          :class="balloon.who"
+          :style="{ left: balloon.x + '%', top: balloon.y + '%' }"
+          aria-hidden="true"
+        >
+          {{ balloon.text }}
+        </div>
       </div>
-      <div
-        v-if="balloon"
-        class="hk-scene-balloon"
-        :class="balloon.who"
-        :style="{ left: balloon.x + '%', top: balloon.y + '%' }"
-        aria-hidden="true"
-      >
-        {{ balloon.text }}
-      </div>
-      <div v-if="cli.length" class="hk-scene-cli" aria-hidden="true">
+    </figure>
+    <section class="hk-strip">
+      <div class="hk-scene-cli" aria-hidden="true">
         <div v-for="(line, i) in cli" :key="i" :class="line.out ? 'out' : 'cmd'">
           <template v-if="!line.out"><b>$ </b></template>{{ line.text }}
         </div>
+        <div v-if="!cli.length" class="cmd"><b>$ </b><span class="hk-caret">&#9612;</span></div>
       </div>
-      <button v-if="!reduced" type="button" class="hk-scene-toggle" @click="toggle">
-        {{ playing ? "Pause" : "Play" }}
-      </button>
-    </figure>
-    <nav class="hk-stages" aria-label="Jump to a step">
-      <button
-        v-for="(st, i) in STAGES"
-        :key="st.step"
-        type="button"
-        :class="{ on: stage === i, done: stage > i }"
-        :aria-current="stage === i ? 'step' : undefined"
-        @click="seek(i)"
-      >
-        <i>{{ st.step }}</i>
-        <code>{{ st.label }}</code>
-      </button>
-    </nav>
+      <nav class="hk-stages" aria-label="Jump to a step">
+        <button
+          v-for="(st, i) in STAGES"
+          :key="st.step"
+          type="button"
+          :class="{ on: stage === i, done: stage > i }"
+          :aria-current="stage === i ? 'step' : undefined"
+          @click="seek(i)"
+        >
+          <i>{{ st.step }}</i>
+          <code>{{ st.label }}</code>
+        </button>
+        <button v-if="!reduced" type="button" class="hk-scene-toggle" @click="toggle">
+          {{ playing ? "Pause" : "Play" }}
+        </button>
+      </nav>
+    </section>
   </div>
 </template>

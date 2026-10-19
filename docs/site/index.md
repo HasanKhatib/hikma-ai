@@ -8,19 +8,18 @@ import { withBase } from "vitepress";
 </script>
 
 <div class="hk-hero-wrap">
-<div class="hk-hero">
-  <div class="hk-hero-copy">
-    <p class="hk-eyebrow"><bdi lang="ar" dir="rtl">حكمة</bdi> Hikma</p>
-    <h1>Skills follow you. <em>Define your source, use one CLI.</em></h1>
-    <p class="hk-hero-tagline">Publish to a registry you own, install into Claude, Codex, Copilot, OpenCode, or your own agent. Plain Git.</p>
-    <div class="hk-hero-actions">
-      <a class="hk-button hk-button-brand" :href="withBase('/getting-started')">Get started <span aria-hidden="true">&#8594;</span></a>
-      <a class="hk-text-link" :href="withBase('/commands/')">Commands</a>
+  <HeroScene />
+  <div class="hk-dock">
+    <div class="hk-headline">
+      <h1>CLI buddy to help you <em>manage your skills.</em></h1>
+      <p class="hk-hero-tagline">Setup your GitHub registry, push skills to it from wherever, create skills from templates, and more around it.</p>
     </div>
-    <InstallLine />
+    <div class="hk-getit">
+      <InstallLine />
+      <div class="hk-hero-actions">
+        <a class="hk-button hk-button-brand" :href="withBase('/getting-started')">Get started <span aria-hidden="true">&#8594;</span></a>
+        <a class="hk-text-link" :href="withBase('/commands/')">Commands</a>
+      </div>
+    </div>
   </div>
-  <div class="hk-hero-image">
-    <HeroScene />
-  </div>
-</div>
 </div>

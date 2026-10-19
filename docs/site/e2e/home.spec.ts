@@ -25,13 +25,26 @@ async function canvasPixel(page: Page, x: number, y: number) {
 
 for (const theme of ["dark", "light"] as const) {
   test.describe(`home page, ${theme}`, () => {
-    test("fits one screen on a laptop", async ({ page }, info) => {
-      test.skip(isPhone(info.project.name), "phones scroll by design");
-      for (const size of [{ width: 1366, height: 650 }, { width: 1280, height: 720 }, { width: 1440, height: 800 }]) {
+    test("is one screen: the page cannot scroll and nothing is cut off", async ({ page }, info) => {
+      const sizes = isPhone(info.project.name)
+        ? [{ width: 390, height: 664 }]
+        : [{ width: 1366, height: 650 }, { width: 1280, height: 720 }, { width: 1440, height: 800 }, { width: 1920, height: 1080 }];
+      for (const size of sizes) {
         await page.setViewportSize(size);
         await openHome(page, theme);
-        const overflow = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
-        expect(overflow, `page is ${overflow}px taller than a ${size.width}x${size.height} window`).toBeLessThanOrEqual(1);
+        const m = await page.evaluate(() => ({
+          overflow: getComputedStyle(document.documentElement).overflow,
+          dockBottom: document.querySelector(".hk-dock")!.getBoundingClientRect().bottom,
+          installRight: document.querySelector(".hk-getit")!.getBoundingClientRect().right,
+          sceneHeight: document.querySelector(".hk-scene")!.getBoundingClientRect().height,
+          h: window.innerHeight,
+          w: window.innerWidth,
+        }));
+        const at = `${size.width}x${size.height}`;
+        expect(m.overflow, `${at} can scroll`).toBe("hidden");
+        expect(m.dockBottom, `${at}: the dock is cut off`).toBeLessThanOrEqual(m.h + 1);
+        expect(m.installRight, `${at}: the install box is cut off`).toBeLessThanOrEqual(m.w + 1);
+        expect(m.sceneHeight, `${at}: the scene got squeezed`).toBeGreaterThan(200);
       }
     });
 
@@ -65,12 +78,12 @@ for (const theme of ["dark", "light"] as const) {
 test.describe("scene controls", () => {
   test("each stage button jumps the scene and lights up", async ({ page }) => {
     await openHome(page, "dark");
-    const stages = page.locator(".hk-stages button");
+    const stages = page.locator(".hk-stages button:not(.hk-scene-toggle)");
     await expect(stages).toHaveCount(4);
 
     await stages.nth(3).click(); // hikma sync
     await expect(stages.nth(3)).toHaveAttribute("aria-current", "step");
-    await expect(page.locator(".hk-scene-cli")).toContainText("hikma sync", { timeout: 10_000 });
+    await expect(page.locator(".hk-scene-cli")).toContainText("hikma sync", { timeout: 15_000 });
 
     await stages.nth(1).click(); // skill install
     await expect(stages.nth(1)).toHaveAttribute("aria-current", "step");
@@ -83,7 +96,7 @@ test.describe("scene controls", () => {
 
   test("a later stage dims until it is reached", async ({ page }) => {
     await openHome(page, "dark");
-    const last = page.locator(".hk-stages button").nth(3);
+    const last = page.locator(".hk-stages button:not(.hk-scene-toggle)").nth(3);
     await expect(last).not.toHaveClass(/on|done/);
     const opacity = await last.evaluate((el) => Number(getComputedStyle(el).opacity));
     expect(opacity).toBeLessThan(0.9);

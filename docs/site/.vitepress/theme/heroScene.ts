@@ -2,18 +2,38 @@
 // Everything is a pure function of time (scene seconds into the story, played slower),
 // so the same code can draw a live canvas or render frames for a video.
 
-export const W = 240;
+export const W = 240; // the stage the story is drawn on; wider windows get more world either side of it
+export const MAX_VW = 560;
 export const H = 135;
 export const GROUND = 92;
-export const STORY = 22; // length of the story, in scene seconds
+export const STORY = 24.8; // length of the story, in scene seconds
 export const INTRO = 1.4; // a title screen before the story starts
 export const SLOW = 1.6; // real seconds per scene second
 export const LOOP = (STORY + INTRO) * SLOW; // real length of one loop
+
+// The canvas can be wider than the stage. The story stays centered; the world fills the rest.
+let VW = W;
+let OFF = 0;
+export function setView(width: number) {
+  VW = Math.max(W, Math.min(MAX_VW, Math.round(width)));
+  OFF = Math.floor((VW - W) / 2);
+  return VW;
+}
 
 const HOLE_A = 142;
 const HOLE_B = 172;
 const FLAG_X = 118;
 const CHEST_X = 206;
+
+// Stage 4 happens in a second world: a "WORLD 2" card, then a lava land where the pet starts with no skills.
+const W2 = 15; // the world changes here, hidden under the card
+const FALL_A = 18; // the hero walks off the edge of the lava hole
+const FALL_B = 18.7;
+const RESPAWN = 19.5; // back at the checkpoint flag
+const SYNC_A = 21.3; // first skill restored
+const SYNC_B = 21.6; // second skill restored
+const JUMP_A = 22.2;
+const JUMP_B = 23.8;
 
 type Palette = Record<string, string>;
 
@@ -115,47 +135,58 @@ const ease = (p: number) => p * p * (3 - 2 * p);
 function charX(t: number): number {
   if (t < 3) return 28;
   if (t < 8) return lerp(28, 92, seg(t, 3, 8));
-  if (t < 14.2) return 92;
-  if (t < 15.4) return lerp(92, 152, seg(t, 14.2, 15.4));
-  if (t < 16) return 152;
-  if (t < 19.6) return FLAG_X;
-  if (t < 21.2) return lerp(FLAG_X, 178, ease(seg(t, 19.6, 21.2)));
-  return lerp(178, 188, seg(t, 21.2, 22));
+  if (t < W2) return 92;
+  if (t < 16.4) return 28;
+  if (t < FALL_A) return lerp(28, 134, seg(t, 16.4, FALL_A));
+  if (t < FALL_B) return lerp(134, 146, seg(t, FALL_A, FALL_B));
+  if (t < RESPAWN) return 146;
+  if (t < JUMP_A) return FLAG_X;
+  if (t < JUMP_B) return lerp(FLAG_X, 178, ease(seg(t, JUMP_A, JUMP_B)));
+  return lerp(178, 188, seg(t, JUMP_B, STORY));
 }
 
 function charMoving(t: number): boolean {
-  return (t > 3 && t < 8) || (t > 14.2 && t < 15.4) || t > 21.2 || (t > 19.6 && t < 21.2);
+  return (t > 3 && t < 8) || (t > 16.4 && t < FALL_B) || t > JUMP_A;
 }
 
 function charY(t: number): number {
   let y = GROUND - 20;
-  if (t >= 15.4 && t < 16) y += ((t - 15.4) / 0.6) ** 2 * 44;
-  if (t >= 19.6 && t < 21.2) y -= Math.sin(Math.PI * seg(t, 19.6, 21.2)) * 34;
+  if (t >= FALL_A && t < FALL_B) y += ((t - FALL_A) / (FALL_B - FALL_A)) ** 2 * 60;
+  if (t >= JUMP_A && t < JUMP_B) y -= Math.sin(Math.PI * seg(t, JUMP_A, JUMP_B)) * 34;
   return y;
 }
 
 function charVisible(t: number): boolean {
-  if (t >= 16 && t < 16.9) return false;
-  if (t >= 16.9 && t < 17.5) return Math.floor(t * 10) % 2 === 0;
+  if (t >= FALL_B && t < RESPAWN) return false;
+  if (t >= RESPAWN && t < RESPAWN + 0.6) return Math.floor(t * 10) % 2 === 0;
   return true;
 }
 
 function petPos(t: number): { x: number; y: number } {
   let x = charX(Math.max(0, t - 0.6)) - 22;
-  if (t >= 14.9 && t < 17.2) x = 122;
-  else if (t >= 17.2 && t < 17.9) x = lerp(122, charX(17.3) - 22, ease(seg(t, 17.2, 17.9)));
   let y = GROUND - 12 + Math.round(Math.sin(t * 5));
-  if (t >= 19.8 && t < 21.4) {
+  if (t >= FALL_A && t < 18.5) x = lerp(charX(FALL_A - 0.6) - 22, 138, seg(t, FALL_A, 18.5));
+  else if (t >= 18.5 && t < 19.2) {
+    const p = seg(t, 18.5, 19.2);
+    x = lerp(138, 148, p);
+    y += p * p * 62;
+  }
+  if (t >= JUMP_A + 0.2 && t < JUMP_B + 0.2) {
     x = charX(t - 0.25) - 18;
-    y += -Math.sin(Math.PI * seg(t, 19.8, 21.4)) * 28 + 6;
+    y += -Math.sin(Math.PI * seg(t, JUMP_A + 0.2, JUMP_B + 0.2)) * 28 + 6;
   }
   return { x, y };
 }
 
+function petVisible(t: number): boolean {
+  return !(t >= 19.2 && t < 19.6);
+}
+
+// The pet is dark with no skills, blue with the first, violet with two. It loses them in the new world.
 function skillCount(t: number): number {
-  if (t < 6.6 || (t >= 16 && t < 18)) return 0;
-  if (t >= 18 && t < 18.3) return 1;
-  if (t >= 18) return 2;
+  if (t < 6.6 || (t >= W2 && t < SYNC_A)) return 0;
+  if (t >= SYNC_B) return 2;
+  if (t >= SYNC_A) return 1;
   return t >= 10.6 ? 2 : 1;
 }
 
@@ -181,58 +212,110 @@ const THEMES = {
   light: { sky: "#cfe7e1", mid: "#dcefe9", low: "#e9f5f1", hills: "#b4d9cf", grass: "#2a8f84", soil: "#5aa79c", dirt: "#8cc2b8", speck: "#7bb5aa", hole: "#1b2f2c" },
 };
 
-function drawWorld(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
-  const c = dark ? THEMES.dark : THEMES.light;
-  px(ctx, c.sky, 0, 0, W, H);
-  px(ctx, c.mid, 0, 28, W, 30);
-  px(ctx, c.low, 0, 58, W, GROUND - 58);
-  // distant hills
-  for (let x = 0; x < W; x += 2) {
-    const h = 10 + Math.round(Math.sin(x / 17) * 5 + Math.sin(x / 7) * 2);
+// World 2: a lava land.
+const LAVA = {
+  dark: { sky: "#150808", mid: "#2a0d0a", low: "#4a170d", hills: "#3a120c", grass: "#8a3a1c", soil: "#4a1a10", dirt: "#2a0e09", speck: "#3a150d", hole: "#ff5a1f" },
+  light: { sky: "#f3c9a8", mid: "#f0b48a", low: "#e99a70", hills: "#c9714f", grass: "#9b4a2a", soil: "#b5603d", dirt: "#8f4527", speck: "#a0522f", hole: "#ff5a1f" },
+};
+
+function drawLava(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
+  const HA = HOLE_A + OFF;
+  const HB = HOLE_B + OFF;
+  const c = dark ? LAVA.dark : LAVA.light;
+  px(ctx, c.sky, 0, 0, VW, H);
+  px(ctx, c.mid, 0, 28, VW, 30);
+  px(ctx, c.low, 0, 58, VW, GROUND - 58);
+  // jagged ridge, with a volcano that glows
+  for (let x = 0; x < VW; x += 2) {
+    const h = 12 + Math.round(Math.abs(Math.sin(x / 13)) * 14);
     px(ctx, c.hills, x, GROUND - h, 2, h);
   }
-  if (dark) {
-    for (let i = 0; i < 18; i++) {
-      const sx = (i * 53) % W;
-      const sy = 4 + ((i * 29) % 40);
-      if (Math.floor(t * 1.5 + i) % 3) px(ctx, "#f2c46d", sx, sy);
-    }
-  } else {
-    // a blocky sun and two slow clouds
-    px(ctx, "#f2c46d", 196, 12, 14, 14);
-    px(ctx, "#ffe39a", 199, 15, 8, 8);
-    for (const [cx, cy] of [[30, 16], [120, 30]] as const) {
-      const x = ((cx + t * 3) % (W + 40)) - 20;
-      px(ctx, "#ffffff", x, cy, 22, 5);
-      px(ctx, "#ffffff", x + 5, cy - 4, 12, 4);
-    }
+  for (let i = 0; i < 44; i++) {
+    const w = 44 - i;
+    px(ctx, c.hills, VW - 44 - w / 2, GROUND - 6 - i, w, 1);
   }
-  // ground, with a hole
-  px(ctx, c.hole, HOLE_A, GROUND, HOLE_B - HOLE_A, H - GROUND);
-  for (let x = 0; x < W; x++) {
-    if (x >= HOLE_A && x < HOLE_B) continue;
+  px(ctx, "#ff7a2a", VW - 50, GROUND - 52, 12, 2);
+  px(ctx, "#ffd24a", VW - 47, GROUND - 53, 6, 1);
+  // a red sun and drifting embers
+  px(ctx, dark ? "#b3261e" : "#d9482b", 28, 26, 16, 16);
+  for (let i = 0; i < 16; i++) {
+    const ex = (i * 47 + t * 6) % VW;
+    const ey = (GROUND - ((t * 14 + i * 23) % (GROUND + 10))) | 0;
+    px(ctx, i % 2 ? "#ff9a3a" : "#ffd24a", ex, ey);
+  }
+  // ground, with a lava-filled hole
+  for (let x = 0; x < VW; x++) {
+    if (x >= HA && x < HB) continue;
     px(ctx, c.grass, x, GROUND, 1, 2);
     px(ctx, c.soil, x, GROUND + 2, 1, 4);
     px(ctx, c.dirt, x, GROUND + 6, 1, H - GROUND - 6);
     if ((x * 7) % 11 === 0) px(ctx, c.speck, x, GROUND + 8 + (x % 5) * 3, 2, 1);
   }
-  px(ctx, "#ff9a6b", HOLE_A - 2, GROUND - 1, 2, 1);
-  px(ctx, "#ff9a6b", HOLE_B, GROUND - 1, 2, 1);
+  px(ctx, c.hole, HA, GROUND, HB - HA, H - GROUND);
+  for (let x = HA; x < HB; x += 3) {
+    const row = Math.floor(t * 3 + x / 3) % 4;
+    px(ctx, "#ffd24a", x, GROUND + 4 + row * 12, 3, 2);
+    px(ctx, "#c2330f", x + 1, GROUND + 10 + row * 9, 2, 2);
+  }
+  px(ctx, "#ffd24a", HA - 2, GROUND - 1, 2, 1);
+  px(ctx, "#ffd24a", HB, GROUND - 1, 2, 1);
+}
+
+function drawWorld(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
+  const HA = HOLE_A + OFF;
+  const HB = HOLE_B + OFF;
+  if (t >= W2) return drawLava(ctx, t, dark);
+  const c = dark ? THEMES.dark : THEMES.light;
+  px(ctx, c.sky, 0, 0, VW, H);
+  px(ctx, c.mid, 0, 28, VW, 30);
+  px(ctx, c.low, 0, 58, VW, GROUND - 58);
+  // distant hills
+  for (let x = 0; x < VW; x += 2) {
+    const h = 10 + Math.round(Math.sin(x / 17) * 5 + Math.sin(x / 7) * 2);
+    px(ctx, c.hills, x, GROUND - h, 2, h);
+  }
+  if (dark) {
+    for (let i = 0; i < 18; i++) {
+      const sx = (i * 53) % VW;
+      const sy = 22 + ((i * 29) % 36); // below the nav bar that sits over the top of the page
+      if (Math.floor(t * 1.5 + i) % 3) px(ctx, "#f2c46d", sx, sy);
+    }
+  } else {
+    // a blocky sun and two slow clouds
+    px(ctx, "#f2c46d", VW - 44, 24, 14, 14);
+    px(ctx, "#ffe39a", VW - 41, 27, 8, 8);
+    for (const [cx, cy] of [[30, 28], [120, 42]] as const) {
+      const x = ((cx + t * 3) % (VW + 40)) - 20;
+      px(ctx, "#ffffff", x, cy, 22, 5);
+      px(ctx, "#ffffff", x + 5, cy - 4, 12, 4);
+    }
+  }
+  // ground, with a hole
+  px(ctx, c.hole, HA, GROUND, HB - HA, H - GROUND);
+  for (let x = 0; x < VW; x++) {
+    if (x >= HA && x < HB) continue;
+    px(ctx, c.grass, x, GROUND, 1, 2);
+    px(ctx, c.soil, x, GROUND + 2, 1, 4);
+    px(ctx, c.dirt, x, GROUND + 6, 1, H - GROUND - 6);
+    if ((x * 7) % 11 === 0) px(ctx, c.speck, x, GROUND + 8 + (x % 5) * 3, 2, 1);
+  }
+  px(ctx, "#ff9a6b", HA - 2, GROUND - 1, 2, 1);
+  px(ctx, "#ff9a6b", HB, GROUND - 1, 2, 1);
 }
 
 function drawProps(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
   // signposts: the repo gets set up
   for (const [x, at] of [[46, 1.4], [62, 1.7]] as const) {
     const p = ease(seg(t, at, at + 0.4));
-    if (p > 0) blit(ctx, s.sign, x, GROUND - 10 * p);
+    if (p > 0 && t < W2) blit(ctx, s.sign, x, GROUND - 10 * p);
   }
-  // checkpoint flag
-  if (t >= 14.4 && t < 22) {
+  // checkpoint flag, in the lava world
+  if (t >= 16.4 && t < STORY) {
     px(ctx, "#f1ede2", FLAG_X - 14, GROUND - 22, 2, 22);
     px(ctx, "#ff9a6b", FLAG_X - 12, GROUND - 22, 9, 6);
   }
   // registry chest
-  if (t >= 12 && t < 22) {
+  if (t >= 12 && t < W2) {
     const rise = ease(seg(t, 12, 12.4));
     blit(ctx, s.chest, CHEST_X, GROUND - 12 * rise);
     if (t >= 14 && t < 14.8) px(ctx, "#fff7d6", CHEST_X + 4, GROUND - 16, 20, 3);
@@ -267,11 +350,19 @@ function drawGems(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sp
     blit(ctx, s.gem2, x, y);
   }
   burst(ctx, CHEST_X + 14, GROUND - 10, 14, t, "#a78bfa");
-  burst(ctx, pet.x + 8, pet.y + 4, 18, t);
-  burst(ctx, pet.x + 8, pet.y + 4, 18.3, t, "#a78bfa");
+  // the sync brings both skills back from above
+  for (const [a, b, sprite, dx] of [[20.7, SYNC_A, s.gem, -30], [21, SYNC_B, s.gem2, 30]] as const) {
+    if (t >= a && t < b) {
+      const p = ease(seg(t, a, b));
+      blit(ctx, sprite, lerp(pet.x + dx, pet.x + 3, p), lerp(6, pet.y - 10, p));
+    }
+  }
+  burst(ctx, pet.x + 8, pet.y + 4, SYNC_A, t);
+  burst(ctx, pet.x + 8, pet.y + 4, SYNC_B, t, "#a78bfa");
 }
 
 function drawPet(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
+  if (!petVisible(t)) return;
   const { x, y } = petPos(t);
   const blink = (((t % 3.2) + 3.2) % 3.2) < 0.12;
   const tone = Math.min(2, skillCount(t));
@@ -281,7 +372,7 @@ function drawPet(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Spr
   for (let i = 0; i < n; i++) {
     px(ctx, i === 0 ? "#4aa8ff" : "#a78bfa", x + 2 + i * 6, y - 8, 4, 4);
   }
-  if (t >= 16 && t < 17.9) {
+  if (t >= 19.6 && t < SYNC_A) {
     px(ctx, "#a9b0a6", x + 7, y - 6, 2, 2);
     px(ctx, "#a9b0a6", x + 7, y - 12, 2, 4);
   }
@@ -290,15 +381,15 @@ function drawPet(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Spr
 function drawChar(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
   if (!charVisible(t)) {
     // pop into pixels
-    const dt = t - 16;
-    if (dt >= 0 && dt < 0.9) {
+    const dt = t - FALL_B;
+    if (dt >= 0 && dt < 0.8) {
       for (let i = 0; i < 14; i++) {
         const a = (i / 14) * Math.PI * 2 + i;
         const sp = 14 + (i % 4) * 7;
         px(
           ctx,
-          i % 3 ? "#f2b84b" : "#f6d9b0",
-          152 + 8 + Math.cos(a) * sp * dt,
+          i % 3 ? "#ff9a3a" : "#ffd24a",
+          146 + 8 + Math.cos(a) * sp * dt,
           GROUND + 14 + Math.sin(a) * sp * dt + 50 * dt * dt,
           2,
           2,
@@ -309,6 +400,20 @@ function drawChar(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sp
   }
   const sprite = charMoving(t) && Math.floor(t * 6) % 2 ? s.charB : s.charA;
   blit(ctx, sprite, charX(t), charY(t));
+}
+
+// The top-edge sky color, so the page can fill any space above a canvas that is wider than tall.
+export function skyAt(raw: number, dark: boolean): string {
+  const t = sceneTime(raw);
+  if (cardAlpha(t) > 0.5) return "#14090a";
+  const c = t >= W2 ? LAVA : THEMES;
+  return (dark ? c.dark : c.light).sky;
+}
+
+// The "WORLD 2" card: fades in at the end of stage 3, holds while the world changes, then fades out.
+function cardAlpha(t: number): number {
+  if (t < 14.3 || t >= 16.5) return 0;
+  return t < 15.9 ? seg(t, 14.3, 14.9) : 1 - seg(t, 15.9, 16.5);
 }
 
 // Real seconds into the loop -> scene seconds into the story (negative on the title screen).
@@ -322,16 +427,25 @@ export function drawScene(ctx: CanvasRenderingContext2D, raw: number, dark = tru
   const s = getSprites();
   ctx.imageSmoothingEnabled = false;
   drawWorld(ctx, t, dark);
+  ctx.save();
+  ctx.translate(OFF, 0);
   drawProps(ctx, t, s);
   drawGems(ctx, t, s);
   drawPet(ctx, t, s);
   drawChar(ctx, t, s);
+  ctx.restore();
   // dim behind the title screen, fade in from black, and fade out at the end of the loop
   let fade = story < INTRO ? 0.5 * (1 - seg(story, INTRO - 0.5, INTRO)) : 0;
   fade = Math.max(fade, 1 - seg(story, 0, 0.3), seg(t, STORY - 0.4, STORY));
   if (fade > 0) {
     ctx.globalAlpha = fade;
-    px(ctx, dark ? "#0b1514" : "#e9f5f1", 0, 0, W, H);
+    px(ctx, dark ? "#0b1514" : "#e9f5f1", 0, 0, VW, H);
+    ctx.globalAlpha = 1;
+  }
+  const card = cardAlpha(t);
+  if (card > 0) {
+    ctx.globalAlpha = card;
+    px(ctx, "#14090a", 0, 0, VW, H);
     ctx.globalAlpha = 1;
   }
 }
@@ -344,9 +458,9 @@ const BALLOONS: { a: number; b: number; who: "char" | "pet"; text: string }[] = 
   { a: 0.3, b: 3.0, who: "char", text: "New repo." },
   { a: 3.4, b: 7.2, who: "char", text: "Great skill for my agent!" },
   { a: 8.2, b: 13.2, who: "pet", text: "I learned a lot. Let's make walking-above-holes." },
-  { a: 14.9, b: 15.7, who: "pet", text: "Hole!" },
-  { a: 17.1, b: 19.0, who: "char", text: "New laptop. Same skills." },
-  { a: 19.2, b: 20.4, who: "pet", text: "Watch this." },
+  { a: 17.1, b: 17.9, who: "char", text: "Hole!" },
+  { a: 19.8, b: 21, who: "char", text: "No skills." },
+  { a: 22.1, b: 23.2, who: "pet", text: "Watch this." },
 ];
 
 export function balloonAt(raw: number): Balloon | null {
@@ -354,7 +468,8 @@ export function balloonAt(raw: number): Balloon | null {
   const b = BALLOONS.find((x) => t >= x.a && t < x.b);
   if (!b) return null;
   const p = b.who === "pet" ? petPos(t) : { x: charX(t), y: charY(t) };
-  const x = clamp((p.x + 8) / W, 0.24, 0.76) * 100;
+  const edge = 58 / VW; // keep a balloon inside the picture
+  const x = clamp((p.x + 8 + OFF) / VW, edge, 1 - edge) * 100;
   const y = ((p.y - (b.who === "pet" ? 14 : 6)) / H) * 100;
   return { who: b.who, text: b.text, x, y };
 }
@@ -371,10 +486,10 @@ const CLI: Cmd[] = [
   { group: 3, at: 9.8, text: "Created .claude/skills/walking-above-holes/", out: true },
   { group: 4, at: 10.4, text: "hikma skill push walking-above-holes" },
   { group: 4, at: 12.2, text: "Pushed to myghaccount/myrepo", out: true },
-  { group: 5, at: 17.0, text: "hikma sync" },
-  { group: 5, at: 18.0, text: "restored .claude/skills/go-blue", out: true },
-  { group: 5, at: 18.3, text: "restored .claude/skills/walking-above-holes", out: true },
-  { group: 5, at: 18.6, text: "Done: 2 restored, 0 failed", out: true },
+  { group: 5, at: 19.8, text: "hikma sync" },
+  { group: 5, at: 21.2, text: "restored .claude/skills/go-blue", out: true },
+  { group: 5, at: 21.5, text: "restored .claude/skills/walking-above-holes", out: true },
+  { group: 5, at: 21.8, text: "Done: 2 restored, 0 failed", out: true },
 ];
 
 const GROUPS: [number, number, number][] = [
@@ -382,7 +497,7 @@ const GROUPS: [number, number, number][] = [
   [2, 3.4, 8.0],
   [3, 8.2, 10.3],
   [4, 10.4, 14.2],
-  [5, 17.0, 21.4],
+  [5, 19.8, 24.4],
 ];
 
 export type CliLine = { out: boolean; text: string };
@@ -405,7 +520,7 @@ export function cliAt(raw: number): CliLine[] {
 }
 
 export const TRANSCRIPT =
-  "A pixel-art loop. A developer and a small bot pet start a new repo with hikma init, find a skill called go-blue and install it, which turns the bot blue, create a new skill called walking-above-holes and push it to a registry, fall into a hole, and respawn on a new laptop where hikma sync restores their skills.";
+  "A pixel-art loop. A developer and a small bot pet start a new repo with hikma init, find a skill called go-blue and install it, which turns the bot blue, then create a new skill called walking-above-holes and push it to a registry. In World 2, a lava land on a new machine, the bot is dark again with no skills. They fall into a hole, respawn, and run hikma sync, which restores both skills, and the bot turns blue and then violet. Now they jump the hole.";
 
 // ── Stages ───────────────────────────────────────────────────────────────────
 
@@ -418,7 +533,7 @@ export const STAGES: Stage[] = [
   { step: "1", label: "hikma init", start: 0 },
   { step: "2", label: "skill install", start: at(2.8) },
   { step: "3", label: "skill create + push", start: at(7.9) },
-  { step: "4", label: "hikma sync", start: at(14.4) },
+  { step: "4", label: "hikma sync", start: at(14.3) },
 ];
 
 export function stageAt(raw: number): number {
@@ -430,10 +545,15 @@ export function stageAt(raw: number): number {
   return active;
 }
 
-// 1 on the title screen, fading to 0 as the story starts.
-export function titleAlpha(raw: number): number {
-  const story = sceneTime(raw) + INTRO;
-  return story < INTRO ? 1 - seg(story, INTRO - 0.5, INTRO) : 0;
+export type Title = { alpha: number; main: string; sub: string };
+
+// The start screen at the top of the loop, and the "WORLD 2" card before stage 4.
+export function titleAt(raw: number): Title {
+  const t = sceneTime(raw);
+  const card = cardAlpha(t);
+  if (card > 0) return { alpha: card, main: "World 2", sub: "new machine" };
+  const story = t + INTRO;
+  return { alpha: story < INTRO ? 1 - seg(story, INTRO - 0.5, INTRO) : 0, main: "Hikma", sub: "press start" };
 }
 
 // A frame that reads well without motion: the pet tells its plan and the CLI shows create and push.

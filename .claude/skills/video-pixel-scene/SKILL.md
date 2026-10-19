@@ -5,7 +5,7 @@ description: "Builds or changes the pixel-art, game-style animated scene for a w
 
 # Pixel scene
 
-A short story played as pixel art: a developer and a bot pet go through the product's steps, the terminal shows the real commands, and the viewer can jump between steps. Hikma's version lives in `docs/site/.vitepress/theme/` (`heroScene.ts`, `HeroScene.vue`, `InstallLine.vue`) and tells this story: start a repo (`hikma init`), find and install a skill (the bot turns blue), create and push a new one (the bot turns violet), fall in a hole and lose everything, respawn on a new laptop where `hikma sync` restores the skills.
+A short story played as pixel art: a developer and a bot pet go through the product's steps, the terminal shows the real commands, and the viewer can jump between steps. Hikma's version lives in `docs/site/.vitepress/theme/` (`heroScene.ts`, `HeroScene.vue`, `InstallLine.vue`) and tells this story: start a repo (`hikma init`), find and install a skill (the bot turns blue), create and push a new one (the bot turns violet), cross into World 2 (a "WORLD 2" card, then a lava land) on a new machine where the bot is dark again, fall in the lava hole, respawn at a checkpoint flag, run `hikma sync` to restore both skills (the bot turns blue, then violet), and jump the hole.
 
 ## Rules
 

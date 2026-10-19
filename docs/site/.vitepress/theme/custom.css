@@ -109,297 +109,6 @@ kbd,
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Hero */
-
-.hk-eyebrow bdi {
-  margin-right: 10px;
-  padding-right: 11px;
-  border-right: 1px solid var(--line);
-  color: var(--forest);
-  font:
-    700 17px/1 "Amiri", "Noto Naskh Arabic", "Geeza Pro", "Segoe UI", serif;
-  letter-spacing: 0;
-}
-
-.hk-hero-wrap {
-  display: flex;
-  flex-direction: column;
-  min-height: calc(100svh - var(--vp-nav-height));
-}
-
-.hk-hero {
-  flex: 1;
-  width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 32px 24px;
-  display: grid;
-  grid-template-columns: minmax(0, 1.02fr) minmax(410px, 0.98fr);
-  gap: clamp(42px, 7vw, 92px);
-  align-items: center;
-}
-
-.hk-hero-copy {
-  animation: hk-enter 0.65s ease-out both;
-}
-
-.hk-eyebrow {
-  margin: 0 0 17px;
-  color: var(--orange);
-  font:
-    700 12px/1.4 "SFMono-Regular",
-    Consolas,
-    monospace;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.hk-hero h1 {
-  max-width: 650px;
-  margin: 0 0 25px;
-  padding: 0;
-  border: 0;
-  color: var(--ink);
-  font-size: clamp(46px, 5.2vw, 68px);
-  font-weight: 800;
-  line-height: 0.95;
-  letter-spacing: -0.07em;
-}
-
-.hk-hero h1 em {
-  color: var(--forest);
-  font-style: normal;
-}
-
-.hk-hero-tagline {
-  max-width: 550px;
-  margin: 0 0 30px;
-  color: var(--muted);
-  font-size: 19px;
-  line-height: 1.6;
-}
-
-.hk-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-}
-
-.hk-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 9px;
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid var(--forest);
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: 700;
-  transition:
-    transform 0.16s ease,
-    box-shadow 0.16s ease,
-    border-color 0.16s ease;
-}
-
-.hk-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 9px 20px rgba(11, 60, 56, 0.18);
-}
-
-.hk-button.hk-button-brand {
-  background: var(--forest);
-  color: var(--paper);
-}
-
-.dark .hk-button.hk-button-brand {
-  color: #1a1407;
-}
-
-.hk-button.hk-button-alt {
-  border-color: var(--line);
-  color: var(--forest);
-}
-
-.hk-button.hk-button-alt:hover {
-  border-color: var(--forest);
-}
-.hk-button:focus-visible,
-.hk-workflow-step:focus-visible,
-.hk-guide-link:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--orange) 55%, transparent);
-  outline-offset: 4px;
-}
-
-.hk-hero-meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px 21px;
-  margin: 23px 0 0;
-  color: var(--muted);
-  font:
-    650 12px/1.5 "SFMono-Regular",
-    Consolas,
-    monospace;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.hk-hero-meta span + span::before {
-  content: "/";
-  margin-right: 21px;
-  color: var(--line);
-}
-
-.hk-hero-image {
-  display: flex;
-  justify-content: center;
-  animation: hk-enter 0.7s 0.16s ease-out both;
-}
-
-.hk-shell-switch {
-  display: inline-flex;
-  padding: 3px;
-  border: 1px solid var(--code-line);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.035);
-}
-
-.hk-shell-switch button {
-  min-height: 25px;
-  padding: 0 8px;
-  border: 0;
-  border-radius: 2px;
-  background: transparent;
-  color: var(--code-text-3);
-  font:
-    650 10px/1 "SFMono-Regular",
-    Consolas,
-    monospace;
-  cursor: pointer;
-}
-
-.hk-shell-switch button[aria-pressed="true"] {
-  background: rgba(242, 184, 75, 0.12);
-  color: var(--signal);
-}
-
-@keyframes hk-enter {
-  from {
-    opacity: 0;
-    transform: translateY(14px);
-  }
-}
-
-/* One-screen home: quiet link, flow line, footer */
-
-.hk-text-link {
-  display: inline-flex;
-  align-items: center;
-  min-height: 44px;
-  padding: 0 6px;
-  color: var(--muted);
-  font-size: 14px;
-  font-weight: 650;
-  text-decoration: none;
-  transition: color 0.16s ease;
-}
-
-.hk-text-link:hover {
-  color: var(--forest);
-}
-
-.hk-text-link:focus-visible {
-  outline: 3px solid color-mix(in srgb, var(--orange) 55%, transparent);
-  outline-offset: 2px;
-}
-
-.hk-home-footer {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px 20px;
-  max-width: 1200px;
-  width: 100%;
-  margin: 0 auto;
-  padding: 0 24px 20px;
-  color: var(--muted);
-  font:
-    650 11px/1.5 "SFMono-Regular",
-    Consolas,
-    monospace;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-
-.hk-home-footer a {
-  color: inherit;
-  text-decoration: none;
-}
-
-.hk-home-footer a:hover {
-  color: var(--forest);
-}
-
-.hk-hero-image {
-  flex-direction: column;
-  align-items: center;
-}
-
-@media (max-width: 900px) {
-  .hk-hero {
-    grid-template-columns: 1fr;
-    gap: 28px;
-    padding-top: 28px;
-  }
-}
-
-@media (max-width: 640px) {
-  .hk-hero {
-    padding: 22px 20px;
-    gap: 22px;
-  }
-
-  .hk-hero h1 {
-    margin-bottom: 14px;
-    font-size: clamp(36px, 11vw, 48px);
-  }
-
-  .hk-hero-tagline {
-    margin-bottom: 18px;
-    font-size: 16px;
-  }
-
-  .hk-eyebrow {
-    margin-bottom: 12px;
-  }
-
-  .hk-home-footer {
-    padding: 0 20px 16px;
-  }
-}
-
-@media (max-width: 640px) and (max-height: 760px) {
-
-  .hk-hero {
-    gap: 18px;
-  }
-
-  .hk-hero h1 {
-    font-size: clamp(32px, 9.5vw, 42px);
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .hk-hero-copy,
-  .hk-hero-image {
-    animation: none;
-  }
-
-  .hk-button {
-    transition: none;
-  }
-}
 
 /* The home page is one screen: drop VitePress's bottom margin so it cannot scroll. */
 
@@ -494,22 +203,49 @@ kbd,
   line-height: 1.5;
 }
 
-/* Home scene: the pixel-art loop. */
-.hk-scene {
-  position: relative;
-  width: 100%;
-  max-width: 560px;
-  margin: 0;
-  aspect-ratio: 16 / 9;
-  border: 1px solid var(--line);
-  border-radius: 10px;
-  background: #cfe7e1;
-  box-shadow: var(--shadow);
+
+/* Home: the animation fills the window under the nav. The commands, headline and install sit below it.
+   Fixed to the window so the page never scrolls. */
+html:has(.hk-hero-wrap) {
   overflow: hidden;
 }
-.dark .hk-scene {
-  border-color: var(--code-line);
-  background: #0b1514;
+html:has(.hk-hero-wrap) .VPNavBar {
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
+  backdrop-filter: blur(8px);
+}
+html:has(.hk-hero-wrap) .VPNavBar .divider-line {
+  display: none;
+}
+.hk-hero-wrap {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  background: radial-gradient(var(--grid-line) 1px, transparent 1.2px) 0 0 / 22px 22px, var(--paper);
+}
+.hk-scene-wrap {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+/* The scene. The canvas keeps a 16:9 box at the bottom; a wide window gets a wider canvas instead. */
+.hk-scene {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  container-type: size;
+  background: #cfe7e1;
+}
+.hk-box {
+  position: absolute;
+  inset: auto 0 0;
+  height: min(100cqh, 100cqw * 9 / 16);
 }
 .hk-scene canvas {
   display: block;
@@ -522,7 +258,7 @@ kbd,
   max-width: 46%;
   padding: 5px 9px;
   border: 2px solid #14201e;
-  border-radius: 6px;
+  border-radius: 2px;
   background: #f1ede2;
   color: #14201e;
   font: 600 12px/1.3 var(--vp-font-family-mono);
@@ -541,76 +277,9 @@ kbd,
   border-bottom: 2px solid #14201e;
   transform: translateX(-50%) rotate(45deg);
 }
-.hk-scene-balloon.pet {
-  background: #d6f3ee;
-}
+.hk-scene-balloon.pet,
 .hk-scene-balloon.pet::after {
   background: #d6f3ee;
-}
-.hk-scene-cli {
-  position: absolute;
-  left: 3%;
-  right: 3%;
-  bottom: 4%;
-  min-height: 24%;
-  padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: 6px;
-  background: rgba(252, 250, 244, 0.93);
-  font: 12px/1.5 var(--vp-font-family-mono);
-  color: var(--muted);
-  white-space: nowrap;
-  overflow: hidden;
-}
-.hk-scene-cli .cmd {
-  color: var(--ink);
-}
-.hk-scene-cli .cmd b {
-  color: var(--orange);
-  font-weight: 700;
-}
-.dark .hk-scene-cli {
-  border-color: var(--code-line);
-  background: rgba(8, 15, 14, 0.9);
-  color: var(--code-text-2);
-}
-.dark .hk-scene-cli .cmd {
-  color: var(--code-text);
-}
-.dark .hk-scene-cli .cmd b {
-  color: var(--signal);
-}
-.hk-scene-toggle {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  padding: 2px 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: rgba(252, 250, 244, 0.85);
-  color: var(--muted);
-  font-size: 12px;
-  cursor: pointer;
-}
-.dark .hk-scene-toggle {
-  border-color: var(--code-line);
-  background: rgba(8, 15, 14, 0.7);
-  color: var(--code-text-2);
-}
-.hk-scene-toggle:focus-visible {
-  outline: 2px solid var(--signal);
-  outline-offset: 2px;
-}
-@media (max-width: 640px) {
-  .hk-scene-balloon,
-  .hk-scene-cli {
-    font-size: 10px;
-  }
-}
-
-.hk-scene-wrap {
-  width: 100%;
-  max-width: 560px;
 }
 .hk-scene-title {
   position: absolute;
@@ -623,7 +292,7 @@ kbd,
   pointer-events: none;
 }
 .hk-scene-title strong {
-  font: 800 clamp(28px, 7vw, 44px) / 1 var(--vp-font-family-mono);
+  font: 800 clamp(28px, 6vw, 56px) / 1 var(--vp-font-family-mono);
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: #f2c46d;
@@ -643,25 +312,53 @@ kbd,
   }
 }
 
-/* The four steps under the scene: lit when active, dim until reached, click to jump. */
+/* The strip under the scene: what is being typed, and the four steps. */
+.hk-strip {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px 24px;
+  padding: 12px 24px 0;
+  border-top: 4px solid var(--forest-2);
+}
+.hk-scene-cli {
+  flex: 1;
+  min-width: 0;
+  min-height: 63px;
+  overflow: hidden;
+  color: var(--ink);
+  font: 13px/1.55 var(--vp-font-family-mono);
+}
+.hk-scene-cli .cmd b {
+  color: var(--orange);
+}
+.hk-scene-cli .out {
+  overflow: hidden;
+  color: var(--forest);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hk-caret {
+  animation: hk-blink 1s steps(2, start) infinite;
+}
 .hk-stages {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  flex: none;
+  align-items: center;
   gap: 8px;
-  margin-top: 14px;
 }
 .hk-stages button {
   display: flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
-  padding: 8px 10px;
+  padding: 6px 10px;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 2px;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  opacity: 0.5;
+  opacity: 0.55;
   transition: opacity 0.25s, border-color 0.25s, background 0.25s;
 }
 .hk-stages button.done {
@@ -672,22 +369,22 @@ kbd,
   border-color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-soft);
   color: var(--ink);
-  box-shadow: 0 0 0 1px var(--vp-c-brand-1);
 }
 .hk-stages button:hover {
   opacity: 1;
 }
-.hk-stages button:focus-visible {
+.hk-stages button:focus-visible,
+.hk-scene-toggle:focus-visible {
   outline: 2px solid var(--vp-c-brand-1);
   outline-offset: 2px;
 }
 .hk-stages i {
-  flex: none;
   display: grid;
+  flex: none;
   place-items: center;
   width: 20px;
   height: 20px;
-  border-radius: 50%;
+  border-radius: 2px;
   background: var(--line);
   color: var(--ink);
   font: 700 11px/1 var(--vp-font-family-mono);
@@ -699,56 +396,190 @@ kbd,
 }
 .hk-stages code {
   min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  background: transparent;
   padding: 0;
+  background: transparent;
   color: inherit;
   font-size: 13px;
+  white-space: nowrap;
 }
-@media (prefers-reduced-motion: reduce) {
-  .hk-scene-title span {
-    animation: none;
-  }
-  .hk-stages button {
-    transition: none;
-  }
-}
-
-/* Short laptop screens: tighten the hero so it still fits without scrolling. */
-@media (min-width: 901px) and (max-height: 800px) {
-  .hk-hero {
-    padding-block: 12px;
-  }
-  .hk-hero h1 {
-    margin-bottom: 14px;
-    font-size: clamp(38px, 4.2vw, 54px);
-  }
-  .hk-hero-tagline {
-    margin-bottom: 20px;
-    font-size: 17px;
-    line-height: 1.5;
-  }
-  .hk-install-line {
-    margin-top: 18px;
-  }
-  .hk-install-alt {
-    margin-top: 8px;
-    font-size: 12px;
-  }
-  .hk-stages {
-    margin-top: 10px;
-  }
+.hk-stages .hk-scene-toggle {
+  padding: 6px 4px;
+  border-color: transparent;
+  font-size: 12px;
+  opacity: 1;
 }
 
-/* Grid items default to min-width:auto, so one long unbroken line (the install command) can make
-   a phone-width page scroll sideways. Let them shrink and scroll inside their own box. */
-.hk-hero-copy,
-.hk-hero-image,
-.hk-scene-wrap {
+/* The dock: headline on the left, install on the right. */
+.hk-dock {
+  display: flex;
+  flex: none;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px 32px;
+  padding: 12px 24px 18px;
+}
+.hk-headline {
   min-width: 0;
 }
-.hk-install-line {
-  max-width: 100%;
+.hk-hero h1,
+.hk-dock h1 {
+  max-width: 760px;
+  margin: 0 0 6px;
+  padding: 0;
+  border: 0;
+  color: var(--ink);
+  font-size: clamp(26px, 3vw, 42px);
+  font-weight: 800;
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+}
+.hk-dock h1 em {
+  color: var(--forest);
+  font-style: normal;
+}
+.hk-hero-tagline {
+  max-width: 640px;
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+  line-height: 1.5;
+}
+.hk-getit {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  gap: 6px;
+  width: min(100%, 460px);
+  /* Leaves room for the credit pill in the bottom right corner. */
+  padding-bottom: 28px;
+}
+.hk-getit .hk-install-line {
+  margin: 0;
+  padding: 8px 10px 8px 14px;
+  border-radius: 2px;
+}
+.hk-getit .hk-install-alt {
+  margin: 0;
+  font-size: 12px;
+}
+.hk-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.hk-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  min-height: 40px;
+  padding: 0 16px;
+  border: 1px solid var(--forest);
+  border-radius: 2px;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+}
+.hk-button.hk-button-brand {
+  background: var(--forest);
+  color: var(--paper);
+}
+.dark .hk-button.hk-button-brand {
+  color: #1a1407;
+}
+.hk-button:focus-visible,
+.hk-text-link:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--orange) 55%, transparent);
+  outline-offset: 2px;
+}
+.hk-text-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 6px;
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.hk-text-link:hover {
+  color: var(--forest);
+}
+
+/* Short laptop screens: give the scene the room, trim the dock. */
+@media (min-width: 761px) and (max-height: 760px) {
+  .hk-dock {
+    padding-bottom: 10px;
+  }
+  .hk-hero-tagline {
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  .hk-getit .hk-install-alt {
+    display: none;
+  }
+  .hk-getit {
+    padding-bottom: 24px;
+  }
+}
+
+/* Phones: the strip and dock stack, and the extras go. */
+@media (max-width: 760px) {
+  .hk-strip {
+    flex-direction: column;
+    gap: 8px;
+    padding: 8px 16px 0;
+  }
+  .hk-scene-cli {
+    flex: none;
+    width: 100%;
+    min-height: 42px;
+    font-size: 12px;
+  }
+  .hk-scene-cli .out:nth-of-type(n + 3) {
+    display: none;
+  }
+  .hk-stages {
+    width: 100%;
+    gap: 6px;
+  }
+  .hk-stages button {
+    flex: 1;
+    justify-content: center;
+    padding: 6px 4px;
+  }
+  .hk-stages code {
+    display: none;
+  }
+  .hk-stages .hk-scene-toggle {
+    flex: none;
+  }
+  .hk-dock {
+    flex-direction: column;
+    gap: 10px;
+    padding: 10px 16px 40px;
+  }
+  .hk-hero-tagline {
+    display: none;
+  }
+  .hk-getit {
+    width: 100%;
+    padding-bottom: 0;
+  }
+  .hk-getit .hk-install-alt,
+  .hk-text-link {
+    display: none;
+  }
+  .hk-scene-balloon {
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hk-stages button,
+  .hk-caret,
+  .hk-scene-title span {
+    animation: none;
+    transition: none;
+  }
 }
