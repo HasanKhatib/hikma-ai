@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-19
+
 ### Changed
 - `hikma upgrade` now upgrades hikma instead of printing instructions. It shows the plan (`brew upgrade` for a Homebrew install, otherwise the install script, which checks the checksum and attestation), asks first, and replaces the binary where it is. `--yes` skips the question; without a terminal it prints the plan and exits non-zero. The old `hikma update` command is now `hikma upgrade`.
 
@@ -110,7 +112,8 @@ First public release.
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
 
-[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/HasanKhatib/hikma-ai/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.5.0...v1.0.0
 [0.5.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.4.0...v0.5.0
 [0.4.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.3.0...v0.4.0
