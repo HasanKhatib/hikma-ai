@@ -17,7 +17,7 @@ func newSkillCmd() *cobra.Command {
 	var flagRegistry string
 	cmd := &cobra.Command{
 		Use:   "skill",
-		Short: "Install, update, diff, verify, remove, adopt, create, and publish skills",
+		Short: "Install, update, diff, verify, remove, adopt, create, import, and publish skills",
 	}
 	cmd.PersistentFlags().StringVar(&flagRegistry, "registry", "", "registry to use for this command (owner/repo, git URL, or local path)")
 
@@ -32,6 +32,7 @@ func newSkillCmd() *cobra.Command {
 		newSkillVerifyCmd(),
 		newSkillCreateCmd(),
 		newSkillPushCmd(&flagRegistry),
+		newSkillImportCmd(&flagRegistry),
 	)
 
 	return cmd
@@ -154,6 +155,9 @@ func normalizeSkillName(input string) string {
 }
 
 // preflightError formats preflight failures into a single error.
+// preflightCheck is a variable so tests do not need a signed-in gh.
+var preflightCheck = preflight.Check
+
 func preflightError(result preflight.Result) error {
 	var sb strings.Builder
 	for _, f := range result.Failures {

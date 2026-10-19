@@ -13,9 +13,11 @@ hikma skill install my-skill               # from your configured registry
 hikma skill install owner/repo my-skill    # from any GitHub repo
 hikma skill install owner/repo             # pick from the skills in that repo
 hikma skill install ./local/path my-skill  # from a local checkout
+hikma skill install owner/repo/skills/my-skill   # a folder in a repo
+hikma skill install https://github.com/owner/repo/tree/main/skills/my-skill   # a link from the browser
 ```
 
-A single argument that contains a `/`, a URL, or a path is treated as a source. Anything else is a skill name looked up in your registry. See the [source list](/commands/#sources).
+A folder or a `/tree/<branch>/<folder>` link names one skill, so no name is needed. The folder has to be one hikma installs from (`skills/<name>/`, `<name>/`, or the root); for another layout, [`skill import`](/commands/skill-import) finds more. A single argument that contains a `/`, a URL, or a path is treated as a source. Anything else is a skill name looked up in your registry. See the [source list](/commands/#sources).
 
 With a source but no name, a terminal shows a picker. Without a terminal the skills are listed and the command exits asking for a name.
 

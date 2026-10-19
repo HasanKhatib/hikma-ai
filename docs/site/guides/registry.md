@@ -81,7 +81,30 @@ The action needs Hikma v0.2.0 or later, the first release with `--format github`
 
 ## Publishing
 
-`hikma skill push <name>` commits to the registry when you have write access, and opens a pull request through your fork when you do not (`--pr` forces one). See [skill push](/commands/skill-push) for the confirmation prompt, fork behavior, and update behavior.
+`hikma skill push <name>` and [`hikma skill import`](/commands/skill-import) publish the same way. See [skill push](/commands/skill-push) for the confirmation prompt, fork behavior, and update behavior.
+
+## How publishing decides
+
+Hikma reads this from GitHub each time and never stores it, because write access differs from person to person and branch rules change. Nothing to configure, and nothing asked at `init`.
+
+| What GitHub says | What push and import do |
+|---|---|
+| You can write, and no rule requires pull requests | Commit to the default branch, whatever its name (`main`, `master`, ...) |
+| A rule on the default branch requires pull requests | Open a pull request, and say why |
+| You cannot write | Fork the registry and open a pull request from the fork |
+| You pass `--pr` | Open a pull request even if you could commit |
+
+Every confirmation says which of these will happen, in words, before anything is written. `hikma init --registry ...` and `hikma doctor` print the same for your registry:
+
+```text
+Registry owner/registry: push and import commit straight to main (you can write, and no rule requires a pull request); add --pr to open one instead
+```
+
+**To review everything that enters the registry**, require pull requests with a branch protection rule or a ruleset on the default branch. Hikma then opens a pull request by itself. Rulesets are visible to Hikma. Classic branch protection is not, so with it a direct commit is rejected and the error suggests `--pr`.
+
+## Importing skills
+
+`hikma skill import <source> [<name>]` brings a skill you found elsewhere into the registry, with a review first and its origin recorded in `skills/<name>/.hikma-origin.json`. It never overwrites an existing skill without `--force`. In a registry with CI, [`registry validate`](/commands/registry-validate) accepts the origin file like any other file in a skill folder. See [skill import](/commands/skill-import).
 
 ## Keep it neutral
 

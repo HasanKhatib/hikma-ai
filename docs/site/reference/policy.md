@@ -25,6 +25,10 @@ A feature is removed only in a major version, after at least one minor release t
 
 Security fixes are the one exception: if a behavior is unsafe, it can be tightened in a minor or patch release, and the changelog says so.
 
+## The origin file
+
+`skills/<name>/.hikma-origin.json`, written by [`skill import`](/commands/skill-import), carries a `version` (currently `1`). Within version `1`, fields can be added and existing fields keep their names and meaning, so readers ignore fields they do not know. A reader that meets a newer version still reads the fields it knows and never rewrites the file. The file is advisory: it records where a copy came from, and does not prove the copy is safe or unchanged.
+
 ## Before 1.0
 
 Releases below 1.0 can change the contracts above when there is a good reason, and the changelog says what changed. 0.6 and later follow these rules where they can, so the move to 1.0 changes as little as possible.

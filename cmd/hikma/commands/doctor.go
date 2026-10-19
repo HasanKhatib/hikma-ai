@@ -58,6 +58,9 @@ func runDoctor() error {
 		fmt.Printf("  %s  registry not configured\n        %s\n", ui.Yellow(os.Stdout, "warn"), ui.Dim(os.Stdout, "fix: run 'hikma config set registry <owner/repo>' (needed for bare skill names and push)"))
 	} else {
 		fmt.Printf("  %s    registry: %s (%s)\n", ui.Green(os.Stdout, "ok"), src.Display, origin)
+		if line, ok := describeRegistry(src.Raw); ok {
+			fmt.Printf("        %s\n", ui.Dim(os.Stdout, line))
+		}
 	}
 
 	if gh := ghManagedUntracked(projectScope()); len(gh) > 0 {

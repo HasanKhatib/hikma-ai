@@ -72,6 +72,7 @@ export default defineConfig({
           { text: "sync", link: "/commands/sync" },
           { text: "skill create", link: "/commands/skill-create" },
           { text: "skill push", link: "/commands/skill-push" },
+          { text: "skill import", link: "/commands/skill-import" },
           { text: "completion", link: "/commands/completion" },
           { text: "upgrade", link: "/commands/upgrade" },
         ],

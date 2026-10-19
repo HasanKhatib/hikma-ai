@@ -25,6 +25,7 @@ type fakeGH struct {
 	blobCount int
 	protected bool   // the default branch rejects direct updates
 	rules     string // comma-separated rule types on the default branch, from the rules endpoint
+	branch    string // the default branch; "main" when empty
 }
 
 func newFakeGH() *fakeGH {
@@ -60,10 +61,13 @@ func (f *fakeGH) run(stdin string, args ...string) (string, error) {
 	switch {
 	case method == "GET" && endpoint == "repos/org/reg":
 		if jq == ".default_branch" {
+			if f.branch != "" {
+				return f.branch, nil
+			}
 			return "main", nil
 		}
 		return f.canPush, nil
-	case method == "GET" && endpoint == "repos/org/reg/rules/branches/main":
+	case method == "GET" && strings.HasPrefix(endpoint, "repos/org/reg/rules/branches/"):
 		return f.rules, nil
 	case method == "POST" && endpoint == "repos/org/reg/forks":
 		return "me/reg", nil

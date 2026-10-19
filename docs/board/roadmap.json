@@ -2,7 +2,7 @@
   "$schema": "./roadmap.schema.json",
   "version": 1,
   "project": "Hikma AI",
-  "updated": "2026-10-18",
+  "updated": "2026-10-20",
   "releases": [
     {
       "id": "v0.1",
@@ -51,6 +51,14 @@
       "status": "planned",
       "goal": "Stable contracts, hardened quality, and complete docs.",
       "exit": "Config keys, the lockfile format, and the skill layout are documented and versioned; CI covers all supported platforms end to end."
+    },
+    {
+      "id": "v1.2",
+      "title": "Bring skills in",
+      "emoji": "v1.2",
+      "status": "planned",
+      "goal": "Let a user bring a skill they found anywhere into their own registry in one reviewed step, with its origin recorded.",
+      "exit": "hikma skill import copies a skill from owner/repo, a GitHub URL, or a local path into the configured registry after a review and a confirmation, and records where it came from."
     },
     {
       "id": "later",
@@ -2456,6 +2464,170 @@
               "planned": null
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "P8",
+      "title": "Bring skills in",
+      "emoji": "P8",
+      "status": "planned",
+      "release": "v1.2",
+      "goal": "Close the loop from finding a skill to owning it: import it into your registry, reviewed, with its origin recorded.",
+      "exit": "hikma skill import ships with docs, tests on all three platforms, and a recorded origin for every imported skill.",
+      "epics": [
+        {
+          "id": "E8.1",
+          "title": "Import a skill into your registry",
+          "emoji": "I",
+          "status": "active",
+          "assignee": "ai+verify",
+          "labels": [
+            "feature",
+            "cli",
+            "skills",
+            "registry",
+            "security"
+          ],
+          "planned": null,
+          "order": 1,
+          "goal": "Finding a skill you like and owning it takes one reviewed command: it lands in your registry with its origin recorded.",
+          "exit": "hikma skill import <source> [<name>] copies a skill into the configured registry after showing its files and licence and asking to confirm, publishes it the way push does, refuses to overwrite an existing skill, and writes .hikma-origin.json.",
+          "body": "epics/E8.1.md",
+          "tasks": [
+            {
+              "id": "E8.1-T1",
+              "title": "Run the council on the command name, the origin file, and the registry write, and record it in the epic body",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "process",
+                "architecture"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T2",
+              "title": "Add a source-reference parser for owner/repo, owner/repo/path, GitHub tree and blob URLs, git and ssh URLs, and local paths, with --ref, branch names that contain slashes, credentials stripped from the display form, and a clear error for non-github.com hosts, shared with install",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "cli",
+                "skills"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T3",
+              "title": "Build the import core: shallow and sparse fetch, discovery in the gh layouts (hidden folders off), pick a skill, validate, read bytes from git objects so line endings and LFS cannot change them, and print a review of files, licence, scripts, executables, binaries, skipped entries and outside-folder links, with caps of 100 files and 5 MiB, case-insensitive collision check, and --dry-run",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "security"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T4",
+              "title": "Write .hikma-origin.json (version, credential-free source, ref, commit and tree only for a clean tree, path, licence as written, file hashes, changes), strip metadata.github-* so gh update cannot bypass the registry, keep every other byte identical, and make --as rewrite only the name line",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "registry"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T5",
+              "title": "Publish through the push machinery: publish like skill push (commit when you can write, a pull request when required or without write access, --pr to force one), refuse to overwrite an existing registry skill without --force, support --yes, show source commit and target in the confirmation, retry GitHub 403 and 429 with retry-after (also benefits skill push), never prompt without a terminal",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "registry",
+                "security"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T6",
+              "title": "Add a menu and wizard entry that prints the equivalent hikma command, with a picker in a terminal and a list otherwise (last in order; may move to a follow-up release)",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T7",
+              "title": "Show the origin and edited-since-import in skill list and skill info, and let registry validate accept and check the origin file's schema and path, never its hashes (last in order; may move to a follow-up release)",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "registry",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T8",
+              "title": "Ship docs (command page, README, glossary, registry guide, policy note), a CHANGELOG entry, tests on macOS, Linux and Windows including core.autocrlf=true, the scenario table as tests or docs lines, and a GitHub round-trip e2e",
+              "status": "doing",
+              "assignee": "ai+verify",
+              "labels": [
+                "docs",
+                "test",
+                "release"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T9",
+              "title": "Check import by hand on Windows, with a real GitHub account, in a terminal and in CI",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T10",
+              "title": "Make import publish like push: remove --direct, add --pr, commit to the default branch when you can write, open a pull request when a rule requires one or without write access (owner decision 2026-10-20)",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "registry",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T11",
+              "title": "Add a shared registry access check (default branch, write access, pull request rule) that the push and import confirmations, init, and doctor all use",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "registry",
+                "architecture"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E8.1-T12",
+              "title": "Report how publishing will go in init and doctor, read from GitHub and never stored, silent without gh, a sign-in, or a GitHub registry, and document it everywhere",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "cli",
+                "docs"
+              ],
+              "planned": null
+            }
+          ],
+          "release": "v1.2"
         }
       ]
     }

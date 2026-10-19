@@ -27,7 +27,8 @@ func TestGitHubRoundTrip(t *testing.T) {
 		t.Fatal("gh is not on PATH")
 	}
 	name := fmt.Sprintf("e2e-%d", time.Now().UnixNano())
-	t.Cleanup(func() { deleteSkill(t, repo, token, name) })
+	copyName := name + "-copy"
+	t.Cleanup(func() { deleteSkill(t, repo, token, name); deleteSkill(t, repo, token, copyName) })
 
 	// A registry is always user-configured, so pass it per command and keep the
 	// test off the host's git credential helpers (a locked keychain would hang).
@@ -77,6 +78,23 @@ func TestGitHubRoundTrip(t *testing.T) {
 	}
 	if out := hikma(other, "skill", "verify", "--json"); !strings.Contains(out, `"ok": true`) {
 		t.Fatalf("verify after update:\n%s", out)
+	}
+
+	// Import the skill from the registry back into it under another name, the way
+	// you would bring in a skill you found elsewhere. --direct skips the pull request
+	// so the copy is installable at once.
+	if out := hikma(author, "skill", "import", repo+"/skills/"+name, "--as", copyName, "--registry", repo, "--direct", "--yes"); !strings.Contains(out, "Imported "+copyName) {
+		t.Fatalf("import did not report success:\n%s", out)
+	}
+	hikma(other, "skill", "install", copyName, "--agent", "claude", "--registry", repo, "--yes")
+	installed := filepath.Join(other.project, ".claude", "skills", copyName)
+	md, err := os.ReadFile(filepath.Join(installed, "SKILL.md"))
+	if err != nil || !strings.Contains(string(md), "name: "+copyName) || !strings.Contains(string(md), "Second version.") {
+		t.Fatalf("the imported copy is wrong (err %v):\n%s", err, md)
+	}
+	origin, err := os.ReadFile(filepath.Join(installed, ".hikma-origin.json"))
+	if err != nil || !strings.Contains(string(origin), `"source": "`+repo+`"`) || !strings.Contains(string(origin), `"reason": "rename"`) {
+		t.Fatalf("the origin file is wrong (err %v):\n%s", err, origin)
 	}
 }
 

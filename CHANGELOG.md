@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- `hikma skill import <source> [<name>]` brings a skill you found into your registry. It reads `owner/repo`, an exact folder (`owner/repo/skills/name`), a GitHub `/tree/` or `/blob/` link, or a local folder. It shows a review first (files, licence, scripts, executables, binaries, links outside the folder), asks, and publishes it the way `skill push` does: committed to the registry's default branch (whatever it is called) when you can write, as a pull request when a branch rule requires one or you cannot write (through your fork), and always as a pull request with `--pr`. Files are copied byte for byte from git objects, except that `metadata.github-*` is removed from `SKILL.md` so `gh skill update` cannot bypass your registry, and `--as` rewrites the name line. It refuses an existing skill (any letter case) without `--force`, takes at most 100 files and 5 MiB, and writes `skills/<name>/.hikma-origin.json` with the source, commit, tree, licence, file hashes, and every change from upstream. `--dry-run` shows the plan without contacting the registry, and `--json` prints it as a versioned document. See [skill import](https://hasankhatib.github.io/hikma-ai/commands/skill-import).
+
+### Changed
+- `hikma init` and `hikma doctor` say how publishing to a GitHub registry will go: a commit to the default branch, a pull request because the branch requires one, or a pull request through your fork. Nothing is asked or saved, because it depends on who you are and on branch rules; with no `gh`, no sign-in, a `--dry-run`, or a registry outside GitHub they print nothing.
+- `hikma skill install` now takes a folder in a GitHub repository (`owner/repo/skills/name`) and GitHub `/tree/<branch>/<folder>` links, as well as `owner/repo`. Credentials in a pasted URL are never printed.
+- `hikma skill push` retries when GitHub rate limits it (HTTP 429 or a secondary limit): after a minute, then two, then four. If it still fails, the error says how many files were uploaded and that nothing was committed.
+
 ## [1.1.0] - 2026-10-19
 
 ### Changed

@@ -192,6 +192,10 @@ Examples:
 				}
 			}
 			fmt.Fprintf(out, "  Wrote %s\n", relOrFull(path, projectCfg))
+			if registryValue != "" {
+				// What publishing will do is read from GitHub, not saved: it differs per person and changes with branch rules.
+				reportRegistryAccess(out, registryValue)
+			}
 
 			if len(flagSkills) > 0 {
 				if err := installInitSkills(cmd, flagSkills, flagRegistry, targets, force); err != nil {

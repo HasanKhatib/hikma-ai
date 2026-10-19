@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
-	"github.com/hasankhatib/hikma-ai/internal/preflight"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/spf13/cobra"
@@ -46,12 +45,43 @@ var (
 	pushNow   = time.Now
 )
 
+// ghSleep and ghNotice are variables so tests do not wait and can read the notice.
+var (
+	ghSleep            = time.Sleep
+	ghNotice io.Writer = os.Stderr
+	// rateLimitWaits is how long to wait before each retry of a rate-limited call.
+	// gh api does not show the Retry-After header, so these are GitHub's advice for
+	// secondary limits: wait at least a minute, then back off.
+	rateLimitWaits = []time.Duration{time.Minute, 2 * time.Minute, 4 * time.Minute}
+)
+
+func isRateLimited(err error) bool {
+	s := strings.ToLower(err.Error())
+	return strings.Contains(s, "rate limit") || strings.Contains(s, "http 429")
+}
+
+// ghCall is ghRun with a retry for GitHub's rate limits (HTTP 429, and the 403
+// "secondary rate limit"). Any other error is returned at once.
+func ghCall(stdin string, args ...string) (string, error) {
+	for attempt := 0; ; attempt++ {
+		out, err := ghRun(stdin, args...)
+		if err == nil || !isRateLimited(err) {
+			return out, err
+		}
+		if attempt >= len(rateLimitWaits) {
+			return "", fmt.Errorf("%w\nGitHub is still rate limiting requests after %d retries; wait a few minutes and run the command again", err, len(rateLimitWaits))
+		}
+		fmt.Fprintf(ghNotice, "GitHub is rate limiting requests; waiting %s before retrying (%d of %d)...\n", rateLimitWaits[attempt], attempt+1, len(rateLimitWaits))
+		ghSleep(rateLimitWaits[attempt])
+	}
+}
+
 func ghGet(endpoint string, jq string) (string, error) {
 	args := []string{"api", endpoint}
 	if jq != "" {
 		args = append(args, "--jq", jq)
 	}
-	return ghRun("", args...)
+	return ghCall("", args...)
 }
 
 func ghSend(method, endpoint, jq string, body any) (string, error) {
@@ -63,7 +93,7 @@ func ghSend(method, endpoint, jq string, body any) (string, error) {
 	if jq != "" {
 		args = append(args, "--jq", jq)
 	}
-	return ghRun(string(data), args...)
+	return ghCall(string(data), args...)
 }
 
 func isNotFound(err error) bool {
@@ -86,6 +116,17 @@ type pushPlan struct {
 	codeowners string
 	// viaPR opens a pull request even when you can write to the registry.
 	viaPR bool
+	// message is the commit message and pull request title; empty means "feat(skills): add <name>" (or update).
+	message string
+	// prBody is the pull request description; empty means the one push writes.
+	prBody string
+	// branch is the branch a pull request comes from; empty means skill/<name>.
+	branch string
+	// replace deletes files of the registry's existing copy that the new files do not have,
+	// so an overwrite leaves nothing stale behind.
+	replace bool
+	// directHint is what to suggest when a direct commit is rejected; empty means a push --pr.
+	directHint string
 }
 
 func readPushFiles(skillDir, name string) ([]pushFile, error) {
@@ -164,7 +205,10 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 	}
 	direct := canPush == "true" && !plan.viaPR
 
-	branch := "skill/" + plan.name
+	branch := plan.branch
+	if branch == "" {
+		branch = "skill/" + plan.name
+	}
 	existingPR := ""
 	var head string
 	var exists bool
@@ -217,20 +261,30 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 	}
 
 	fmt.Fprintln(w, "Uploading files...")
-	var entries []map[string]string
-	for _, f := range plan.files {
+	var entries []map[string]any
+	for i, f := range plan.files {
 		sha, err := ghSend("POST", "repos/"+writeRepo+"/git/blobs", ".sha", map[string]string{
 			"content": base64.StdEncoding.EncodeToString(f.content), "encoding": "base64",
 		})
 		if err != nil {
-			return "", fmt.Errorf("create blob for %s: %w", f.path, err)
+			return "", fmt.Errorf("create blob for %s: %w\n(%d of %d files were uploaded; nothing was committed)", f.path, err, i, len(plan.files))
 		}
 		mode := "100644"
 		if f.exec {
 			mode = "100755"
 		}
-		entries = append(entries, map[string]string{"path": f.path, "mode": mode, "type": "blob", "sha": sha})
+		entries = append(entries, map[string]any{"path": f.path, "mode": mode, "type": "blob", "sha": sha})
 		fmt.Fprintf(w, "  %s\n", strings.TrimPrefix(f.path, "skills/"+plan.name+"/"))
+	}
+	if plan.replace {
+		stale, err := staleFiles(writeRepo, baseTree, plan)
+		if err != nil {
+			return "", err
+		}
+		for _, p := range stale {
+			entries = append(entries, map[string]any{"path": p, "mode": "100644", "type": "blob", "sha": nil})
+			fmt.Fprintf(w, "  %s  (removed)\n", strings.TrimPrefix(p, "skills/"+plan.name+"/"))
+		}
 	}
 
 	if plan.codeowners != "" {
@@ -245,7 +299,7 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 			if err != nil {
 				return "", fmt.Errorf("create CODEOWNERS blob: %w", err)
 			}
-			entries = append(entries, map[string]string{"path": ".github/CODEOWNERS", "mode": "100644", "type": "blob", "sha": sha})
+			entries = append(entries, map[string]any{"path": ".github/CODEOWNERS", "mode": "100644", "type": "blob", "sha": sha})
 			fmt.Fprintf(w, "  .github/CODEOWNERS  (+%s)\n", entry.line)
 		}
 	}
@@ -264,6 +318,9 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 		action = "update"
 	}
 	message := fmt.Sprintf("feat(skills): %s %s", action, plan.name)
+	if plan.message != "" {
+		message = plan.message
+	}
 	commit, err := ghSend("POST", "repos/"+writeRepo+"/git/commits", ".sha", map[string]any{
 		"message": message, "tree": tree, "parents": []string{head},
 	})
@@ -278,7 +335,11 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 	}
 	if err != nil {
 		if direct {
-			return "", fmt.Errorf("could not commit to %s on %s: %w\nif the branch is protected, publish through a pull request instead: hikma skill push %s --pr", baseBranch, upstream, err, plan.name)
+			hint := plan.directHint
+			if hint == "" {
+				hint = "hikma skill push " + plan.name + " --pr"
+			}
+			return "", fmt.Errorf("could not commit to %s on %s: %w\nif the branch is protected, publish through a pull request instead: %s", baseBranch, upstream, err, hint)
 		}
 		return "", fmt.Errorf("update branch: %w", err)
 	}
@@ -298,6 +359,9 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 		headRef = headOwner + ":" + branch
 	}
 	body := fmt.Sprintf("%s the `%s` skill.\n\nCreated via `hikma skill push`.", strings.ToUpper(action[:1])+action[1:]+"s", plan.name)
+	if plan.prBody != "" {
+		body = plan.prBody
+	}
 	pr, err := ghSend("POST", "repos/"+upstream+"/pulls", ".html_url", map[string]string{
 		"title": message, "head": headRef, "base": baseBranch, "body": body,
 	})
@@ -306,6 +370,35 @@ func pushSkill(w io.Writer, plan pushPlan) (string, error) {
 	}
 	fmt.Fprintf(w, "  PR: %s\n", pr)
 	return pr, nil
+}
+
+// staleFiles lists the files of the registry's copy of the skill (at the tree
+// the commit is built on) that the new files do not replace.
+func staleFiles(repo, baseTree string, plan pushPlan) ([]string, error) {
+	prefix := "skills/" + plan.name + "/"
+	trunc, err := ghGet(fmt.Sprintf("repos/%s/git/trees/%s?recursive=1", repo, baseTree), ".truncated")
+	if err != nil {
+		return nil, fmt.Errorf("list the existing %s: %w", plan.name, err)
+	}
+	if trunc == "true" {
+		return nil, fmt.Errorf("%s is too large for GitHub to list its files, so an overwrite cannot be done safely", repo)
+	}
+	out, err := ghGet(fmt.Sprintf("repos/%s/git/trees/%s?recursive=1", repo, baseTree), fmt.Sprintf(`[.tree[] | select(.type == "blob") | .path | select(startswith(%q))] | join("\n")`, prefix))
+	if err != nil {
+		return nil, fmt.Errorf("list the existing %s: %w", plan.name, err)
+	}
+	keep := map[string]bool{}
+	for _, f := range plan.files {
+		keep[f.path] = true
+	}
+	var stale []string
+	for _, p := range strings.Split(out, "\n") {
+		if p != "" && !keep[p] {
+			stale = append(stale, p)
+		}
+	}
+	sort.Strings(stale)
+	return stale, nil
 }
 
 func skillExistsOnBranch(repo, branch, name string) bool {
@@ -447,17 +540,7 @@ func describePush(r config.Registry, viaPR bool) string {
 	if viaPR {
 		return "as a pull request (--pr)"
 	}
-	canPush, err := ghGet("repos/"+r.FullName(), ".permissions.push")
-	switch {
-	case err != nil:
-		return "committed to the default branch if you have write access (no review), otherwise a pull request from your fork; add --pr to always open one"
-	case canPush == "true":
-		if branch, berr := ghGet("repos/"+r.FullName(), ".default_branch"); berr == nil && requiresPullRequest(r.FullName(), branch) {
-			return "as a pull request (the default branch requires one)"
-		}
-		return "committed straight to the default branch, with no review (add --pr for a pull request)"
-	}
-	return "as a pull request from your fork (you have no write access)"
+	return detectRegistryAccess(r).publishLine()
 }
 
 func newSkillPushCmd(flagRegistry *string) *cobra.Command {
@@ -487,7 +570,7 @@ it is pushed to your fork and a pull request is opened. Nothing is force-pushed.
 			if err != nil {
 				return err
 			}
-			if result := preflight.Check(); !result.OK() {
+			if result := preflightCheck(); !result.OK() {
 				return preflightError(result)
 			}
 

@@ -35,6 +35,7 @@ Every document has a `version` field, currently `1`. Within a major version, fie
 | `hikma sync --json` | `{ version, ok, dryRun, skills: [{ path, name, source, commit, state, result, error? }] }` where `state` is `ok`, `restore`, or `modified`, and `result` is `up-to-date`, `planned`, `restored`, `skipped`, `failed`, or `not-run` |
 | `hikma skill list --installed --json` | `{ version, skills: [{ scope, name, path, status, source, ref, commit, origin, alsoAt }] }` where `status` is `ok`, `modified`, `missing`, or `untracked` |
 | `hikma skill list [<owner/repo>] --json` | `{ version, skills: [{ name, description, owner, path }] }` |
+| `hikma skill import <source> [<name>] --json` | `{ version, dryRun, source: { source, ref, commit, tree, path, readFrom }, skill: { name, description }, files: [{ path, size, executable }], skipped: [{ path, reason }], changes: [{ file, reason, detail }], license: { value, note }, review: { scripts, binaries, outsideLinks, runLines }, warnings, target: { registry, origin, how } \| null, result: { url, mode } \| null }`. Needs `--yes` or `--dry-run`. `ref`, `commit`, `tree`, and `license.value` are `null` when unknown; `result` is `null` for a dry run, and `mode` is `pull-request` or `commit` |
 | `hikma skill info <name> --json` | `{ version, skill: { name, description, owner, path } }` |
 | `hikma config list --json` | `{ version, entries: [{ key, value, source }] }` |
 

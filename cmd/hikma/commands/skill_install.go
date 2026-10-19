@@ -124,6 +124,56 @@ var stdinIsTerminal = func() bool {
 	return isatty.IsTerminal(os.Stdin.Fd()) || isatty.IsCygwinTerminal(os.Stdin.Fd())
 }
 
+// resolveSourceFolder understands a source that names a folder or a branch inside
+// a GitHub repository (owner/repo/skills/pdf, or a /tree/<ref>/<folder> URL). It
+// returns the plain source to read, the ref to read it at, and the folder to
+// narrow to. Anything else comes back unchanged.
+func resolveSourceFolder(cmd *cobra.Command, repo, ref string) (string, string, string, error) {
+	if repo == "" {
+		return repo, ref, "", nil
+	}
+	sr, err := source.ParseRef(repo)
+	if err != nil {
+		return "", "", "", err
+	}
+	if sr.Tail == "" && sr.Path == "" {
+		return repo, ref, "", nil
+	}
+	if sr.Tail != "" {
+		if ref != "" {
+			return "", "", "", usageError(fmt.Errorf("the URL already names the branch: drop --ref, or use owner/repo with --ref"))
+		}
+		var refs []string
+		if strings.Contains(sr.Tail, "/") {
+			refs, _ = source.ListRefs(sr.Source)
+		}
+		var guessed bool
+		ref, sr.Path, guessed = sr.ResolveTail(refs)
+		if guessed {
+			fmt.Fprintf(cmd.ErrOrStderr(), "note: could not confirm %q is a branch or tag of %s; reading it as the ref\n", ref, sr.Source.Display)
+		}
+	}
+	return sr.Source.Raw, ref, sr.Path, nil
+}
+
+// narrowToFolder keeps the skills at or under folder. A folder that holds no skill
+// hikma installs from is an error that points at import, which finds more layouts.
+func narrowToFolder(skills []source.Skill, folder string, src source.Source) ([]source.Skill, error) {
+	if folder == "" {
+		return skills, nil
+	}
+	var out []source.Skill
+	for _, s := range skills {
+		if s.Rel == folder || strings.HasPrefix(s.Rel, folder+"/") {
+			out = append(out, s)
+		}
+	}
+	if len(out) == 0 {
+		return nil, fmt.Errorf("no skill to install at %s in %s\ninstall reads skills/<name>/, <name>/, or a SKILL.md at the root; for another layout, bring it into your registry with: hikma skill import %s/%s", folder, src.Display, src.Display, folder)
+	}
+	return out, nil
+}
+
 func pickSkill(w io.Writer, skills []source.Skill) (source.Skill, error) {
 	if len(skills) == 0 {
 		return source.Skill{}, fmt.Errorf("no skills found in this source")
@@ -309,6 +359,10 @@ through a symlinked folder.`,
 			printTargets(out, targets, flagAgent != "")
 
 			repo, name := sourceArgs(args)
+			repo, ref, folder, err := resolveSourceFolder(cmd, repo, ref)
+			if err != nil {
+				return err
+			}
 			src, co, cleanup, err := openSource(out, repo, *flagRegistry, ref)
 			if err != nil {
 				return err
@@ -319,8 +373,13 @@ through a symlinked folder.`,
 			if err != nil {
 				return err
 			}
+			if skills, err = narrowToFolder(skills, folder, src); err != nil {
+				return err
+			}
 			var skill source.Skill
-			if name == "" {
+			if name == "" && folder != "" && len(skills) == 1 {
+				skill = skills[0]
+			} else if name == "" {
 				if skill, err = pickSkill(out, skills); err != nil {
 					return err
 				}

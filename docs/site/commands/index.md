@@ -17,6 +17,7 @@
 | [`hikma sync`](/commands/sync) | Restore every skill recorded in the lockfile |
 | [`hikma skill create`](/commands/skill-create) | Scaffold a new skill |
 | [`hikma skill push`](/commands/skill-push) | Publish a skill to your registry |
+| [`hikma skill import`](/commands/skill-import) | Bring a skill you found anywhere into your registry, after a review |
 | [`hikma completion`](/commands/completion) | Generate shell completions |
 | [`hikma upgrade`](/commands/upgrade) | Upgrade hikma itself, for the way you installed it |
 
@@ -25,6 +26,7 @@
 Anywhere a command takes a source, it can be:
 
 - GitHub shorthand: `owner/repo`
+- a folder in a GitHub repo: `owner/repo/skills/name`, or a `https://github.com/owner/repo/tree/<branch>/<folder>` link (`install` and `import`)
 - a git URL: `https://host/path/repo.git` or `git@host:path/repo.git`
 - a local path: `./registry` or `/abs/path`
 

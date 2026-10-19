@@ -33,6 +33,18 @@ hikma init --agent claude --project-name demo --owner platform --technology Go
 | `--dry-run` | Print what would happen without changing anything. |
 | `--project-name`, `--owner`, `--technology` | Fill the generated instructions without prompting. |
 
+## What init tells you about the registry
+
+When a GitHub registry is set (`--registry`, or one you configured already) and the GitHub CLI is signed in, `init` asks GitHub how publishing will go and prints one line:
+
+```text
+Registry owner/registry: push and import commit straight to main (you can write, and no rule requires a pull request); add --pr to open one instead
+Registry owner/registry: main requires pull requests, so push and import open one
+Registry owner/registry: you cannot write to it, so push and import go through your fork as a pull request
+```
+
+It asks no question and saves nothing: the answer depends on who you are and on the branch rules, so it is read again whenever you publish. With no `gh`, no sign-in, a `--dry-run`, or a registry outside GitHub, `init` prints nothing and carries on. See [How publishing decides](/guides/registry#how-publishing-decides).
+
 ## What gets written
 
 | Agent | Instruction files | Skills folder |

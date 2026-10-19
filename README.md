@@ -26,6 +26,7 @@ hikma skill install anthropics/skills pdf        # from any repo, no setup
 hikma config set registry owner/registry         # your own registry
 hikma skill create my-skill --description "What it helps with"
 hikma skill push my-skill                        # shows the target, asks to confirm
+hikma skill import owner/repo some-skill         # bring a skill you found into your registry, after a review
 hikma init --agent claude,codex --skill my-skill # set up a whole repo for your agents
 ```
 
@@ -60,6 +61,7 @@ CI runs the checks in [CONTRIBUTING.md](CONTRIBUTING.md) on Linux, macOS, and Wi
 - Scripts and CI can rely on documented exit codes (`3` means installed skills differ from the lockfile) and versioned `--json` output: see [Exit codes and JSON](https://hasankhatib.github.io/hikma-ai/reference/output).
 - Installs are recorded in `.hikma/lock.json` with the source, commit, and file hashes. `hikma sync` restores them on a fresh clone; `hikma skill update` stops on local edits.
 - `hikma skill push` always shows the target registry and asks before writing. Nothing is force-pushed.
+- `hikma skill import` copies a skill you found into your registry after a review of its files and licence, publishes it the way `push` does (a commit to the default branch when you can write, a pull request when the branch requires one or you cannot write), and records where it came from in `.hikma-origin.json`. It never overwrites an existing skill without `--force`. `init` and `doctor` tell you which way publishing will go.
 - Agent layouts are data in one table, so adding an agent never touches command code.
 
 ## Release

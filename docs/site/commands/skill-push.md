@@ -41,6 +41,14 @@ Nothing is force-pushed:
 
 Executable files keep their executable bit, and binary files are preserved.
 
+## How push decides
+
+The rules above are the same ones [`skill import`](/commands/skill-import) follows, laid out in [How publishing decides](/guides/registry#how-publishing-decides). `hikma init` and `hikma doctor` show which applies to your registry.
+
+## Rate limits
+
+GitHub limits how fast content can be created. A call that is rate limited is retried after a minute, then two, then four. If it still fails, the error says how many files were uploaded and that nothing was committed, so running the command again is safe.
+
 ## In scripts and CI
 
 With write access and `--yes`, a push commits straight to the default branch and nothing waits for a review. If a script should publish through review, pass `--pr`. The confirmation line always says which of the two will happen, so it shows up in the job log.
