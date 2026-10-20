@@ -66,9 +66,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
-      - uses: HasanKhatib/hikma-ai@v0.5.0
+      - uses: HasanKhatib/hikma-ai@v1.1.0
         with:
-          version: v0.5.0
+          version: v1.1.0
 ```
 
 | Input | Default | Description |
@@ -77,7 +77,7 @@ jobs:
 | `version` | `latest` | Hikma release to install. Pin it, so a new release cannot change your CI |
 | `naming` | from `.hikma/config.json` | `loose` or `kebab-case` |
 
-The action needs Hikma v0.2.0 or later, the first release with `--format github`. It runs on Linux, macOS, and Windows runners. Without the action, run `hikma registry validate . --format github` in any step after installing Hikma.
+It runs on Linux, macOS, and Windows runners. Without the action, run `hikma registry validate . --format github` in any step after installing Hikma.
 
 ## Publishing
 

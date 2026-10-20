@@ -12,7 +12,7 @@ The installer shows the file it will change and asks before writing (`--yes` ski
 
 Bash completion needs bash 4.1 or newer with the `bash-completion` package loaded before the line the installer adds; macOS ships bash 3.2, and Git Bash on Windows has no `bash-completion`, so use PowerShell there. To do it by hand, follow the steps below.
 
-Installed with Homebrew (v0.4.1 and later)? Completions are set up for you. For bash and zsh, Homebrew's completion folders must be on your shell's path: see [Homebrew shell completion](https://docs.brew.sh/Shell-Completion). Otherwise follow the steps for your shell.
+Installed with Homebrew? Completions are set up for you. For bash and zsh, Homebrew's completion folders must be on your shell's path: see [Homebrew shell completion](https://docs.brew.sh/Shell-Completion). Otherwise follow the steps for your shell.
 
 ::: code-group
 

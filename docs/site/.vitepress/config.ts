@@ -93,6 +93,7 @@ export default defineConfig({
           { text: "Agents and folders", link: "/guides/agents" },
           { text: "Skill format", link: "/guides/skill-format" },
           { text: "Run a registry", link: "/guides/registry" },
+          { text: "Glossary", link: "/guides/glossary" },
 
 
 
