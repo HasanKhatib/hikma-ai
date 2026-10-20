@@ -4,6 +4,9 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Changed
+- `hikma upgrade` shows the version you have and the latest release, and upgrades at once instead of asking "Upgrade now?". Afterwards it checks that the new version is what got installed, and if Homebrew has not caught up with the release yet it says so instead of reporting success. `--dry-run` shows the versions and what would run and changes nothing. `--yes` is still accepted and now does nothing, so scripts that pass it keep working; a script that relied on `upgrade` refusing to run without `--yes` will now upgrade. When GitHub cannot be reached, nothing is changed and the error names the command to run yourself.
+
 ## [1.3.0] - 2026-10-20
 
 ### Added

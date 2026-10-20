@@ -42,7 +42,7 @@ npx agentkan validate docs/board         # after any change under docs/board
 ## Safety
 
 - Anything read from a committed file (config, lockfile, skill contents) is untrusted input. Paths from it must stay inside the project.
-- Anything that writes outside the project is an explicit user action. It is never triggered by committed config, a lockfile, or an environment variable. The user sees the target and confirms before it is written; `--yes` is the only way to skip the question.
+- Anything that writes outside the project is an explicit user action. It is never triggered by committed config, a lockfile, or an environment variable. The user sees the target and confirms before it is written; `--yes` is the only way to skip the question. The one exception is `hikma upgrade`, whose whole purpose is to replace the hikma that was run: typing the command is the confirmation, and it prints the versions and how it installs. `--dry-run` previews it.
 - Never overwrite a user's local edits silently.
 
 ## Scope
