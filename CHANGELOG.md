@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.3.0] - 2026-10-20
+
 ### Added
 - The menu asks for a description when you create a skill, links a new guide on writing and editing skills, and passes `--description` to `hikma skill create`. The guide, [Write and edit a skill](https://hasankhatib.github.io/hikma-ai/guides/write-a-skill), covers the description, `scripts/`, `references/`, `assets/`, and hooks, with links to Anthropic's and OpenAI's published guidance.
 - The publish menu marks the skills that already exist in your registry with `[exists]`.
@@ -144,7 +146,8 @@ First public release.
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
 
-[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v1.3.0...HEAD
+[1.3.0]: https://github.com/HasanKhatib/hikma-ai/compare/v1.2.0...v1.3.0
 [1.2.0]: https://github.com/HasanKhatib/hikma-ai/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/HasanKhatib/hikma-ai/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.5.0...v1.0.0
