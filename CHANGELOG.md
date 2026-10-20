@@ -4,6 +4,8 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-20
+
 ### Added
 - `hikma skill import <source> [<name>]` brings a skill you found into your registry. It reads `owner/repo`, an exact folder (`owner/repo/skills/name`), a GitHub `/tree/` or `/blob/` link, or a local folder. It shows a review first (files, licence, scripts, executables, binaries, links outside the folder), asks, and publishes it the way `skill push` does: committed to the registry's default branch (whatever it is called) when you can write, as a pull request when a branch rule requires one or you cannot write (through your fork), and always as a pull request with `--pr`. Files are copied byte for byte from git objects, except that `metadata.github-*` is removed from `SKILL.md` so `gh skill update` cannot bypass your registry, and `--as` rewrites the name line. It refuses an existing skill (any letter case) without `--force`, takes at most 100 files and 5 MiB, and writes `skills/<name>/.hikma-origin.json` with the source, commit, tree, licence, file hashes, and every change from upstream. `--dry-run` shows the plan without contacting the registry, and `--json` prints it as a versioned document. See [skill import](https://hasankhatib.github.io/hikma-ai/commands/skill-import).
 - `hikma skill install` takes `--skill <name>`, repeatable, to install several skills from one checkout of a source. Every name is checked before anything is written, one confirmation covers them all, a summary lists each skill as ok or failed, and the command exits non-zero naming the ones that failed. With a registry configured the source can be left out. See [skill install](https://hasankhatib.github.io/hikma-ai/commands/skill-install).
@@ -128,7 +130,8 @@ First public release.
 - `hikma doctor`; shell completions.
 - Homebrew cask and an install script for Windows (Git Bash) and other platforms, with checksum verification.
 
-[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/HasanKhatib/hikma-ai/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/HasanKhatib/hikma-ai/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/HasanKhatib/hikma-ai/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.5.0...v1.0.0
 [0.5.0]: https://github.com/HasanKhatib/hikma-ai/compare/v0.4.0...v0.5.0
