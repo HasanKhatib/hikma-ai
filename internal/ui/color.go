@@ -70,3 +70,20 @@ func PrintWarning(w io.Writer, line string) {
 	}
 	io.WriteString(w, line+"\n")
 }
+
+// ClearScreen wipes the visible terminal and puts the cursor at the top, so a
+// menu that redraws starts from a clean screen. It leaves the scrollback alone,
+// since the user's earlier shell output is not ours to erase. It does nothing
+// when w is not a terminal, TERM=dumb, or ACCESSIBLE is set (a screen reader
+// reads what is on screen, so a wipe would hide it). Unlike color, NO_COLOR does
+// not turn it off: clearing is not color.
+func ClearScreen(w io.Writer) {
+	if os.Getenv("TERM") == "dumb" || os.Getenv("ACCESSIBLE") != "" {
+		return
+	}
+	f, ok := w.(*os.File)
+	if !ok || !(isatty.IsTerminal(f.Fd()) || isatty.IsCygwinTerminal(f.Fd())) || !vtSupported(f) {
+		return
+	}
+	io.WriteString(w, "\x1b[H\x1b[2J")
+}

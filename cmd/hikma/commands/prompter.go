@@ -1,6 +1,9 @@
 package commands
 
-import "errors"
+import (
+	"context"
+	"errors"
+)
 
 // errCancelled is returned by a Prompter when the user backs out (Ctrl-C). The
 // wizard treats it as a quiet exit, not a failure.
@@ -20,6 +23,10 @@ type Prompter interface {
 	Confirm(message string, def bool) (bool, error)
 	// Input asks for a line of text and re-asks until validate accepts it.
 	Input(message string, validate func(string) error) (string, error)
+	// Spinner shows message while fn runs, so a slow fetch does not look like a
+	// hang. Ctrl-C stops waiting and returns errCancelled; ctx is cancelled then.
+	// Without a terminal or in accessible mode it prints message once and runs fn.
+	Spinner(message string, fn func(ctx context.Context) error) error
 }
 
 // prompter is what commands ask through. Tests replace it with a fake.

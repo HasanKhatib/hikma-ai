@@ -114,3 +114,22 @@ func (tm *term) typeText(s string, _ time.Duration) {
 	tm.write(s)
 	time.Sleep(300 * time.Millisecond)
 }
+
+// tick toggles the option under the cursor in a multi-select and waits until
+// substr shows it ticked, pressing again only if the key never arrived. Sending
+// space and Enter back to back can submit before the tick lands, which fails the
+// picker's "choose at least one" check.
+func (tm *term) tick(substr string) {
+	tm.t.Helper()
+	for try := 0; try < 4; try++ {
+		tm.press(" ")
+		deadline := time.Now().Add(2 * time.Second)
+		for time.Now().Before(deadline) {
+			if strings.Contains(plain(tm.output()), substr) {
+				return
+			}
+			time.Sleep(50 * time.Millisecond)
+		}
+	}
+	tm.t.Fatalf("the option was never ticked (wanted %q); screen:\n%s", substr, plain(tm.output()))
+}

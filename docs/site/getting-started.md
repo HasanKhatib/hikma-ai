@@ -82,35 +82,56 @@ $ hikma
 │          │  skills follow you
 ╰──────────╯
 
+registry: acme/skills | agent: claude | 3 installed here
+Ctrl-C or Esc inside a task comes back here. At this menu they quit.
+
 ? What do you want to do?
-> Install a skill from your registry
+> Install skills from your registry
   Browse skills in your registry
   Update installed skills
   Verify installed skills
   Create a new skill
   Publish a skill to your registry
-  Set up this project for your agent
-  Choose your agent
-  Set your registry
-  Install shell completion
-  Check your setup
+  Setup and settings >
   Quit
 ```
 
-Pick an entry and Hikma asks for anything it needs, then runs the same command you could type yourself. It asks only for what is missing: the registry when none is set, the agent when none is chosen, a skill from this project's agent folders when you publish or update, and the agents to set up for a new project. That way the command it prints is complete. When it finishes it prints that command:
+Pick an entry and Hikma asks for anything it needs, then runs the same command you could type yourself. It asks only for what is missing: the registry when none is set, the agent when none is chosen, a skill from this project's agent folders when you publish or update, and the agents to set up for a new project. Agent, registry, project setup, completion, and the setup check live under "Setup and settings".
+
+### Installing skills
+
+Install reads the registry (with a spinner), lists the skills you do not have yet, and lets you tick as many as you want. Long lists can be filtered by typing `/`, and `ctrl+a` ticks them all. Skills already installed for your agent are named but not offered: reinstalling would need `--force` and replace local edits, so use Update installed skills for those. A copy installed for a different agent does not hide the skill. Before anything is written it shows a plan and asks once:
 
 ```text
-Equivalent command:
-  hikma skill create my-skill
+Will install 2 skills from acme/skills
+  foo  Lint a repo
+  bar  Format docs
+Into .claude/skills (agent: claude)
+Install these? Yes / No
 ```
 
-Copy it into a script or run it directly next time.
+It then runs one `hikma skill install --skill=foo --skill=bar` and prints the result and that command, so you can run it yourself next time:
+
+```text
+Installed 2 of 2
+  ok      foo
+  ok      bar
+
+Equivalent command:
+  hikma skill install --skill=foo --skill=bar
+```
+
+If some skills fail, the others are still installed, the result names each one that failed, and "What next?" offers to retry just those.
 
 ### What the menu does and does not do
 
 - It is a front end. Every entry runs an ordinary `hikma` command, so the confirmation questions before a push, an update, or a file write are the ones that command always asks.
-- It runs one task and exits. Run `hikma` again for the next.
-- Press Ctrl-C at any question to leave without doing anything.
+- It clears the screen and stays open. After each task it shows the result and asks "What next?": go back to the menu or quit. Errors are shown there too, so a failed task never closes the menu.
+- The equivalent command is printed after a task that worked, not after a failure or a cancel. When some skills of an install fail, it prints the command that ran and the command that retries only the ones that failed.
+- Ctrl-C or Esc inside a task goes back to the menu without doing anything: at a question, while a registry is being read, or while a command runs (a second Ctrl-C while it is stopping ends hikma). The same goes for "What next?". At the menu itself they leave. On a long list Esc clears the filter instead, and Ctrl-C goes back.
+- The cursor stays on the entry you used last.
+- A mistyped registry asks for another one without asking for your agent again.
+- Clearing keeps your scrollback. In accessible mode (`ACCESSIBLE` set) and under `TERM=dumb` the screen is not cleared, the banner is drawn once, and lists are answered by number.
 
 ### Scripts and CI
 

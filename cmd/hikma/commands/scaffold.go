@@ -299,7 +299,7 @@ func labelForAgent(set config.LayoutSet, a config.Agent) string {
 func installInitSkills(cmd *cobra.Command, names []string, flagRegistry string, targets []config.Selection, force bool) error {
 	out := cmd.OutOrStdout()
 	fmt.Fprintln(out)
-	src, co, cleanup, err := openSource(out, "", flagRegistry, "")
+	src, co, cleanup, err := openSource(cmd.Context(), out, "", flagRegistry, "")
 	if err != nil {
 		return err
 	}

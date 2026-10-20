@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
+
+	"github.com/charmbracelet/x/ansi"
 )
 
 // Out is the default writer for normal output.
@@ -35,4 +38,16 @@ func UserError(format string, args ...any) {
 func Fatal(format string, args ...any) {
 	Error(format, args...)
 	os.Exit(1)
+}
+
+// Width is how many terminal columns s takes. len counts bytes, which is wrong for
+// accented and wide characters.
+func Width(s string) int { return ansi.StringWidth(s) }
+
+// Pad returns s padded with spaces to width columns.
+func Pad(s string, width int) string {
+	if n := width - Width(s); n > 0 {
+		return s + strings.Repeat(" ", n)
+	}
+	return s
 }

@@ -2,6 +2,7 @@ package source
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -18,6 +19,12 @@ type Checkout struct {
 // Resolve makes the source readable locally. Remote sources are shallow-cloned
 // into a temporary directory; the returned cleanup func removes it.
 func Resolve(s Source, ref string) (Checkout, func(), error) {
+	return ResolveContext(context.Background(), s, ref)
+}
+
+// ResolveContext is Resolve, and stops the git or gh process it started when ctx
+// is cancelled, so a Ctrl-C in the menu does not leave a clone running.
+func ResolveContext(ctx context.Context, s Source, ref string) (Checkout, func(), error) {
 	noop := func() {}
 	if s.Kind == KindLocal {
 		if ref != "" {
@@ -40,19 +47,19 @@ func Resolve(s Source, ref string) (Checkout, func(), error) {
 	cleanup := func() { _ = os.RemoveAll(tmp) }
 	dir := tmp + string(os.PathSeparator) + "repo"
 
-	if err := clone(s, ref, dir); err != nil {
+	if err := clone(ctx, s, ref, dir); err != nil {
 		cleanup()
 		return Checkout{}, noop, err
 	}
 	return Checkout{Dir: dir, Commit: headCommit(dir), Ref: ref}, cleanup, nil
 }
 
-func clone(s Source, ref, dir string) error {
+func clone(ctx context.Context, s Source, ref, dir string) error {
 	args := []string{"clone", "--quiet", "--depth", "1"}
 	if ref != "" {
 		args = append(args, "--branch", ref)
 	}
-	err := runGit(append(args, s.CloneURL, dir)...)
+	err := runGit(ctx, append(args, s.CloneURL, dir)...)
 	if err == nil {
 		return nil
 	}
@@ -60,8 +67,8 @@ func clone(s Source, ref, dir string) error {
 	// A ref that is a commit SHA cannot be used with --branch; clone fully and check it out.
 	if ref != "" {
 		_ = os.RemoveAll(dir)
-		if full := runGit("clone", "--quiet", s.CloneURL, dir); full == nil {
-			if co := runGit("-C", dir, "checkout", "--quiet", ref); co == nil {
+		if full := runGit(ctx, "clone", "--quiet", s.CloneURL, dir); full == nil {
+			if co := runGit(ctx, "-C", dir, "checkout", "--quiet", ref); co == nil {
 				return nil
 			}
 			return fmt.Errorf("ref %q not found in %s", ref, s.Display)
@@ -76,7 +83,7 @@ func clone(s Source, ref, dir string) error {
 			if ref != "" {
 				ghArgs = append(ghArgs, "--branch", ref)
 			}
-			if ghErr := run("gh", ghArgs...); ghErr == nil {
+			if ghErr := run(ctx, "gh", ghArgs...); ghErr == nil {
 				return nil
 			}
 		}
@@ -92,14 +99,17 @@ func headCommit(dir string) string {
 	return strings.TrimSpace(string(out))
 }
 
-func runGit(args ...string) error { return run("git", args...) }
+func runGit(ctx context.Context, args ...string) error { return run(ctx, "git", args...) }
 
-func run(name string, args ...string) error {
-	cmd := exec.Command(name, args...)
+func run(ctx context.Context, name string, args ...string) error {
+	cmd := exec.CommandContext(ctx, name, args...)
 	cmd.Env = append(os.Environ(), "GIT_TERMINAL_PROMPT=0")
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 	if err := cmd.Run(); err != nil {
+		if ctxErr := ctx.Err(); ctxErr != nil {
+			return ctxErr
+		}
 		msg := strings.TrimSpace(stderr.String())
 		if msg == "" {
 			return err

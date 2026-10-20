@@ -47,3 +47,32 @@ func TestNoColorFlagTurnsColorOff(t *testing.T) {
 		t.Fatal("colorOK must be false when --no-color is set")
 	}
 }
+
+func TestClearScreenWritesNothingOffATerminal(t *testing.T) {
+	var buf bytes.Buffer
+	ClearScreen(&buf)
+	if buf.Len() != 0 {
+		t.Errorf("captured output got %q", buf.String())
+	}
+}
+
+func TestClearScreenWritesNothingInAccessibleMode(t *testing.T) {
+	t.Setenv("ACCESSIBLE", "1")
+	var buf bytes.Buffer
+	ClearScreen(&buf)
+	if buf.Len() != 0 {
+		t.Errorf("got %q", buf.String())
+	}
+}
+
+func TestWidthCountsColumnsNotBytes(t *testing.T) {
+	if got := Width("café"); got != 4 {
+		t.Errorf("Width(café) = %d, want 4", got)
+	}
+	if got := Width("日本"); got != 4 {
+		t.Errorf("Width(日本) = %d, want 4 columns", got)
+	}
+	if got := Pad("café", 6); got != "café  " {
+		t.Errorf("Pad = %q", got)
+	}
+}

@@ -2,6 +2,7 @@ package source
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"os"
 	"os/exec"
@@ -223,16 +224,16 @@ func fetchObjects(s Source, ref, dir string) error {
 	if ref != "" {
 		branch = append(branch, "--branch", ref)
 	}
-	err := runGit(append(branch, s.CloneURL, dir)...)
+	err := runGit(context.Background(), append(branch, s.CloneURL, dir)...)
 	if err == nil {
 		return nil
 	}
 	// A commit id cannot be given to --branch; fetch it directly.
 	if ref != "" {
 		_ = os.RemoveAll(dir)
-		if runGit("init", "--quiet", dir) == nil && runGit("-C", dir, "remote", "add", "origin", s.CloneURL) == nil &&
-			runGit("-C", dir, "fetch", "--quiet", "--depth", "1", "--filter=blob:none", "origin", ref) == nil &&
-			runGit("-C", dir, "update-ref", "HEAD", "FETCH_HEAD") == nil {
+		if runGit(context.Background(), "init", "--quiet", dir) == nil && runGit(context.Background(), "-C", dir, "remote", "add", "origin", s.CloneURL) == nil &&
+			runGit(context.Background(), "-C", dir, "fetch", "--quiet", "--depth", "1", "--filter=blob:none", "origin", ref) == nil &&
+			runGit(context.Background(), "-C", dir, "update-ref", "HEAD", "FETCH_HEAD") == nil {
 			return nil
 		}
 		_ = os.RemoveAll(dir)
@@ -244,7 +245,7 @@ func fetchObjects(s Source, ref, dir string) error {
 			if ref != "" {
 				ghArgs = append(ghArgs, "--branch", ref)
 			}
-			if run("gh", ghArgs...) == nil {
+			if run(context.Background(), "gh", ghArgs...) == nil {
 				return nil
 			}
 		}

@@ -15,16 +15,31 @@ hikma skill install owner/repo             # pick from the skills in that repo
 hikma skill install ./local/path my-skill  # from a local checkout
 hikma skill install owner/repo/skills/my-skill   # a folder in a repo
 hikma skill install https://github.com/owner/repo/tree/main/skills/my-skill   # a link from the browser
+hikma skill install owner/repo --skill a --skill b   # several skills from one checkout
 ```
 
 A folder or a `/tree/<branch>/<folder>` link names one skill, so no name is needed. The folder has to be one hikma installs from (`skills/<name>/`, `<name>/`, or the root); for another layout, [`skill import`](/commands/skill-import) finds more. A single argument that contains a `/`, a URL, or a path is treated as a source. Anything else is a skill name looked up in your registry. See the [source list](/commands/#sources).
 
 With a source but no name, a terminal shows a picker. Without a terminal the skills are listed and the command exits asking for a name.
 
+## Several skills at once
+
+Repeat `--skill` to install more than one skill from a single checkout of the source. The source is read once, every name is checked before anything is written, and one confirmation covers them all. With a registry configured the source can be left out: `hikma skill install --skill a --skill b`.
+
+```text
+Installed 2 of 3
+  ok      alpha
+  ok      gamma
+  failed  beta   beta is already installed at .claude/skills/beta/; use --force to reinstall
+```
+
+If one skill cannot be installed the others still are, and the command exits non-zero naming the ones that failed. A name that is not in the source stops the command before it writes anything. Name skills with `--skill` or as an argument, not both.
+
 ## Flags
 
 | Flag | Description |
 |---|---|
+| `--skill <name>` | A skill to install. Repeat it to install several from one checkout |
 | `--ref <ref>` | Branch, tag, or commit to install from. `--pin` is an alias, matching `gh skill` |
 | `--agent <list>` | Agents, comma-separated, overriding your configuration |
 | `--force` | Reinstall even if already installed |

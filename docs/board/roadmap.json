@@ -2464,6 +2464,221 @@
               "planned": null
             }
           ]
+        },
+        {
+          "id": "E7.7",
+          "title": "Menu that stays open",
+          "emoji": "M",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": [
+            "feature",
+            "cli",
+            "ux"
+          ],
+          "planned": null,
+          "goal": "The menu is a wizard you stay in: it clears the screen, finishes a whole task such as installing several skills, shows a clear result, and returns until you quit.",
+          "exit": "Every menu task runs end to end with a spinner, a plan, a one-screen result, and the equivalent command last; Ctrl-C never kills the menu; a pty test passes on Linux, macOS, and Windows.",
+          "body": "epics/E7.7.md",
+          "tasks": [
+            {
+              "id": "E7.7-T1",
+              "title": "Run the council on the 1.x install contract (several names in one skill install, or a wizard-only shared checkout), on promoting huh/spinner and bubbles to direct dependencies, and on the Prompter additions; record the outcome in the epic body",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "process",
+                "architecture"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T2",
+              "title": "Terminal hygiene: ClearScreen stops sending the scrollback wipe and does nothing in accessible mode; theme and key map set once instead of changing NO_COLOR on every prompt",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T3",
+              "title": "Picker usability: filter on lists over 8 items, height clamped to the terminal rows, select-all, and a one-line key hint under each menu",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T4",
+              "title": "Add Spinner(message, fn) to the Prompter with a huh/spinner implementation and a fake; wrap the registry fetch; plain one-line message without a terminal or in accessible mode",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T5",
+              "title": "Ctrl-C returns to the menu during the fetch (the spinner reads it) and while a command runs (the interrupt is caught and the task becomes a cancel), instead of exiting hikma",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T6",
+              "title": "Install several skills from one checkout, as decided in T1, so five skills clone once and the printed command is a single real command",
+              "status": "done",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T7",
+              "title": "Plan screen and one Confirm before an install, naming the target folder; skills already installed are named but not offered, because reinstalling needs --force and would replace local edits (the menu points at Update); pure renderer with golden-text tests",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "cli",
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T8",
+              "title": "Result screen: per-skill ok or failed with a reason, 'Installed 2 of 3', the equivalent command last and only after success, and Retry failed in 'What next?' only when something failed",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "cli",
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T9",
+              "title": "Context header (registry, agent, installed count), a Setup submenu, empty states that name the registry, and errors that say what to type only where the cause is known",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T10",
+              "title": "Not built. Stretch: Esc to go back, and registry, agent, and picker as one multi-step form with Shift-Tab back",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T11",
+              "title": "Docs, README, and changelog for each step, and an e2e per step (Ctrl-C during a slow fetch, a 24-row terminal with 60 skills, partial failure)",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "docs",
+                "test"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T12",
+              "title": "Automated 2026-10-20 in the pty e2e on Linux, macOS, and Windows ConPTY: the menu loop, Esc and Ctrl-C, a real install, accessible mode, and (Unix) Ctrl-C during a hung clone stopping git. Left for a person: how it looks in the Windows legacy console and a light theme, and a real screen reader",
+              "status": "todo",
+              "assignee": "me",
+              "labels": [
+                "verify"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T13",
+              "title": "Fix the findings of the second review (2026-10-20): Ctrl-C reaches work with no child process, the spinner cannot race, Ctrl-C or Esc at 'What next?' goes back, installed-for-another-agent no longer hides a skill, a registry typo keeps the other answers, short terminals, display-width padding, partial-failure commands, cursor memory, Esc, accessible banner",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "fix",
+                "cli"
+              ],
+              "planned": null
+            }
+          ],
+          "release": "v1.2"
+        },
+        {
+          "id": "E7.8",
+          "title": "One form per menu task",
+          "emoji": "F",
+          "status": "backlog",
+          "assignee": "ai+verify",
+          "labels": [
+            "feature",
+            "cli",
+            "architecture"
+          ],
+          "planned": null,
+          "goal": "Each menu task is one huh form with groups, so Shift-Tab goes back a step and answers survive a cancel.",
+          "exit": "The council has decided whether Prompter becomes run-this-plan, and every menu task keeps its answers when the user steps back, with the fakes able to drive it.",
+          "body": "epics/E7.8.md",
+          "tasks": [
+            {
+              "id": "E7.8-T1",
+              "title": "Run the council on changing Prompter from 'ask one question' to 'run this plan', and on what happens to the fakes and the pty tests",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "process",
+                "architecture"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.8-T2",
+              "title": "Move install to one multi-group form (registry, agent, picker, confirm) with Shift-Tab back, behind the Prompter",
+              "status": "todo",
+              "assignee": "ai+verify",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.8-T3",
+              "title": "Move the remaining menu tasks the same way once install has shipped and been used",
+              "status": "todo",
+              "assignee": "ai",
+              "labels": [
+                "feature",
+                "cli"
+              ],
+              "planned": null
+            }
+          ],
+          "release": "v1.2"
         }
       ]
     },

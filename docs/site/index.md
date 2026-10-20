@@ -11,7 +11,7 @@ import { withBase } from "vitepress";
   <HeroScene />
   <div class="hk-dock">
     <div class="hk-headline">
-      <h1>CLI buddy to help you <em>manage your skills.</em></h1>
+      <h1>CLI buddy to help you <em>manage your AI skills.</em></h1>
       <p class="hk-hero-tagline">Setup your GitHub registry, push skills to it from wherever, create skills from templates, and more around it.</p>
     </div>
     <div class="hk-getit">

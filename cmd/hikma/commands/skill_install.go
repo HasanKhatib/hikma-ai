@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"os"
@@ -74,7 +75,8 @@ func shortCommit(c string) string {
 }
 
 // openSource resolves the source for a command and returns its checkout.
-func openSource(w io.Writer, repo, flagRegistry, ref string) (source.Source, source.Checkout, func(), error) {
+// ctx stops the clone when it is cancelled.
+func openSource(ctx context.Context, w io.Writer, repo, flagRegistry, ref string) (source.Source, source.Checkout, func(), error) {
 	var (
 		src    source.Source
 		origin string
@@ -90,7 +92,7 @@ func openSource(w io.Writer, repo, flagRegistry, ref string) (source.Source, sou
 		return src, source.Checkout{}, func() {}, err
 	}
 	fmt.Fprintf(w, "Source: %s (%s)\n", src.Display, origin)
-	co, cleanup, err := source.Resolve(src, ref)
+	co, cleanup, err := source.ResolveContext(ctx, src, ref)
 	if err != nil {
 		return src, source.Checkout{}, func() {}, err
 	}
@@ -239,7 +241,7 @@ func newSkillListCmd(flagRegistry *string) *cobra.Command {
 			if len(args) == 1 {
 				repo = args[0]
 			}
-			src, co, cleanup, err := openSource(status, repo, *flagRegistry, "")
+			src, co, cleanup, err := openSource(cmd.Context(), status, repo, *flagRegistry, "")
 			if err != nil {
 				return err
 			}
@@ -280,7 +282,7 @@ func newSkillInfoCmd(flagRegistry *string) *cobra.Command {
 				status = cmd.ErrOrStderr()
 			}
 			repo, name := sourceArgs(args)
-			src, co, cleanup, err := openSource(status, repo, *flagRegistry, ref)
+			src, co, cleanup, err := openSource(cmd.Context(), status, repo, *flagRegistry, ref)
 			if err != nil {
 				return err
 			}
@@ -327,6 +329,7 @@ func nameFromPicker(w io.Writer, skills []source.Skill) (string, error) {
 func newSkillInstallCmd(flagRegistry *string) *cobra.Command {
 	var force, global, yes bool
 	var flagAgent, ref string
+	var flagSkills []string
 
 	cmd := &cobra.Command{
 		Use:   "install [<owner/repo>] [<name>]",
@@ -337,6 +340,8 @@ func newSkillInstallCmd(flagRegistry *string) *cobra.Command {
   hikma skill install owner/repo my-skill    from any GitHub repo
   hikma skill install owner/repo             pick from the skills in that repo
   hikma skill install ./local/path my-skill  from a local checkout
+  hikma skill install owner/repo --skill a --skill b
+                                             several skills from one checkout
 
 Sources can be GitHub owner/repo, any git URL, or a local path. Use --ref to pin
 a branch, tag, or commit. Skill names are not restricted on install.
@@ -345,9 +350,19 @@ With --global the skill goes into your home directory (for example
 ~/.claude/skills) and is tracked in ~/.hikma/lock.json. hikma prints the
 absolute paths and asks first; --yes skips the question. It never writes
 through a symlinked folder.`,
-		Args: cobra.RangeArgs(1, 2),
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(flagSkills) > 0 {
+				// With --skill the skills are named by the flag; RunE explains the
+				// mix-ups (a name as well) better than a count can.
+				return cobra.MaximumNArgs(2)(cmd, args)
+			}
+			return cobra.RangeArgs(1, 2)(cmd, args)
+		},
 		RunE: func(cmd *cobra.Command, args []string) error {
 			out := cmd.OutOrStdout()
+			if len(flagSkills) > 0 && (len(args) == 2 || (len(args) == 1 && !source.LooksLikeSource(args[0]))) {
+				return usageError(fmt.Errorf("name the skills with --skill or as an argument, not both: drop %q, or drop --skill", args[len(args)-1]))
+			}
 			sc, err := scopeFor(global)
 			if err != nil {
 				return err
@@ -363,7 +378,7 @@ through a symlinked folder.`,
 			if err != nil {
 				return err
 			}
-			src, co, cleanup, err := openSource(out, repo, *flagRegistry, ref)
+			src, co, cleanup, err := openSource(cmd.Context(), out, repo, *flagRegistry, ref)
 			if err != nil {
 				return err
 			}
@@ -375,6 +390,9 @@ through a symlinked folder.`,
 			}
 			if skills, err = narrowToFolder(skills, folder, src); err != nil {
 				return err
+			}
+			if len(flagSkills) > 0 {
+				return installMany(cmd, sc, src, co, skills, flagSkills, targets, force, yes, ref)
 			}
 			var skill source.Skill
 			if name == "" && folder != "" && len(skills) == 1 {
@@ -417,6 +435,7 @@ through a symlinked folder.`,
 		}
 		return pflag.NormalizedName(name)
 	})
+	cmd.Flags().StringArrayVar(&flagSkills, "skill", nil, "a skill to install; repeat it to install several from one checkout")
 	cmd.Flags().StringVar(&flagAgent, "agent", "", "agents, comma-separated (copilot, codex, opencode, claude)")
 	_ = cmd.RegisterFlagCompletionFunc("agent", func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
 		return []string{"copilot", "codex", "opencode", "claude"}, cobra.ShellCompDirectiveNoFileComp

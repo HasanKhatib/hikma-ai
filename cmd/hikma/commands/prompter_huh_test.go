@@ -43,3 +43,16 @@ func TestNoColorFlagReachesHuhThroughNoColorEnv(t *testing.T) {
 		t.Fatal("--no-color must set NO_COLOR so huh drops its colors")
 	}
 }
+
+func TestFitHeightHoldsALongListToTheTerminal(t *testing.T) {
+	for _, c := range []struct{ h, rows, want int }{
+		{63, 24, 16}, // 60 skills on a 24-row terminal: scroll inside 16 rows
+		{9, 24, 9},   // a short list is left alone
+		{63, 0, 63},  // unknown size: unchanged
+		{63, 10, 4},  // a very short terminal: the smallest usable list, not the full one
+	} {
+		if got := fitHeight(c.h, c.rows); got != c.want {
+			t.Errorf("fitHeight(%d, %d) = %d, want %d", c.h, c.rows, got, c.want)
+		}
+	}
+}

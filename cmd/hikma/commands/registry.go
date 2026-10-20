@@ -50,7 +50,7 @@ up as annotations on the files in a pull request.`,
 			if len(args) == 1 {
 				repo = args[0]
 			}
-			src, co, cleanup, err := openSource(out, repo, "", ref)
+			src, co, cleanup, err := openSource(cmd.Context(), out, repo, "", ref)
 			if err != nil {
 				return err
 			}
