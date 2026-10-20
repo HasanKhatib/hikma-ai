@@ -4,14 +4,23 @@ on:
   push:
     tags:
       - "v*"
+  # Started by the Cut release workflow, which tags a new CHANGELOG version.
+  # Run it from a tag, never a branch: the job below refuses anything else.
+  workflow_dispatch:
 
 permissions:
   contents: write
   id-token: write      # sign build attestations
   attestations: write
 
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   goreleaser:
+    # Publishing is for tags only.
+    if: startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7

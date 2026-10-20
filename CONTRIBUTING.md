@@ -59,11 +59,19 @@ Roadmap and decisions live in `docs/board/`. See `AGENTS.md` for the board rules
 
 ## Releasing
 
-Releases are tag-based. Pushing a `v*` tag runs GoReleaser, publishes binaries to GitHub Releases, attests the archives and `checksums.txt`, and writes the Homebrew formula (`scripts/render-formula.sh`) into `HasanKhatib/homebrew-tap`, using the `HOMEBREW_TAP_DEPLOY_KEY` repository secret (a write-enabled deploy key on the tap). Pre-release tags such as `v0.3.0-rc.1` build and attest but do not update the tap.
+A release is a version heading in `CHANGELOG.md` and a tag. You write the heading; the tag is cut for you.
+
+1. Open a pull request that moves the Unreleased entries under a new `## [X.Y.Z] - date` heading and updates the compare links at the bottom (see the 1.3.0 one). Choose the version by Semantic Versioning: new features are a minor version.
+2. Merge it. When CI and Terminal have both finished on that commit, the **Cut release** workflow (`.github/workflows/cut-release.yml`) tags it `vX.Y.Z` and starts the **Release** workflow, as long as every check on the commit passed. `scripts/next-release.sh` decides the version: the newest heading, if it has no tag yet and is not older than the newest release.
+3. **Release** runs GoReleaser, publishes binaries to GitHub Releases (the notes are that CHANGELOG section), attests the archives and `checksums.txt`, and writes the Homebrew formula (`scripts/render-formula.sh`) into `HasanKhatib/homebrew-tap`, using the `HOMEBREW_TAP_DEPLOY_KEY` repository secret (a write-enabled deploy key on the tap). Pre-release versions such as `0.3.0-rc.1` build and attest but do not update the tap.
+
+If checks failed or the release did not start, fix the cause and run **Cut release** from the Actions tab (use `dry_run` to see what it would do without releasing). You can still release by hand; pushing a `v*` tag runs **Release** directly:
 
 ```bash
 git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
+
+The tag starts the release because a person pushed it; a tag pushed by a workflow with the default token would not, which is why **Cut release** starts **Release** explicitly.
 
 Try a release locally with `goreleaser release --snapshot --clean`.

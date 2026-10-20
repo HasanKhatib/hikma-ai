@@ -91,6 +91,8 @@ jobs:
         run: shellcheck scripts/*.sh
       - name: install script against a fake release
         run: bash scripts/test-install.sh
+      - name: release version detection
+        run: bash scripts/test-next-release.sh
       - name: Homebrew formula rendering
         if: runner.os != 'Windows'
         run: bash scripts/test-formula.sh
