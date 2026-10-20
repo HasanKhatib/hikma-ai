@@ -109,6 +109,52 @@ func generateCompletion(cmd *cobra.Command, shell string, w io.Writer) error {
 	return fmt.Errorf("unknown shell %q", shell)
 }
 
+// reloadCommand is how to load the completion into the shell that is already open.
+func reloadCommand(shell, path string) string {
+	switch shell {
+	case "powershell":
+		return ". $PROFILE"
+	case "fish":
+		return "exec fish"
+	}
+	return "source " + path
+}
+
+// compinitBefore reports whether zsh's completion system is started before the
+// hikma line. The hikma script registers itself with compdef, which does not
+// exist until compinit has run (oh-my-zsh runs it when it is sourced), so a hikma
+// line above it fails with "command not found: compdef" when the shell starts.
+func compinitBefore(content, line string) bool {
+	before, _, found := strings.Cut(content, line)
+	if !found {
+		return false
+	}
+	for _, l := range strings.Split(before, "\n") {
+		l = strings.TrimSpace(l)
+		if strings.HasPrefix(l, "#") {
+			continue
+		}
+		if strings.Contains(l, "compinit") || strings.Contains(l, "oh-my-zsh.sh") {
+			return true
+		}
+	}
+	return false
+}
+
+// printCompletionAdvice follows "already set up". A line in the shell's startup
+// file only counts in windows opened after it was added, so an open window needs
+// a reload, and a zsh file that starts compinit after the hikma line needs
+// reordering. Saying "already set up" and stopping left people with a completion
+// that did nothing and no hint why.
+func printCompletionAdvice(out io.Writer, shell string, t completionTarget, content string) {
+	if shell == "zsh" && !t.create && !compinitBefore(content, t.line) {
+		fmt.Fprintf(out, "But no 'compinit' (or oh-my-zsh) comes before it in %s, so zsh cannot register the completion; new shells may print \"command not found: compdef\".\n", t.path)
+		fmt.Fprintln(out, "Move the lines below the one that starts completion, for example 'autoload -U compinit && compinit'.")
+		return
+	}
+	fmt.Fprintf(out, "It only works in terminal windows opened after that. If Tab completes nothing in this one, open a new window or run:\n  %s\n", reloadCommand(shell, t.path))
+}
+
 // installCompletion shows exactly what it will change, asks, then writes.
 // It never touches anything without a yes (or --yes), and never twice.
 func installCompletion(cmd *cobra.Command, shell string, assumeYes bool) error {
@@ -130,10 +176,12 @@ func installCompletion(cmd *cobra.Command, shell string, assumeYes bool) error {
 	}
 	if t.create && bytes.Equal(existing, script.Bytes()) {
 		fmt.Fprintf(out, "Completion for %s is already installed (%s).\n", shell, t.path)
+		printCompletionAdvice(out, shell, t, string(existing))
 		return nil
 	}
 	if !t.create && hasActiveLine(string(existing), t.line) {
 		fmt.Fprintf(out, "Completion for %s is already set up in %s.\n", shell, t.path)
+		printCompletionAdvice(out, shell, t, string(existing))
 		return nil
 	}
 
@@ -191,7 +239,7 @@ func installCompletion(cmd *cobra.Command, shell string, assumeYes bool) error {
 			return werr
 		}
 	}
-	fmt.Fprintf(out, "Installed. Open a new %s session to use it.\n", shell)
+	fmt.Fprintf(out, "Installed. Open a new %s session to use it, or run:\n  %s\n", shell, reloadCommand(shell, t.path))
 	return nil
 }
 

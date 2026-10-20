@@ -60,6 +60,17 @@ func fitHeight(h, rows int) int {
 	return h
 }
 
+// theme is huh's default look with a checkbox in front of each option of a
+// multi-select, "[ ]" or "[x]", so a ticked option reads the same without color.
+func theme(isDark bool) *huh.Styles {
+	st := huh.ThemeCharm(isDark)
+	for _, f := range []*huh.FieldStyles{&st.Focused, &st.Blurred} {
+		f.SelectedPrefix = f.SelectedPrefix.SetString("[x] ")
+		f.UnselectedPrefix = f.UnselectedPrefix.SetString("[ ] ")
+	}
+	return st
+}
+
 // ask runs one field. Esc backs out like Ctrl-C when esc is true; a list that can
 // be filtered keeps Esc for clearing the filter, which huh would otherwise
 // pre-empt, since it checks the form's quit key first.
@@ -69,7 +80,7 @@ func ask(f huh.Field, esc bool) error {
 	if esc {
 		km.Quit = key.NewBinding(key.WithKeys("ctrl+c", "esc"))
 	}
-	err := huh.NewForm(huh.NewGroup(f)).WithKeyMap(km).WithAccessible(accessible()).Run()
+	err := huh.NewForm(huh.NewGroup(f)).WithTheme(huh.ThemeFunc(theme)).WithKeyMap(km).WithAccessible(accessible()).Run()
 	if errors.Is(err, huh.ErrUserAborted) {
 		return errCancelled
 	}
@@ -133,16 +144,23 @@ func (huhPrompter) Confirm(message string, def bool) (bool, error) {
 
 func (huhPrompter) Input(message string, validate func(string) error) (string, error) {
 	var s string
-	err := ask(huh.NewInput().Title(message).Value(&s).Validate(func(v string) error {
-		if strings.TrimSpace(v) == "" {
-			return errors.New("enter a value")
-		}
-		if validate != nil {
-			return validate(v)
-		}
-		return nil
-	}), true)
+	err := ask(huh.NewInput().Title(message).Value(&s).Validate(inputValidator(validate)), true)
 	return s, err
+}
+
+// inputValidator is what an Input field checks. With no validate func an answer is
+// required; with one, the caller decides, so a question that may be left empty
+// (an optional description, an optional registry) can be.
+func inputValidator(validate func(string) error) func(string) error {
+	if validate == nil {
+		return func(v string) error {
+			if strings.TrimSpace(v) == "" {
+				return errors.New("enter a value")
+			}
+			return nil
+		}
+	}
+	return validate
 }
 
 func (huhPrompter) Spinner(message string, fn func(ctx context.Context) error) error {

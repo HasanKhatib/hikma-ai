@@ -8,6 +8,7 @@ import (
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/scaffold"
+	"gopkg.in/yaml.v3"
 )
 
 func opts(dir string, agents ...config.Agent) scaffold.Options {
@@ -105,5 +106,48 @@ func TestScaffoldRejectsBadAgents(t *testing.T) {
 	}
 	if _, err := scaffold.Scaffold(opts(t.TempDir(), "vim")); err == nil {
 		t.Fatal("expected error for unknown agent")
+	}
+}
+
+func TestCreateSkillKeepsTheFrontmatterValidForAnyDescription(t *testing.T) {
+	for _, desc := range []string{
+		`Say "hello": a quote and a colon`,
+		`C:\temp\files and a trailing backslash\`,
+		"two\nlines and a\ttab",
+		"  padded  ",
+		"",
+	} {
+		dir := filepath.Join(t.TempDir(), "my-skill")
+		if _, err := scaffold.CreateSkill(scaffold.SkillOptions{SkillName: "my-skill", Owner: `o"wner`, Team: `t\eam`, Description: desc, TargetDir: dir}); err != nil {
+			t.Fatal(err)
+		}
+		data, err := os.ReadFile(filepath.Join(dir, "SKILL.md"))
+		if err != nil {
+			t.Fatal(err)
+		}
+		// The template has CRLF line endings when checked out on Windows.
+		_, rest, _ := strings.Cut(strings.ReplaceAll(string(data), "\r\n", "\n"), "---\n")
+		front, _, _ := strings.Cut(rest, "\n---")
+		var meta struct {
+			Name        string `yaml:"name"`
+			Description string `yaml:"description"`
+			Metadata    struct {
+				Owner string `yaml:"owner"`
+				Team  string `yaml:"team"`
+			} `yaml:"metadata"`
+		}
+		if err := yaml.Unmarshal([]byte(front), &meta); err != nil {
+			t.Fatalf("description %q gave frontmatter that does not parse: %v\n%s", desc, err, front)
+		}
+		want := strings.Join(strings.Fields(desc), " ")
+		if want != "" && meta.Description != want {
+			t.Errorf("description %q came back as %q, want %q", desc, meta.Description, want)
+		}
+		if want == "" && !strings.HasPrefix(meta.Description, "Replace this description") {
+			t.Errorf("no description should keep the placeholder, got %q", meta.Description)
+		}
+		if meta.Metadata.Owner != `o"wner` || meta.Metadata.Team != `t\eam` {
+			t.Errorf("owner and team = %q, %q", meta.Metadata.Owner, meta.Metadata.Team)
+		}
 	}
 }

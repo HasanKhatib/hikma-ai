@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"errors"
 	"os"
 	"testing"
 
@@ -54,5 +55,24 @@ func TestFitHeightHoldsALongListToTheTerminal(t *testing.T) {
 		if got := fitHeight(c.h, c.rows); got != c.want {
 			t.Errorf("fitHeight(%d, %d) = %d, want %d", c.h, c.rows, got, c.want)
 		}
+	}
+}
+
+func TestInputWithAValidatorMayBeLeftEmpty(t *testing.T) {
+	optional := func(s string) error { return nil }
+	if err := inputValidator(optional)(""); err != nil {
+		t.Errorf("a question the caller allows to be empty was refused: %v", err)
+	}
+	if err := inputValidator(nil)("  "); err == nil {
+		t.Error("with no validator an answer is required")
+	}
+	required := func(s string) error {
+		if s == "" {
+			return errors.New("enter owner/repo")
+		}
+		return nil
+	}
+	if err := inputValidator(required)(""); err == nil || err.Error() != "enter owner/repo" {
+		t.Errorf("the caller's own message should be used, got %v", err)
 	}
 }

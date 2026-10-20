@@ -4,6 +4,20 @@ All notable changes to this project are documented here. The format follows [Kee
 
 ## [Unreleased]
 
+### Added
+- The menu asks for a description when you create a skill, links a new guide on writing and editing skills, and passes `--description` to `hikma skill create`. The guide, [Write and edit a skill](https://hasankhatib.github.io/hikma-ai/guides/write-a-skill), covers the description, `scripts/`, `references/`, `assets/`, and hooks, with links to Anthropic's and OpenAI's published guidance.
+- The publish menu marks the skills that already exist in your registry with `[exists]`.
+- `hikma skill list` and the `hikma skill install` picker mark skills you already have with `[installed]`.
+- Lists where you tick options show a checkbox (`[ ]`, `[x]`).
+
+### Fixed
+- `hikma skill create --description` (and the owner and team) no longer breaks the `SKILL.md` when the text contains a quote or a backslash.
+- A question that may be left empty in the menu, such as the optional registry in project setup, can now be left empty in a terminal; the prompt used to refuse an empty answer.
+- `hikma completion` no longer stops at "already set up". It says the line only works in windows opened after it was added and how to load it now, and for zsh it checks that `compinit` comes before the hikma line, since otherwise zsh prints `command not found: compdef`.
+
+### Changed
+- The install menu lists the skills you already have last, crossed out and marked `[installed]`, instead of hiding them; ticking one does nothing. When every skill in the registry is already installed it now says so and lists them, instead of showing an `error:`.
+
 ## [1.2.0] - 2026-10-20
 
 ### Added

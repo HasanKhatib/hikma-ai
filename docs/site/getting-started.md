@@ -111,7 +111,7 @@ Pick an entry and Hikma asks for anything it needs, then runs the same command y
 
 ### Installing skills
 
-Install reads the registry (with a spinner), lists the skills you do not have yet, and lets you tick as many as you want. Long lists can be filtered by typing `/`, and `ctrl+a` ticks them all. Skills already installed for your agent are named but not offered: reinstalling would need `--force` and replace local edits, so use Update installed skills for those. A copy installed for a different agent does not hide the skill. Before anything is written it shows a plan and asks once:
+Install reads the registry (with a spinner), lists the skills you do not have yet, and lets you tick as many as you want. Long lists can be filtered by typing `/`, and `ctrl+a` ticks them all. Skills you already have for your agent are listed last, crossed out and marked `[installed]`, and ticking one does nothing: reinstalling would need `--force` and replace local edits, so use Update installed skills for those. A copy installed for a different agent does not count. When every skill is already installed, the menu says so, lists them, and tells you how to refresh them; it is not an error. Before anything is written it shows a plan and asks once:
 
 ```text
 Will install 2 skills from acme/skills
@@ -133,6 +133,14 @@ Equivalent command:
 ```
 
 If some skills fail, the others are still installed, the result names each one that failed, and "What next?" offers to retry just those.
+
+### Creating and publishing
+
+**Create a new skill** asks for the name and a one-line description (Enter to fill it in later), and links the [guide on writing a skill](/guides/write-a-skill). It prints the command it ran, with `--description` in it.
+
+**Publish a skill to your registry** reads your registry first and marks the skills that already exist there with `[exists]`, so you can see what publishing again would update. If the registry cannot be read, for example because it is empty, you can still publish; nothing is marked.
+
+Lists where you tick several options show a checkbox, `[ ]` or `[x]`, so a ticked option reads the same without color.
 
 ### What the menu does and does not do
 

@@ -44,27 +44,48 @@ func fixed(args ...string) func(Prompter) ([]string, error) {
 	return func(Prompter) ([]string, error) { return args, nil }
 }
 
-func askName(message string, args ...string) func(Prompter) ([]string, error) {
-	return func(p Prompter) ([]string, error) {
-		name, err := p.Input(message, func(s string) error {
-			s = strings.TrimSpace(s)
-			switch {
-			case s == "":
-				return errors.New("enter a value")
-			case strings.HasPrefix(s, "-"):
-				// The value becomes a command argument, so a leading dash
-				// would be read as a flag.
-				return errors.New("cannot start with a dash")
-			case strings.ContainsAny(s, " \t"):
-				return errors.New("use one word, with no spaces")
-			}
-			return nil
-		})
-		if err != nil {
-			return nil, err
-		}
-		return append(append([]string{}, args...), strings.TrimSpace(name)), nil
+// validWord checks a value that becomes one command argument.
+func validWord(s string) error {
+	s = strings.TrimSpace(s)
+	switch {
+	case s == "":
+		return errors.New("enter a value")
+	case strings.HasPrefix(s, "-"):
+		// The value becomes a command argument, so a leading dash would be read as
+		// a flag.
+		return errors.New("cannot start with a dash")
+	case strings.ContainsAny(s, " \t"):
+		return errors.New("use one word, with no spaces")
 	}
+	return nil
+}
+
+// validDescription checks the optional one-line description of a new skill.
+func validDescription(s string) error {
+	if len([]rune(strings.TrimSpace(s))) > 300 {
+		return errors.New("keep it to a sentence or two (300 characters at most)")
+	}
+	return nil
+}
+
+// collectCreate asks for the skill's name and an optional description, and points
+// at the guide on writing one. The description becomes a --description=<text> flag
+// so the printed command is complete and a leading dash cannot be read as a flag.
+func collectCreate(p Prompter, out io.Writer) ([][]string, error) {
+	fmt.Fprintf(out, "How to write and edit a skill: %s\n\n", skillGuideURL)
+	name, err := p.Input("Skill name:", validWord)
+	if err != nil {
+		return nil, err
+	}
+	desc, err := p.Input("What does it do, and when should an agent use it? One or two sentences (Enter to fill it in later):", validDescription)
+	if err != nil {
+		return nil, err
+	}
+	args := []string{"skill", "create", strings.TrimSpace(name)}
+	if desc = strings.Join(strings.Fields(desc), " "); desc != "" {
+		args = append(args, "--description="+desc)
+	}
+	return [][]string{args}, nil
 }
 
 // The menu asks for what a command needs, so the equivalent command it prints is
@@ -158,19 +179,28 @@ func projectSkillNames() ([]string, error) {
 	return names, nil
 }
 
-func askLocalSkill(p Prompter, message string) (string, error) {
-	names, err := projectSkillNames()
-	if err != nil {
-		return "", err
+// markLabels lines names up under a marker column: names in marked get "[word]"
+// in front, the rest get blank space, so the names stay aligned and the marker is
+// always a word, never only a style.
+func markLabels(names []string, marked func(string) bool, word string) []string {
+	tag := "[" + word + "] "
+	labels := make([]string, len(names))
+	any := false
+	for _, n := range names {
+		any = any || (marked != nil && marked(n))
 	}
-	if len(names) == 0 {
-		return "", errors.New("no skills in this project's agent folders yet: create one first (hikma skill create <name>) or install one")
+	if !any {
+		// Nothing to mark: no blank column either.
+		return append(labels[:0], names...)
 	}
-	idx, err := p.Select(message, names, 0)
-	if err != nil {
-		return "", err
+	for i, n := range names {
+		if marked(n) {
+			labels[i] = tag + n
+		} else {
+			labels[i] = strings.Repeat(" ", len(tag)) + n
+		}
 	}
-	return names[idx], nil
+	return labels
 }
 
 // withSource adds the registry to a command that reads one, when none is configured.
@@ -243,13 +273,37 @@ func shortLabel(s string) string {
 // installedFor reports whether name is already installed in this project for any
 // of the agents the install would write to. Another agent's copy does not count.
 func installedFor(targets []config.Selection, name string) bool {
-	sc := projectScope()
+	return installedIn(projectScope(), targets, name)
+}
+
+// installedIn is installedFor for a given scope (this project or your home).
+func installedIn(sc scope, targets []config.Selection, name string) bool {
 	for _, t := range targets {
 		if dirExists(sc.skillDir(t, name)) {
 			return true
 		}
 	}
 	return false
+}
+
+// notice is a message that is not a failure: the menu shows it as it is, without
+// "error:", and still holds the screen at "What next?".
+type notice string
+
+func (n notice) Error() string { return string(n) }
+
+// skillLabel is a skill in the picker: its name, then its description.
+func skillLabel(s source.Skill) string {
+	if s.Description == "" {
+		return s.Name
+	}
+	return s.Name + " - " + truncate(s.Description, 70)
+}
+
+// installedLabel is a skill that is already installed: crossed out where the
+// terminal can show it, and always marked in words.
+func installedLabel(out io.Writer, s source.Skill) string {
+	return ui.Strike(out, "[installed] "+skillLabel(s))
 }
 
 // planSkill is one skill on the install screen.
@@ -339,42 +393,52 @@ func collectInstall(p Prompter, out io.Writer) ([][]string, error) {
 
 	// A name from a registry is untrusted: one that starts with a dash would be
 	// read as a flag, so it is left out of the menu.
-	var fresh []source.Skill
-	var already []string
-	total := 0
+	var fresh, have []source.Skill
 	for _, s := range skills {
-		if strings.HasPrefix(s.Name, "-") {
-			continue
+		switch {
+		case strings.HasPrefix(s.Name, "-"):
+		case installedFor(targets, s.Name):
+			have = append(have, s)
+		default:
+			fresh = append(fresh, s)
 		}
-		total++
-		if installedFor(targets, s.Name) {
-			already = append(already, s.Name)
-			continue
-		}
-		fresh = append(fresh, s)
 	}
-	switch {
-	case total == 0:
+	if len(fresh)+len(have) == 0 {
 		return nil, fmt.Errorf("%s has no skills. Check the name, or set another registry: hikma config registry <owner/repo>", label)
-	case len(fresh) == 0:
-		return nil, fmt.Errorf("every skill in %s is already installed here. To refresh them: hikma skill update --all", label)
 	}
 	// Installing over an installed skill needs --force, which would replace local
-	// edits, so the menu keeps those out of the picker and points at Update.
-	if len(already) > 0 {
-		fmt.Fprintf(out, "Already installed (to refresh them, use Update installed skills): %s\n\n", strings.Join(already, ", "))
+	// edits, so installed skills are shown crossed out and marked, and the menu
+	// points at Update for them.
+	if len(fresh) == 0 {
+		for _, s := range have {
+			fmt.Fprintln(out, installedLabel(out, s))
+		}
+		return nil, notice(fmt.Sprintf("Everything in %s is already installed here. To refresh them: hikma skill update --all", shortLabel(label)))
 	}
 
-	labels := make([]string, len(fresh))
-	for i, s := range fresh {
-		labels[i] = s.Name
-		if s.Description != "" {
-			labels[i] += " - " + truncate(s.Description, 70)
-		}
+	// Installed skills sit below the ones that can be installed. They cannot be
+	// told apart from the others by the prompt, so a tick on one is ignored.
+	labels := make([]string, 0, len(fresh)+len(have))
+	for _, s := range fresh {
+		labels = append(labels, skillLabel(s))
 	}
-	picked, err := p.MultiSelect("Skills to install:", labels, nil, 1)
-	if err != nil {
-		return nil, err
+	for _, s := range have {
+		labels = append(labels, installedLabel(out, s))
+	}
+	var picked []int
+	for len(picked) == 0 {
+		idxs, err := p.MultiSelect("Skills to install:", labels, nil, 1)
+		if err != nil {
+			return nil, err
+		}
+		for _, i := range idxs {
+			if i < len(fresh) {
+				picked = append(picked, i)
+			}
+		}
+		if len(picked) == 0 {
+			fmt.Fprintf(out, "\n%s\n\n", "Those are already installed. Tick one that is not, or use Update installed skills.")
+		}
 	}
 	plan := installPlan{Source: label}
 	names := make([]string, len(picked))
@@ -429,20 +493,56 @@ func collectUpdate(p Prompter) ([]string, error) {
 	return []string{"skill", "update", names[idx-1]}, nil
 }
 
-func collectPublish(p Prompter) ([]string, error) {
-	name, err := askLocalSkill(p, "Skill to publish:")
+// collectPublish picks a local skill to publish. It asks for the registry first
+// when none is set, because it reads the registry to mark the skills that already
+// exist there ("[exists]"; publishing one again updates it). A registry that
+// cannot be read, such as a brand-new empty one, only means no marks.
+func collectPublish(p Prompter, out io.Writer) ([][]string, error) {
+	names, err := projectSkillNames()
 	if err != nil {
 		return nil, err
 	}
-	args := []string{"skill", "push", name}
+	if len(names) == 0 {
+		return nil, errors.New("no skills in this project's agent folders yet: create one first (hikma skill create <name>) or install one")
+	}
+
+	repo := ""
 	if !registryConfigured() {
 		r, err := askRegistry(p, "No registry is set. Registry to publish to (owner/repo):")
 		if err != nil {
 			return nil, err
 		}
-		args = append(args, "--registry", r)
+		repo = r
 	}
-	return args, nil
+	label := registryLabel(repo)
+	published := map[string]bool{}
+	skills, err := readRegistry(p, label, repo)
+	switch {
+	case errors.Is(err, errCancelled):
+		return nil, err
+	case err != nil:
+		fmt.Fprintf(out, "%s\n\n", ui.Dim(out, "Could not read "+shortLabel(label)+" to see what exists there, so nothing is marked: "+firstLine(err)))
+	default:
+		for _, s := range skills {
+			published[strings.ToLower(s.Name)] = true
+		}
+	}
+
+	idx, err := p.Select("Skill to publish:", markLabels(names, func(n string) bool { return published[strings.ToLower(n)] }, "exists"), 0)
+	if err != nil {
+		return nil, err
+	}
+	args := []string{"skill", "push", names[idx]}
+	if repo != "" {
+		args = append(args, "--registry", repo)
+	}
+	return [][]string{args}, nil
+}
+
+// firstLine is the first line of an error, for a one-line note.
+func firstLine(err error) string {
+	line, _, _ := strings.Cut(err.Error(), "\n")
+	return line
 }
 
 func collectInit(p Prompter) ([]string, error) {
@@ -489,8 +589,8 @@ var wizardEntries = []wizardEntry{
 	{label: "Browse skills in your registry", collect: one(withSource(nil, "skill", "list"))},
 	{label: "Update installed skills", collect: one(collectUpdate)},
 	{label: "Verify installed skills", collect: one(fixed("skill", "verify"))},
-	{label: "Create a new skill", collect: one(askName("Skill name:", "skill", "create"))},
-	{label: "Publish a skill to your registry", collect: one(collectPublish)},
+	{label: "Create a new skill", collect: collectCreate},
+	{label: "Publish a skill to your registry", collect: collectPublish},
 	{label: "Setup and settings", sub: setupEntries},
 }
 
@@ -649,9 +749,13 @@ func runWizard(p Prompter, out io.Writer, run func(ctx context.Context, args []s
 			continue
 		}
 		var retry []string
-		if err != nil {
+		var note notice
+		switch {
+		case errors.As(err, &note):
+			fmt.Fprintf(out, "\n%s\n", note)
+		case err != nil:
 			fmt.Fprintf(out, "\nerror: %s\n", err)
-		} else {
+		default:
 			fmt.Fprintln(out)
 			retry = execute(out, cmds, run)
 		}

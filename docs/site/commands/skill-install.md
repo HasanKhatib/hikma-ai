@@ -20,7 +20,7 @@ hikma skill install owner/repo --skill a --skill b   # several skills from one c
 
 A folder or a `/tree/<branch>/<folder>` link names one skill, so no name is needed. The folder has to be one hikma installs from (`skills/<name>/`, `<name>/`, or the root); for another layout, [`skill import`](/commands/skill-import) finds more. A single argument that contains a `/`, a URL, or a path is treated as a source. Anything else is a skill name looked up in your registry. See the [source list](/commands/#sources).
 
-With a source but no name, a terminal shows a picker. Without a terminal the skills are listed and the command exits asking for a name.
+With a source but no name, a terminal shows a picker, with `[installed]` in front of the skills you already have. Without a terminal the skills are listed (marked the same way) and the command exits asking for a name.
 
 ## Several skills at once
 

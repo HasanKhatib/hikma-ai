@@ -8,7 +8,7 @@ hikma completion --install zsh   # same, for a shell you name
 hikma completion zsh             # only print the script
 ```
 
-The installer shows the file it will change and asks before writing (`--yes` skips the question). zsh and bash get a marked `source` line appended to `~/.zshrc` or `~/.bashrc` (`~/.bash_profile` on macOS), skipped quietly if `hikma` is ever removed; fish gets `~/.config/fish/completions/hikma.fish`; PowerShell gets a line in your `$PROFILE`. Running it twice changes nothing.
+The installer shows the file it will change and asks before writing (`--yes` skips the question). zsh and bash get a marked `source` line appended to `~/.zshrc` or `~/.bashrc` (`~/.bash_profile` on macOS), skipped quietly if `hikma` is ever removed; fish gets `~/.config/fish/completions/hikma.fish`; PowerShell gets a line in your `$PROFILE`. Running it twice changes nothing: if the line is already there it says so, and tells you what it cannot see for you. A line in `~/.zshrc` only works in terminal windows opened after it was added, so in an open window run `source ~/.zshrc` or open a new one. For zsh it also checks that `compinit` (or oh-my-zsh) comes before the hikma line; without it zsh prints `command not found: compdef` and cannot register the completion, and the message says to move the lines below it.
 
 Bash completion needs bash 4.1 or newer with the `bash-completion` package loaded before the line the installer adds; macOS ships bash 3.2, and Git Bash on Windows has no `bash-completion`, so use PowerShell there. To do it by hand, follow the steps below.
 

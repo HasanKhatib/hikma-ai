@@ -176,17 +176,22 @@ func narrowToFolder(skills []source.Skill, folder string, src source.Source) ([]
 	return out, nil
 }
 
-func pickSkill(w io.Writer, skills []source.Skill) (source.Skill, error) {
+// pickSkill asks which skill of a source to use. installed marks the ones already
+// installed with "[installed]"; it may be nil.
+func pickSkill(w io.Writer, skills []source.Skill, installed func(string) bool) (source.Skill, error) {
 	if len(skills) == 0 {
 		return source.Skill{}, fmt.Errorf("no skills found in this source")
 	}
 	if !isInteractive() {
-		printSkillTable(w, skills)
+		printSkillTableMarked(w, skills, installed)
 		return source.Skill{}, fmt.Errorf("choose a skill: hikma skill install <owner/repo> <name>")
 	}
-	labels := make([]string, len(skills))
+	names := make([]string, len(skills))
 	for i, s := range skills {
-		labels[i] = s.Name
+		names[i] = s.Name
+	}
+	labels := markLabels(names, installed, "installed")
+	for i, s := range skills {
 		if s.Description != "" {
 			labels[i] += " - " + truncate(s.Description, 70)
 		}
@@ -205,16 +210,44 @@ func truncate(s string, n int) string {
 	return s
 }
 
-func printSkillTable(w io.Writer, skills []source.Skill) {
+func printSkillTable(w io.Writer, skills []source.Skill) { printSkillTableMarked(w, skills, nil) }
+
+// printSkillTableMarked prints the skills with "[installed]" in front of the ones
+// marked as installed. When none is, the table is the plain one.
+func printSkillTableMarked(w io.Writer, skills []source.Skill, installed func(string) bool) {
 	if len(skills) == 0 {
 		fmt.Fprintln(w, "No skills found.")
 		return
 	}
-	const nameW, descW = 25, 50
-	fmt.Fprintf(w, "%-*s  %-*s  %s\n", nameW, "NAME", descW, "DESCRIPTION", "OWNER")
-	for _, s := range skills {
-		fmt.Fprintf(w, "%-*s  %-*s  %s\n", nameW, s.Name, descW, truncate(s.Description, descW), s.Owner)
+	names := make([]string, len(skills))
+	for i, s := range skills {
+		names[i] = s.Name
 	}
+	marked := markLabels(names, installed, "installed")
+	lead := ""
+	if anyDiffers(marked, names) {
+		lead = strings.Repeat(" ", len("[installed] "))
+	}
+	const nameW, descW = 25, 50
+	fmt.Fprintf(w, "%s%-*s  %-*s  %s\n", lead, nameW, "NAME", descW, "DESCRIPTION", "OWNER")
+	for i, s := range skills {
+		name := s.Name
+		if lead != "" {
+			name = marked[i]
+			fmt.Fprintf(w, "%s  %-*s  %s\n", ui.Pad(name, len(lead)+nameW), descW, truncate(s.Description, descW), s.Owner)
+			continue
+		}
+		fmt.Fprintf(w, "%-*s  %-*s  %s\n", nameW, name, descW, truncate(s.Description, descW), s.Owner)
+	}
+}
+
+func anyDiffers(a, b []string) bool {
+	for i := range a {
+		if a[i] != b[i] {
+			return true
+		}
+	}
+	return false
 }
 
 func newSkillListCmd(flagRegistry *string) *cobra.Command {
@@ -259,7 +292,11 @@ func newSkillListCmd(flagRegistry *string) *cobra.Command {
 					Skills  []source.Skill `json:"skills"`
 				}{jsonVersion, skills})
 			}
-			printSkillTable(cmd.OutOrStdout(), skills)
+			var installed func(string) bool
+			if targets, err := config.ResolveTargets(""); err == nil {
+				installed = func(n string) bool { return installedIn(projectScope(), targets, n) }
+			}
+			printSkillTableMarked(cmd.OutOrStdout(), skills, installed)
 			return nil
 		},
 	}
@@ -322,7 +359,7 @@ func newSkillInfoCmd(flagRegistry *string) *cobra.Command {
 }
 
 func nameFromPicker(w io.Writer, skills []source.Skill) (string, error) {
-	s, err := pickSkill(w, skills)
+	s, err := pickSkill(w, skills, nil)
 	return s.Name, err
 }
 
@@ -398,7 +435,7 @@ through a symlinked folder.`,
 			if name == "" && folder != "" && len(skills) == 1 {
 				skill = skills[0]
 			} else if name == "" {
-				if skill, err = pickSkill(out, skills); err != nil {
+				if skill, err = pickSkill(out, skills, func(n string) bool { return installedIn(sc, targets, n) }); err != nil {
 					return err
 				}
 			} else {

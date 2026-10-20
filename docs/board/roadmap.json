@@ -2549,7 +2549,7 @@
             },
             {
               "id": "E7.7-T7",
-              "title": "Plan screen and one Confirm before an install, naming the target folder; skills already installed are named but not offered, because reinstalling needs --force and would replace local edits (the menu points at Update); pure renderer with golden-text tests",
+              "title": "Plan screen and one Confirm before an install, naming the target folder; skills already installed are listed last, crossed out and marked [installed], and ticking one does nothing, because reinstalling needs --force and would replace local edits (the menu points at Update); pure renderer with golden-text tests",
               "status": "done",
               "assignee": "ai",
               "labels": [
@@ -2620,6 +2620,18 @@
               "status": "done",
               "assignee": "ai",
               "labels": [
+                "fix",
+                "cli"
+              ],
+              "planned": null
+            },
+            {
+              "id": "E7.7-T14",
+              "title": "Improvements after use (2026-10-20): installed skills crossed out and marked, notice instead of an error when all are installed, a description when creating a skill with a guide link, [exists] when publishing, checkboxes in multi-selects, markers in skill list and the install picker, and a completion message that says how to load it and checks compinit order",
+              "status": "done",
+              "assignee": "ai",
+              "labels": [
+                "feature",
                 "fix",
                 "cli"
               ],

@@ -15,6 +15,7 @@ const (
 	cyan   = "\x1b[36m"
 	bold   = "\x1b[1m"
 	dim    = "\x1b[2m"
+	strike = "\x1b[9m"
 	reset  = "\x1b[0m"
 )
 
@@ -59,6 +60,11 @@ func Bold(w io.Writer, s string) string { return paint(w, bold, s) }
 
 // Dim fades s for secondary text when w is a color-capable terminal.
 func Dim(w io.Writer, s string) string { return paint(w, dim, s) }
+
+// Strike crosses s out when w is a color-capable terminal. A caller that uses it
+// also writes a word such as "[installed]", since a strikethrough is not seen
+// everywhere.
+func Strike(w io.Writer, s string) string { return paint(w, strike, s) }
 
 // Warning is the "warning:" prefix, in yellow on a terminal.
 func Warning(w io.Writer) string { return Yellow(w, "warning:") }

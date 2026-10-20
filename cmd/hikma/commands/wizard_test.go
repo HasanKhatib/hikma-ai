@@ -152,7 +152,7 @@ func TestWizardRunsTheFlagCommandAndPrintsIt(t *testing.T) {
 		equiv  string
 	}{
 		{"Install skills from your registry", nil, []int{1}, []string{"skill", "install", "beta"}, "hikma skill install beta"},
-		{"Create a new skill", []string{" my-skill "}, nil, []string{"skill", "create", "my-skill"}, "hikma skill create my-skill"},
+		{"Create a new skill", []string{" my-skill ", ""}, nil, []string{"skill", "create", "my-skill"}, "hikma skill create my-skill"},
 		{"Set your registry", []string{"acme/skills"}, nil, []string{"config", "registry", "acme/skills"}, "hikma config registry acme/skills"},
 		{"Check your setup", nil, nil, []string{"doctor"}, "hikma doctor"},
 	}
@@ -211,13 +211,13 @@ func TestWizardInstallShowsAPlanAndDeclineWritesNothing(t *testing.T) {
 	if len(ran) != 0 {
 		t.Errorf("declining the plan ran %v", ran)
 	}
-	for _, want := range []string{"Already installed", "alpha", "Will install 1 skill from acme/skills", "  beta  does beta\n", ".claude/skills"} {
+	for _, want := range []string{"Will install 1 skill from acme/skills", "  beta  does beta\n", ".claude/skills"} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("missing %q in:\n%s", want, out.String())
 		}
 	}
-	if len(p.picker) != 1 || !strings.HasPrefix(p.picker[0], "beta") {
-		t.Errorf("an installed skill must not be offered, got %v", p.picker)
+	if len(p.picker) != 2 || !strings.HasPrefix(p.picker[0], "beta") || !strings.HasPrefix(p.picker[1], "[installed] alpha") {
+		t.Errorf("want the new skill first and the installed one last, marked in words; got %v", p.picker)
 	}
 }
 
@@ -230,11 +230,68 @@ func TestWizardInstallExplainsAnEmptyOrFullRegistry(t *testing.T) {
 	if err == nil || !strings.Contains(err.Error(), "acme/skills has no skills") || !strings.Contains(err.Error(), "hikma config registry") {
 		t.Errorf("empty registry: got %v", err)
 	}
-	stubSkills(t, "alpha")
+
+	// Everything installed is not a failure: the list is shown marked, with what to
+	// do next, and no "error:".
+	stubSkills(t, "alpha", "beta")
+	for _, n := range []string{"alpha", "beta"} {
+		write(t, filepath.Join(dir, ".claude/skills/"+n+"/SKILL.md"), "---\nname: "+n+"\ndescription: d\n---\n")
+	}
+	var out bytes.Buffer
+	ran, err := runEntryTo(t, "Install skills from your registry", &fakePrompter{}, &out)
+	if err != nil {
+		t.Fatalf("all installed must not be shown as an error, got %v", err)
+	}
+	if len(ran) != 0 {
+		t.Errorf("ran %v", ran)
+	}
+	for _, want := range []string{"[installed] alpha", "[installed] beta", "Everything in acme/skills is already installed here", "hikma skill update --all"} {
+		if !strings.Contains(out.String(), want) {
+			t.Errorf("missing %q in:\n%s", want, out.String())
+		}
+	}
+	if strings.Contains(out.String(), "error:") {
+		t.Errorf("no 'error:' for a state that is not a failure:\n%s", out.String())
+	}
+}
+
+// ticksThen answers the install picker with each list in turn.
+type ticksThen struct {
+	*fakePrompter
+	answers [][]int
+	asked   int
+}
+
+func (p *ticksThen) MultiSelect(message string, options []string, defaults []int, atLeast int) ([]int, error) {
+	p.fakePrompter.MultiSelect(message, options, defaults, atLeast)
+	a := p.answers[min(p.asked, len(p.answers)-1)]
+	p.asked++
+	return a, nil
+}
+
+func TestTickingAnInstalledSkillIsIgnoredAndAsksAgain(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	t.Setenv("HIKMA_AGENT", "claude")
+	stubSkills(t, "alpha", "beta", "gamma")
 	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
-	_, err = runEntry(t, "Install skills from your registry", &fakePrompter{})
-	if err == nil || !strings.Contains(err.Error(), "already installed") || !strings.Contains(err.Error(), "skill update --all") {
-		t.Errorf("all installed: got %v", err)
+	// The list is beta, gamma, then [installed] alpha. First only alpha is ticked,
+	// then alpha and gamma.
+	fp := &fakePrompter{scripted: true, quitNext: true, picks: pathTo(t, "Install skills from your registry")}
+	p := &ticksThen{fakePrompter: fp, answers: [][]int{{2}, {2, 1}}}
+	var out bytes.Buffer
+	var got [][]string
+	if err := runWizard(p, &out, func(_ context.Context, a []string) error { got = append(got, a); return nil }); err != nil {
+		t.Fatal(err)
+	}
+	if p.asked != 2 {
+		t.Errorf("the picker was shown %d times, want 2: the first tick was only an installed skill", p.asked)
+	}
+	if !strings.Contains(out.String(), "Those are already installed") {
+		t.Errorf("the user should be told why the picker came back:\n%s", out.String())
+	}
+	if want := [][]string{{"skill", "install", "gamma"}}; !reflect.DeepEqual(got, want) {
+		t.Errorf("ran %v, want %v: the installed alpha must be ignored", got, want)
 	}
 }
 
@@ -410,7 +467,7 @@ func TestEveryWizardEntryIsARealCommand(t *testing.T) {
 	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
 	root := Root()
 	for _, e := range leaves() {
-		cmds, err := e.collect(&fakePrompter{inputs: []string{"acme/skills"}, picks: []int{0}, multi: []int{0}}, io.Discard)
+		cmds, err := e.collect(&fakePrompter{inputs: []string{"acme/skills", "a description"}, picks: []int{0}, multi: []int{0}}, io.Discard)
 		if err != nil {
 			t.Fatalf("%s: %v", e.label, err)
 		}
@@ -542,6 +599,7 @@ func TestWizardRejectsABadRegistry(t *testing.T) {
 func TestWizardPublishPicksALocalSkill(t *testing.T) {
 	dir := project(t)
 	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	stubSkills(t) // nothing published yet, so nothing is marked
 	write(t, filepath.Join(dir, ".claude/skills/beta/SKILL.md"), "---\nname: beta\ndescription: d\n---\n")
 	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
 	p := &fakePrompter{picks: []int{1}} // names are sorted: alpha, beta
@@ -557,15 +615,56 @@ func TestWizardPublishPicksALocalSkill(t *testing.T) {
 	}
 }
 
-func TestWizardPublishAsksForARegistryWhenNoneIsSet(t *testing.T) {
+func TestWizardPublishMarksTheSkillsThatAlreadyExistInTheRegistry(t *testing.T) {
 	dir := project(t)
-	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
-	ran, err := runEntry(t, "Publish a skill to your registry", &fakePrompter{inputs: []string{"acme/skills"}})
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	stubSkills(t, "Beta", "other") // the registry has Beta (any letter case) and a skill we do not have
+	for _, n := range []string{"alpha", "beta"} {
+		write(t, filepath.Join(dir, ".claude/skills/"+n+"/SKILL.md"), "---\nname: "+n+"\ndescription: d\n---\n")
+	}
+	p := &fakePrompter{picks: []int{1}}
+	var out bytes.Buffer
+	ran, err := runEntryTo(t, "Publish a skill to your registry", p, &out)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"skill", "push", "alpha", "--registry", "acme/skills"}; !reflect.DeepEqual(ran, want) {
+	if want := [][]string{{"skill", "push", "beta"}}; !reflect.DeepEqual(ran, want) {
 		t.Errorf("ran %v, want %v", ran, want)
+	}
+	want := []string{"         alpha", "[exists] beta"}
+	if !reflect.DeepEqual(p.options, want) {
+		t.Errorf("picker options = %q, want %q: marked in words, names aligned", p.options, want)
+	}
+}
+
+func TestWizardPublishStillWorksWhenTheRegistryCannotBeRead(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	old := registrySkills
+	registrySkills = func(context.Context, string) ([]source.Skill, error) { return nil, errors.New("repository is empty") }
+	t.Cleanup(func() { registrySkills = old })
+	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
+	var out bytes.Buffer
+	ran, err := runEntryTo(t, "Publish a skill to your registry", &fakePrompter{}, &out)
+	if err != nil {
+		t.Fatalf("an unreadable registry must not stop a publish: %v", err)
+	}
+	if want := [][]string{{"skill", "push", "alpha"}}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	if !strings.Contains(out.String(), "nothing is marked") || !strings.Contains(out.String(), "repository is empty") {
+		t.Errorf("the user should be told why nothing is marked:\n%s", out.String())
+	}
+}
+
+func TestMarkLabelsAddsNoColumnWhenNothingIsMarked(t *testing.T) {
+	got := markLabels([]string{"a", "bb"}, func(string) bool { return false }, "exists")
+	if !reflect.DeepEqual(got, []string{"a", "bb"}) {
+		t.Errorf("got %q", got)
+	}
+	got = markLabels([]string{"a", "bb"}, nil, "exists")
+	if !reflect.DeepEqual(got, []string{"a", "bb"}) {
+		t.Errorf("nil marker: got %q", got)
 	}
 }
 
@@ -800,5 +899,43 @@ func TestLongRegistryNamesAreShortened(t *testing.T) {
 	}
 	if got := shortLabel("acme/skills"); got != "acme/skills" {
 		t.Errorf("a short name changes: %q", got)
+	}
+}
+
+func TestWizardCreateAsksForADescriptionAndPointsAtTheGuide(t *testing.T) {
+	project(t)
+	p := &fakePrompter{inputs: []string{"deploy-helper", `  Deploy a service and "verify" it.
+Use when asked to roll out.  `}}
+	var out bytes.Buffer
+	ran, err := runEntryTo(t, "Create a new skill", p, &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := [][]string{{"skill", "create", "deploy-helper", `--description=Deploy a service and "verify" it. Use when asked to roll out.`}}
+	if !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	if !strings.Contains(out.String(), skillGuideURL) {
+		t.Errorf("the prompt text should link the guide:\n%s", out.String())
+	}
+	if !strings.Contains(out.String(), "--description=") {
+		t.Errorf("the equivalent command should carry the description:\n%s", out.String())
+	}
+}
+
+func TestWizardCreateDescriptionIsOptionalAndBounded(t *testing.T) {
+	if err := validDescription(""); err != nil {
+		t.Errorf("an empty description must be allowed: %v", err)
+	}
+	if err := validDescription(strings.Repeat("x", 301)); err == nil {
+		t.Error("a description over 300 characters should be refused")
+	}
+	// A description that starts with a dash is a value, not a flag.
+	ran, err := runEntry(t, "Create a new skill", &fakePrompter{inputs: []string{"s", "-not a flag"}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := []string{"skill", "create", "s", "--description=-not a flag"}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
 	}
 }

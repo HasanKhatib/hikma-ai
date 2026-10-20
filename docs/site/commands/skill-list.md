@@ -15,6 +15,8 @@ deploy-helper              Deploy a service and check health after rollout     p
 release-notes              Draft release notes from merged pull requests       docs
 ```
 
+Skills you already have installed for your agent are marked `[installed]` in front of the name. When none is, the table has no marker column. `--json` carries no markers.
+
 `--json` prints `{ "version": 1, "skills": [...] }` and sends status messages to stderr, so the output is safe to pipe. See [Exit codes and JSON](/reference/output).
 
 ## What is installed here

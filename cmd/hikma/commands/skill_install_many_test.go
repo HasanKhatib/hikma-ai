@@ -161,3 +161,71 @@ func TestInstallFailedErrorDoesNotRepeatTheSummary(t *testing.T) {
 		t.Errorf("got %q", e.Error())
 	}
 }
+
+func TestListMarksInstalledSkillsInTheTableOnly(t *testing.T) {
+	reg := threeSkillRepo(t)
+	project(t)
+	t.Setenv("HIKMA_AGENT", "claude")
+	if out, err := run(t, "skill", "install", reg, "beta"); err != nil {
+		t.Fatalf("setup: %v\n%s", err, out)
+	}
+	out, err := run(t, "skill", "list", reg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "[installed] beta") {
+		t.Errorf("beta is installed and should be marked:\n%s", out)
+	}
+	for _, line := range strings.Split(out, "\n") {
+		if strings.Contains(line, "alpha") && strings.Contains(line, "[installed]") {
+			t.Errorf("alpha is not installed but is marked: %q", line)
+		}
+	}
+	// Machine output is unchanged.
+	js, err := run(t, "skill", "list", reg, "--json")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(js, "[installed]") {
+		t.Errorf("--json must not carry display markers:\n%s", js)
+	}
+}
+
+func TestListHasNoMarkerColumnWhenNothingIsInstalled(t *testing.T) {
+	reg := threeSkillRepo(t)
+	project(t)
+	t.Setenv("HIKMA_AGENT", "claude")
+	out, err := run(t, "skill", "list", reg)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "[installed]") {
+		t.Errorf("nothing is installed:\n%s", out)
+	}
+	if !strings.Contains(out, "NAME ") || strings.Contains(out, "  NAME") {
+		t.Errorf("the table should not be indented when nothing is marked:\n%s", out)
+	}
+}
+
+func TestInstallPickerMarksInstalledSkills(t *testing.T) {
+	reg := threeSkillRepo(t)
+	project(t)
+	t.Setenv("HIKMA_AGENT", "claude")
+	if out, err := run(t, "skill", "install", reg, "gamma"); err != nil {
+		t.Fatalf("setup: %v\n%s", err, out)
+	}
+	f := &fakePrompter{pick: 0}
+	withPrompter(t, f)
+	if out, err := run(t, "skill", "install", reg); err != nil {
+		t.Fatalf("install: %v\n%s", err, out)
+	}
+	var marked []string
+	for _, o := range f.options {
+		if strings.Contains(o, "[installed]") {
+			marked = append(marked, o)
+		}
+	}
+	if len(marked) != 1 || !strings.Contains(marked[0], "gamma") {
+		t.Errorf("only gamma is installed; picker options: %q", f.options)
+	}
+}

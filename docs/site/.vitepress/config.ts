@@ -91,6 +91,7 @@ export default defineConfig({
         items: [
           { text: "Overview", link: "/guides/" },
           { text: "Agents and folders", link: "/guides/agents" },
+          { text: "Write and edit a skill", link: "/guides/write-a-skill" },
           { text: "Skill format", link: "/guides/skill-format" },
           { text: "Run a registry", link: "/guides/registry" },
           { text: "Glossary", link: "/guides/glossary" },

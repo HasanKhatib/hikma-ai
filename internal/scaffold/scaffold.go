@@ -186,6 +186,25 @@ type SkillOptions struct {
 	TargetDir   string
 }
 
+// yamlDoubleQuoted escapes s for use inside a YAML double-quoted string: a
+// backslash and a double quote are escaped, and a line break or other control
+// character becomes a space, so the value stays on one line.
+func yamlDoubleQuoted(s string) string {
+	var b strings.Builder
+	for _, r := range strings.TrimSpace(s) {
+		switch {
+		case r == '\\', r == '"':
+			b.WriteRune('\\')
+			b.WriteRune(r)
+		case r < 0x20 || r == 0x7f:
+			b.WriteRune(' ')
+		default:
+			b.WriteRune(r)
+		}
+	}
+	return b.String()
+}
+
 // CreateSkill writes a new skill directory from the embedded skill template
 // into opts.TargetDir, interpolating the provided variables.
 // It returns the list of files created.
@@ -196,10 +215,12 @@ func CreateSkill(opts SkillOptions) ([]string, error) {
 		Team        string
 		Description string
 	}{
-		SkillName:   opts.SkillName,
-		Owner:       opts.Owner,
-		Team:        opts.Team,
-		Description: opts.Description,
+		SkillName: opts.SkillName,
+		// These land inside double quotes in the SKILL.md frontmatter, so a quote
+		// or a backslash in them must not end the string early.
+		Owner:       yamlDoubleQuoted(opts.Owner),
+		Team:        yamlDoubleQuoted(opts.Team),
+		Description: yamlDoubleQuoted(opts.Description),
 	}
 
 	var result Result

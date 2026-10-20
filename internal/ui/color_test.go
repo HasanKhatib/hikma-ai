@@ -76,3 +76,10 @@ func TestWidthCountsColumnsNotBytes(t *testing.T) {
 		t.Errorf("Pad = %q", got)
 	}
 }
+
+func TestStrikeIsPlainOffATerminal(t *testing.T) {
+	var buf bytes.Buffer
+	if got := Strike(&buf, "[installed] alpha"); got != "[installed] alpha" {
+		t.Errorf("captured output got %q", got)
+	}
+}
