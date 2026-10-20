@@ -1,31 +1,131 @@
 name: Release
 
+# Fully automated: merging to main is the release. Nobody tags by hand.
+#
+#   gate     waits until every other workflow on this commit has finished and
+#            passed, so a failing check (including the pty tests) blocks a release.
+#   release  semantic-release reads the conventional commits since the last tag
+#            (rules in .releaserc.json), picks the next version, pushes the tag
+#            and creates the GitHub release with generated notes. When no commit
+#            calls for a release (docs, chore, ci, test, refactor) it does nothing
+#            and the jobs after it are skipped.
+#   build    GoReleaser builds the binaries at that tag and attaches them to the
+#            release, the archives are attested, and the Homebrew formula is
+#            written to the tap.
+#   verify   installs the published release on each OS the way users do.
+#
+# Commit types and their effect on the version:
+#   fix:, perf:                  patch  (1.3.0 -> 1.3.1)
+#   feat:                        minor  (1.3.0 -> 1.4.0)
+#   feat!:, BREAKING CHANGE:     major  (1.3.0 -> 2.0.0)
+#   docs:, chore:, ci:, test:, refactor:   no release
+#
+# The version in the binary comes from the tag (GoReleaser sets it with ldflags).
+# Do not push v* tags by hand. If build fails after the tag exists, re-run the
+# failed jobs of that run: semantic-release will not release the same commits twice.
+
 on:
   push:
-    tags:
-      - "v*"
-  # Started by the Cut release workflow, which tags a new CHANGELOG version.
-  # Run it from a tag, never a branch: the job below refuses anything else.
+    branches: [main]
   workflow_dispatch:
 
-permissions:
-  contents: write
-  id-token: write      # sign build attestations
-  attestations: write
-
+# One release at a time. A newer push waits for the running one, and only the
+# newest waiting run is kept: it contains the commits of the ones it replaced.
 concurrency:
-  group: release-${{ github.ref_name }}
+  group: release
   cancel-in-progress: false
 
+permissions:
+  contents: read
+
 jobs:
-  goreleaser:
-    # Publishing is for tags only.
-    if: startsWith(github.ref, 'refs/tags/v')
+  gate:
+    name: Wait for checks
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - name: Wait for the other workflows on this commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          # Other workflows start within seconds of a push, but not instantly, so
+          # CI has to be seen before "nothing is running" can be believed.
+          sleep 30
+          for _ in $(seq 1 130); do
+            runs=$(gh api "repos/$GITHUB_REPOSITORY/actions/runs?head_sha=$SHA&per_page=100" \
+              --jq "[.workflow_runs[] | select(.id != $GITHUB_RUN_ID)]")
+            has_ci=$(jq '[.[] | select(.name == "CI")] | length' <<<"$runs")
+            pending=$(jq -r '[.[] | select(.status != "completed") | .name] | join(", ")' <<<"$runs")
+            failed=$(jq -r '[.[] | select(.status == "completed" and (.conclusion | IN("success","skipped","neutral") | not)) | .name] | join(", ")' <<<"$runs")
+            if [ -n "$failed" ]; then
+              echo "::error::Not releasing: these workflows did not pass on $SHA: $failed"
+              exit 1
+            fi
+            if [ "$has_ci" != "0" ] && [ -z "$pending" ]; then
+              echo "All $(jq length <<<"$runs") other workflows passed on $SHA."
+              exit 0
+            fi
+            echo "Waiting for: ${pending:-CI to start}"
+            sleep 20
+          done
+          echo "::error::Timed out waiting for the other workflows on $SHA."
+          exit 1
+
+  release:
+    name: Semantic release
+    needs: gate
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write # push the tag and create the GitHub release
+    outputs:
+      released: ${{ steps.sr.outputs.released }}
+      tag: ${{ steps.sr.outputs.tag }}
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+      - name: Run semantic-release
+        id: sr
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          before=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo none)
+          # The preset stays on major 9: 10 needs a newer changelog writer than the one
+          # semantic-release's release-notes plugin bundles, and fails at the notes step.
+          npx --yes -p semantic-release@25.0.9 -p conventional-changelog-conventionalcommits@9.3.1 semantic-release
+          git fetch --tags --force --quiet
+          after=$(git describe --tags --abbrev=0 --match 'v[0-9]*' 2>/dev/null || echo none)
+          if [ "$after" != "$before" ]; then
+            echo "released=true" >> "$GITHUB_OUTPUT"
+            echo "tag=$after" >> "$GITHUB_OUTPUT"
+            echo "Released $after (was $before)."
+          else
+            echo "released=false" >> "$GITHUB_OUTPUT"
+            echo "No release: no commit since $before calls for one."
+          fi
+
+  build:
+    name: GoReleaser
+    needs: release
+    if: needs.release.outputs.released == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      id-token: write # sign build attestations
+      attestations: write
+    env:
+      TAG: ${{ needs.release.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ needs.release.outputs.tag }}
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
@@ -36,21 +136,16 @@ jobs:
           umask 077
           printf '%s\n' "$TAP_KEY" > "$RUNNER_TEMP/tap_deploy_key"
           echo "HOMEBREW_TAP_KEY_PATH=$RUNNER_TEMP/tap_deploy_key" >> "$GITHUB_ENV"
-      - name: Release notes from CHANGELOG
-        run: |
-          v="${GITHUB_REF_NAME#v}"
-          v="${v%%-*}"
-          awk -v v="$v" '/^## \[/ { p = index($0, "[" v "]") > 0; next } p' CHANGELOG.md > "$RUNNER_TEMP/notes.md"
-          [ -s "$RUNNER_TEMP/notes.md" ] || echo "Release $GITHUB_REF_NAME" > "$RUNNER_TEMP/notes.md"
       - uses: goreleaser/goreleaser-action@v7
         with:
           distribution: goreleaser
           version: "~> v2"
-          args: release --clean --release-notes=${{ runner.temp }}/notes.md
+          # The release and its notes already exist (semantic-release made them);
+          # GoReleaser builds the binaries and attaches them.
+          args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # Build the pushed tag even when another tag (such as an rc) points at the same commit.
-          GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
+          GORELEASER_CURRENT_TAG: ${{ needs.release.outputs.tag }}
       - name: Attest the release artifacts
         uses: actions/attest-build-provenance@v4
         with:
@@ -60,13 +155,13 @@ jobs:
             dist/checksums.txt
       - name: Publish the Homebrew formula
         # Pre-releases (for example v0.3.0-rc.1) must not update the tap.
-        if: ${{ !contains(github.ref_name, '-') }}
+        if: ${{ !contains(needs.release.outputs.tag, '-') }}
         run: |
           export GIT_SSH_COMMAND="ssh -i $HOMEBREW_TAP_KEY_PATH -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new"
           git clone --depth 1 git@github.com:HasanKhatib/homebrew-tap.git "$RUNNER_TEMP/tap"
           cd "$RUNNER_TEMP/tap"
           mkdir -p Formula
-          "$GITHUB_WORKSPACE/scripts/render-formula.sh" "$GITHUB_REF_NAME" "$GITHUB_WORKSPACE/dist/checksums.txt" > Formula/hikma.rb
+          "$GITHUB_WORKSPACE/scripts/render-formula.sh" "$TAG" "$GITHUB_WORKSPACE/dist/checksums.txt" > Formula/hikma.rb
           # A cask and a formula with one name make 'brew install hikma' ambiguous.
           git rm -q --ignore-unmatch Casks/hikma.rb
           git add Formula/hikma.rb
@@ -76,5 +171,14 @@ jobs:
           fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git commit -q -m "hikma ${GITHUB_REF_NAME#v}"
+          git commit -q -m "hikma ${TAG#v}"
           git push
+
+  verify:
+    name: Verify release
+    needs: [release, build]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/verify-release.yml
+    with:
+      tag: ${{ needs.release.outputs.tag }}

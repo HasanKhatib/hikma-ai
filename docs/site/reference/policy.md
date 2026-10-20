@@ -20,10 +20,10 @@ A feature is removed only in a major version, after at least one minor release t
 
 - The warning goes to **stderr**, so piped output and `--json` stay clean.
 - It names the replacement and the version that removes the feature.
-- The change is listed under *Deprecated* in the [changelog](https://github.com/HasanKhatib/hikma-ai/blob/main/CHANGELOG.md).
+- The deprecation is announced in the [release notes](https://github.com/HasanKhatib/hikma-ai/releases) of the release that introduces it.
 - Once you have switched to the replacement, the warning stops.
 
-Security fixes are the one exception: if a behavior is unsafe, it can be tightened in a minor or patch release, and the changelog says so.
+Security fixes are the one exception: if a behavior is unsafe, it can be tightened in a minor or patch release, and the release notes say so.
 
 ## The origin file
 
@@ -31,7 +31,7 @@ Security fixes are the one exception: if a behavior is unsafe, it can be tighten
 
 ## Before 1.0
 
-Releases below 1.0 can change the contracts above when there is a good reason, and the changelog says what changed. 0.6 and later follow these rules where they can, so the move to 1.0 changes as little as possible.
+Releases below 1.0 can change the contracts above when there is a good reason, and the release notes say what changed. 0.6 and later follow these rules where they can, so the move to 1.0 changes as little as possible.
 
 ## Agents and `gh skill`
 

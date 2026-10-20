@@ -1,12 +1,23 @@
-import { readFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
 import { defineConfig } from "vitepress";
 
 // Project Pages are served from /hikma-ai/. Override with VITEPRESS_BASE for another host.
 const base = process.env.VITEPRESS_BASE ?? "/hikma-ai/";
 
-// The nav shows the latest released version, read from the changelog so it never goes stale.
-const latest =
-  readFileSync(new URL("../../../CHANGELOG.md", import.meta.url), "utf8").match(/^## \[(\d[^\]]*)\]/m)?.[1] ?? "";
+// The nav shows the latest released version, from the newest release tag so it never goes stale.
+// Without tags (a shallow clone) it just says "Releases".
+const latest = (() => {
+  try {
+    return execFileSync("git", ["describe", "--tags", "--abbrev=0", "--match", "v[0-9]*"], {
+      encoding: "utf8",
+      stdio: ["ignore", "pipe", "ignore"],
+    })
+      .trim()
+      .replace(/^v/, "");
+  } catch {
+    return "";
+  }
+})();
 
 export default defineConfig({
   lang: "en-US",
@@ -39,8 +50,8 @@ export default defineConfig({
       {
         text: latest ? `v${latest}` : "Releases",
         items: [
-          { text: "What's new", link: "https://github.com/HasanKhatib/hikma-ai/blob/main/CHANGELOG.md" },
-          { text: "Releases", link: "https://github.com/HasanKhatib/hikma-ai/releases" },
+          { text: "What's new", link: "https://github.com/HasanKhatib/hikma-ai/releases/latest" },
+          { text: "All releases", link: "https://github.com/HasanKhatib/hikma-ai/releases" },
         ],
       },
     ],

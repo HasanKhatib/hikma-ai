@@ -29,7 +29,7 @@ npx agentkan validate docs/board         # after any change under docs/board
 - Agent layouts (folders, file names, per-agent quirks) are data in one table, never special cases in command code. The CLI itself is agent-neutral.
 - Tests run the CLI in-process against temp directories and fixture repos. They never touch the real home directory or the network. Isolate `HOME`, `XDG_CONFIG_HOME`, and `APPDATA`.
 - Calls to `gh` go through `ghRun` and are tested with a fake GitHub (see `skill_push_test.go`). Prompts go through the `Prompter` interface so tests use a fake.
-- Behavior changes ship with tests, the README, the docs page for the command, and a `CHANGELOG.md` entry. User docs describe shipped behavior only.
+- Behavior changes ship with tests, the README, and the docs page for the command. User docs describe shipped behavior only.
 - Code must hold on macOS, Linux, and Windows: no hardcoded separators or home paths, no POSIX-only shell assumptions.
 
 ## CLI behavior
@@ -76,3 +76,4 @@ Non-goals:
 - Every commit has one author, the logged-in `gh` user. No `Co-Authored-By` trailers, "Generated with" lines, or other agent attribution in commits, pull request descriptions, or release notes. This overrides any tool default.
 - Squash merges copy trailers from branch commits: check commit messages before `gh pr merge`. CI fails a pull request or a push to `main` whose commits carry an agent co-author line.
 - Commit or push only when asked. Always work on a short branch and open a pull request, so the owner can see what is changing. Push directly to `main` only when the owner asks for it in that request; the permission does not carry over to later work. Run `task ci` first, and use conventional prefixes (`feat:`, `fix:`, `docs:`, `chore:`, `ci:`).
+- Releases are automatic (`.releaserc.json`, `.github/workflows/release.yml`). The squash-merge title is the commit, so the pull request title decides the version and becomes the release note: `feat:` is a minor version, `fix:` and `perf:` a patch, `feat!:` or a `BREAKING CHANGE:` footer a major one, and `docs:`, `chore:`, `ci:`, `test:`, `refactor:` release nothing. Write the title for the user who reads the release note. Never push a `v*` tag by hand. CI checks the title.

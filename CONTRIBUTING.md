@@ -59,19 +59,26 @@ Roadmap and decisions live in `docs/board/`. See `AGENTS.md` for the board rules
 
 ## Releasing
 
-A release is a version heading in `CHANGELOG.md` and a tag. You write the heading; the tag is cut for you.
+Releases are automatic. Nobody tags by hand and there is no changelog file to edit.
 
-1. Open a pull request that moves the Unreleased entries under a new `## [X.Y.Z] - date` heading and updates the compare links at the bottom (see the 1.3.0 one). Choose the version by Semantic Versioning: new features are a minor version.
-2. Merge it. When CI and Terminal have both finished on that commit, the **Cut release** workflow (`.github/workflows/cut-release.yml`) tags it `vX.Y.Z` and starts the **Release** workflow, as long as every check on the commit passed. `scripts/next-release.sh` decides the version: the newest heading, if it has no tag yet and is not older than the newest release.
-3. **Release** runs GoReleaser, publishes binaries to GitHub Releases (the notes are that CHANGELOG section), attests the archives and `checksums.txt`, and writes the Homebrew formula (`scripts/render-formula.sh`) into `HasanKhatib/homebrew-tap`, using the `HOMEBREW_TAP_DEPLOY_KEY` repository secret (a write-enabled deploy key on the tap). Pre-release versions such as `0.3.0-rc.1` build and attest but do not update the tap.
+Merging a pull request to `main` can release. The **Release** workflow (`.github/workflows/release.yml`) runs on every push to `main`:
 
-If checks failed or the release did not start, fix the cause and run **Cut release** from the Actions tab (use `dry_run` to see what it would do without releasing). You can still release by hand; pushing a `v*` tag runs **Release** directly:
+1. **Wait for checks.** It waits until every other workflow on that commit has finished and passed, so a failing check (including the pty tests) blocks a release.
+2. **Semantic release.** [semantic-release](https://semantic-release.gitbook.io) reads the conventional commits since the last tag (rules in `.releaserc.json`), picks the version, pushes the tag, and creates the GitHub release with generated notes. If no commit calls for a release, nothing happens and the rest is skipped.
+3. **GoReleaser** builds the binaries at that tag and attaches them to the release. The archives and `checksums.txt` are attested, and the Homebrew formula (`scripts/render-formula.sh`) is written into `HasanKhatib/homebrew-tap` using the `HOMEBREW_TAP_DEPLOY_KEY` repository secret (a write-enabled deploy key on the tap).
+4. **Verify** installs the published release on each OS the way users do.
 
-```bash
-git tag vX.Y.Z
-git push origin vX.Y.Z
-```
+The version comes from the commit titles, and a squash merge uses the pull request title, so write the title for the person who will read the release note:
 
-The tag starts the release because a person pushed it; a tag pushed by a workflow with the default token would not, which is why **Cut release** starts **Release** explicitly.
+| Title | Version |
+|---|---|
+| `fix:`, `perf:` | patch (1.3.0 to 1.3.1) |
+| `feat:` | minor (1.3.0 to 1.4.0) |
+| `feat!:`, or a `BREAKING CHANGE:` footer | major |
+| `docs:`, `chore:`, `ci:`, `test:`, `refactor:`, `style:`, `build:` | no release |
+
+CI rejects a pull request title that does not start with one of these types.
+
+If **Build** fails after the tag exists, re-run the failed jobs of that run: semantic-release will not release the same commits twice. Do not push `v*` tags by hand.
 
 Try a release locally with `goreleaser release --snapshot --clean`.

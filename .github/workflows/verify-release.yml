@@ -2,12 +2,17 @@ name: Verify release
 
 # After a release is published, install it the way users do on each OS and
 # check it is the right version, passes its build attestation, and runs.
-# Trigger it by hand for any tag to re-check an old release.
+# The Release workflow calls this for every release it makes. Trigger it by hand
+# for any tag to re-check an old release.
 
 on:
-  workflow_run:
-    workflows: [Release]
-    types: [completed]
+  workflow_call:
+    inputs:
+      tag:
+        description: Release tag to verify (empty means the latest release)
+        type: string
+        required: false
+        default: ""
   workflow_dispatch:
     inputs:
       tag:
@@ -23,8 +28,6 @@ env:
 
 jobs:
   verify:
-    # For the Release workflow, only verify when it succeeded.
-    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
@@ -40,9 +43,8 @@ jobs:
         id: tag
         env:
           INPUT_TAG: ${{ inputs.tag }}
-          RUN_TAG: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_branch || '' }}
         run: |
-          tag="${INPUT_TAG:-$RUN_TAG}"
+          tag="$INPUT_TAG"
           latest=$(gh release view --repo "$GITHUB_REPOSITORY" --json tagName -q .tagName)
           [ -n "$tag" ] || tag=$latest
           {

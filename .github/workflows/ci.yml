@@ -53,6 +53,16 @@ jobs:
             echo "::error::Remove agent co-author or 'Generated with' lines from the commit messages (see AGENTS.md)."
             exit 1
           fi
+      - name: pull request title is a conventional commit
+        if: github.event_name == 'pull_request'
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # The squash-merge title is the commit, which decides the version and is the release note.
+          if ! grep -qE '^(feat|fix|perf|docs|chore|ci|test|refactor|style|build|revert)(\([a-z0-9._-]+\))?!?: .+' <<<"$TITLE"; then
+            echo "::error::The pull request title decides the version and becomes the release note. Start it with feat:, fix:, perf:, docs:, chore:, ci:, test:, refactor:, style:, build:, or revert: (see AGENTS.md)."
+            exit 1
+          fi
       - name: gofmt
         run: test -z "$(gofmt -l cmd internal)"
       - name: go mod tidy
@@ -91,8 +101,6 @@ jobs:
         run: shellcheck scripts/*.sh
       - name: install script against a fake release
         run: bash scripts/test-install.sh
-      - name: release version detection
-        run: bash scripts/test-next-release.sh
       - name: Homebrew formula rendering
         if: runner.os != 'Windows'
         run: bash scripts/test-formula.sh
@@ -118,6 +126,8 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # the nav shows the latest release tag
       - uses: actions/setup-node@v7
         with:
           node-version: 24
