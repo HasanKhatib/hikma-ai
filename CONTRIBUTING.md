@@ -40,6 +40,7 @@ task docs:stop        # stop a docs server these tasks started
 | Job | Runs when these change |
 |---|---|
 | `test` (Linux, macOS, Windows) | `cmd/`, `internal/`, `e2e/`, `go.mod`, `go.sum`, `.goreleaser.yml` |
+| `vet` (one Linux runner per system, set with `GOOS`) | the same |
 | `release-dry-run` (pull requests only) | the same, plus `scripts/` and `release.yml` |
 | `install-script` | `scripts/`, `.goreleaser.yml` |
 | `docs-build` | `docs/site/`, `pages.yml` |
