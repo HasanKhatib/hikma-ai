@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "skills": {
+    ".agents/skills/hej": {
+      "name": "hej",
+      "source": "hasankhatib/ai",
+      "commit": "cace478993e07e94ce504afa8ba1624157701c26",
+      "files": {
+        "SKILL.md": "84610c06ccbd95a3fb53a2b2c3d1e0016d875ae5608a4b421b004f5f615d8a4c",
+        "assets/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "references/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "scripts/.gitkeep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    }
+  }
+}
