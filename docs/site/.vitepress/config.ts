@@ -1,8 +1,8 @@
 import { execFileSync } from "node:child_process";
 import { defineConfig } from "vitepress";
 
-// Project Pages are served from /hikma-ai/. Override with VITEPRESS_BASE for another host.
-const base = process.env.VITEPRESS_BASE ?? "/hikma-ai/";
+// The site is served from the root of hikma.alkhatib.tech. Override with VITEPRESS_BASE for a sub-path.
+const base = process.env.VITEPRESS_BASE ?? "/";
 
 // The nav shows the latest released version, from the newest release tag so it never goes stale.
 // Without tags (a shallow clone) it just says "Releases".
@@ -37,7 +37,7 @@ export default defineConfig({
     ["meta", { property: "og:type", content: "website" }],
     ["meta", { property: "og:title", content: "Hikma: skills follow you" }],
     ["meta", { property: "og:description", content: "Define your source, publish to a registry you own, and install into any agent with one CLI." }],
-    ["meta", { property: "og:image", content: "https://hasankhatib.github.io/hikma-ai/og.png" }],
+    ["meta", { property: "og:image", content: "https://hikma.alkhatib.tech/og.png" }],
     ["meta", { name: "twitter:card", content: "summary_large_image" }],
   ],
 

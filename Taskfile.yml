@@ -6,7 +6,7 @@ vars:
   CMD: ./cmd/hikma
   PKG: github.com/hasankhatib/hikma-ai
   DOCS_DIR: docs/site
-  DOCS_BASE: /hikma-ai/
+  DOCS_BASE: /
   DOCS_DEV_PORT: 5173
   DOCS_PREVIEW_PORT: 4180
 
@@ -114,7 +114,7 @@ tasks:
         fi
 
   docs:dev:
-    desc: "Run the docs site with live reload at http://localhost:5173/hikma-ai/"
+    desc: "Run the docs site with live reload at http://localhost:5173/"
     deps: [docs:deps]
     cmds:
       - task: docs:free
@@ -128,7 +128,7 @@ tasks:
       - npm run docs:build --prefix {{.DOCS_DIR}}
 
   docs:preview:
-    desc: "Build the docs site and serve it as GitHub Pages does, at http://localhost:4180/hikma-ai/"
+    desc: "Build the docs site and serve it as GitHub Pages does, at http://localhost:4180/"
     cmds:
       - task: docs:build
       - task: docs:free

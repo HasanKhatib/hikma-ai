@@ -27,8 +27,8 @@ task test             # Go tests, without the terminal tests
 task test:terminal    # the pty tests that drive the real menu and color
 task docs:e2e         # docs site in real browsers and phone profiles; manual, not part of CI (run the Docs e2e workflow from the Actions tab)
 task run -- skill list   # build and run hikma with arguments
-task docs:dev         # docs with live reload at http://localhost:5173/hikma-ai/
-task docs:preview     # production build served like GitHub Pages at http://localhost:4180/hikma-ai/
+task docs:dev         # docs with live reload at http://localhost:5173/
+task docs:preview     # production build served like GitHub Pages at http://localhost:4180/
 task docs:pages       # same, from a clean npm install
 task docs:stop        # stop a docs server these tasks started
 ```

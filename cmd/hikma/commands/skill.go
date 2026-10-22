@@ -40,7 +40,7 @@ func newSkillCmd() *cobra.Command {
 
 // skillGuideURL is the guide on writing and editing a skill, linked from the
 // places that create one.
-const skillGuideURL = "https://hasankhatib.github.io/hikma-ai/guides/write-a-skill"
+const skillGuideURL = "https://hikma.alkhatib.tech/guides/write-a-skill"
 
 func newSkillCreateCmd() *cobra.Command {
 	var flagOwner, flagTeam, flagDescription string

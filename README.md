@@ -8,7 +8,7 @@ This repository is the CLI only. Registries are plain repos you configure; none 
 
 ## Use Hikma
 
-Read the documentation at **[hasankhatib.github.io/hikma-ai](https://hasankhatib.github.io/hikma-ai/)**. It has a page for every command.
+Read the documentation at **[hikma.alkhatib.tech](https://hikma.alkhatib.tech/)**. It has a page for every command.
 
 Install, then check your setup:
 
@@ -17,7 +17,7 @@ brew install HasanKhatib/tap/hikma     # macOS and Linux
 hikma doctor
 ```
 
-On Windows or without Homebrew, use the install script from [Getting started](https://hasankhatib.github.io/hikma-ai/getting-started).
+On Windows or without Homebrew, use the install script from [Getting started](https://hikma.alkhatib.tech/getting-started).
 
 A first session:
 
@@ -32,7 +32,7 @@ hikma init --agent claude,codex --skill my-skill # set up a whole repo for your 
 
 Run `hikma` with no arguments in a terminal for a menu of the common tasks. It stays open until you quit, so you can install, update, and publish in one sitting.
 
-Guides: [agents and folders](https://hasankhatib.github.io/hikma-ai/guides/agents), [skill format](https://hasankhatib.github.io/hikma-ai/guides/skill-format), and [running a registry](https://hasankhatib.github.io/hikma-ai/guides/registry).
+Guides: [agents and folders](https://hikma.alkhatib.tech/guides/agents), [skill format](https://hikma.alkhatib.tech/guides/skill-format), and [running a registry](https://hikma.alkhatib.tech/guides/registry).
 
 ## Develop Hikma
 
@@ -58,7 +58,7 @@ CI runs the checks in [CONTRIBUTING.md](CONTRIBUTING.md) on Linux, macOS, and Wi
 ## How Hikma works
 
 - A skill source is a GitHub `owner/repo`, any git URL, or a local path. Reading skills needs only `git`.
-- Scripts and CI can rely on documented exit codes (`3` means installed skills differ from the lockfile) and versioned `--json` output: see [Exit codes and JSON](https://hasankhatib.github.io/hikma-ai/reference/output).
+- Scripts and CI can rely on documented exit codes (`3` means installed skills differ from the lockfile) and versioned `--json` output: see [Exit codes and JSON](https://hikma.alkhatib.tech/reference/output).
 - Installs are recorded in `.hikma/lock.json` with the source, commit, and file hashes. `hikma sync` restores them on a fresh clone; `hikma skill update` stops on local edits.
 - `hikma skill push` always shows the target registry and asks before writing. Nothing is force-pushed.
 - `hikma skill import` copies a skill you found into your registry after a review of its files and licence, publishes it the way `push` does (a commit to the default branch when you can write, a pull request when the branch requires one or you cannot write), and records where it came from in `.hikma-origin.json`. It never overwrites an existing skill without `--force`. `init` and `doctor` tell you which way publishing will go.
