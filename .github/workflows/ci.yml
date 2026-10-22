@@ -55,31 +55,8 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
-          # Windows spent ~34s in this step with the cache on. Off there to measure whether
-          # it was the cache; turn it back on if the step is no faster.
-          cache: ${{ runner.os != 'Windows' }}
-      - run: go test -short ./...
-
-  # go vet is a static check, so one Linux runner can vet for each system by setting
-  # GOOS, including the files that only build there. That keeps it out of the slowest
-  # job, the Windows tests, where a vet from a cold cache took ~25s.
-  vet:
-    needs: changes
-    if: needs.changes.outputs.go == 'true'
-    strategy:
-      fail-fast: false
-      matrix:
-        goos: [linux, windows, darwin]
-    runs-on: ubuntu-latest
-    timeout-minutes: 15
-    env:
-      GOOS: ${{ matrix.goos }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
       - run: go vet ./...
+      - run: go test -short ./...
 
   hygiene:
     runs-on: ubuntu-latest
