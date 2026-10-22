@@ -519,6 +519,17 @@ func warnOverlappingTargets(w io.Writer, targets []config.Selection) {
 	}
 }
 
+// alreadyInstalledError is the failure for a skill whose folder exists and --force
+// was not given. It is its own type so a retry is not offered: it would fail again.
+type alreadyInstalledError struct {
+	Name string
+	Dir  string
+}
+
+func (e *alreadyInstalledError) Error() string {
+	return fmt.Sprintf("%s is already installed at %s/\n  use --force to reinstall", e.Name, e.Dir)
+}
+
 // installSkill copies one skill into every target's skills directory and records each install.
 func installSkill(sc scope, out io.Writer, src source.Source, co source.Checkout, skill source.Skill, targets []config.Selection, force bool, ref string) error {
 	// Path safety only: install enforces no naming convention.
@@ -528,7 +539,7 @@ func installSkill(sc scope, out io.Writer, src source.Source, co source.Checkout
 	for _, t := range targets {
 		dir := sc.skillDir(t, skill.Name)
 		if _, err := os.Stat(dir); err == nil && !force {
-			return fmt.Errorf("%s is already installed at %s/\n  use --force to reinstall", skill.Name, dir)
+			return &alreadyInstalledError{Name: skill.Name, Dir: dir}
 		}
 		if err := requireSkillFolder(dir); err != nil {
 			return err

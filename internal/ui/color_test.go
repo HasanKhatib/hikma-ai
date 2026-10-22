@@ -83,3 +83,16 @@ func TestStrikeIsPlainOffATerminal(t *testing.T) {
 		t.Errorf("captured output got %q", got)
 	}
 }
+
+func TestTruncateCountsColumns(t *testing.T) {
+	if got := Truncate("short", 10); got != "short" {
+		t.Errorf("a short string changes: %q", got)
+	}
+	got := Truncate("someone-with-a-very-long-registry-name/and-a-long-repo", 20)
+	if Width(got) > 20 || !strings.HasSuffix(got, "...") {
+		t.Errorf("Truncate = %q (%d columns)", got, Width(got))
+	}
+	if got := Truncate("日本語日本語日本語", 9); Width(got) > 9 {
+		t.Errorf("wide characters overflow: %q is %d columns", got, Width(got))
+	}
+}

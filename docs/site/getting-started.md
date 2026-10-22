@@ -107,6 +107,8 @@ Ctrl-C or Esc inside a task comes back here. At this menu they quit.
   Quit
 ```
 
+If a skills folder cannot be read, the last part says `installed here: unknown (cannot read the skills folders)` instead of `0`, so an unreadable folder is not mistaken for an empty one.
+
 Pick an entry and Hikma asks for anything it needs, then runs the same command you could type yourself. It asks only for what is missing: the registry when none is set, the agent when none is chosen, a skill from this project's agent folders when you publish or update, and the agents to set up for a new project. Agent, registry, project setup, completion, and the setup check live under "Setup and settings".
 
 ### Installing skills
@@ -132,7 +134,7 @@ Equivalent command:
   hikma skill install --skill=foo --skill=bar
 ```
 
-If some skills fail, the others are still installed, the result names each one that failed, and "What next?" offers to retry just those.
+If some skills fail, the others are still installed, the result names each one that failed, and "What next?" offers to retry just those. Skills that failed only because they are already installed are not offered again, since trying again would fail the same way; the menu says how many there were and points you to Update installed skills. After a retry works, the equivalent command printed is the whole install, not just the retried skills.
 
 ### Creating and publishing
 
@@ -146,7 +148,7 @@ Lists where you tick several options show a checkbox, `[ ]` or `[x]`, so a ticke
 
 - It is a front end. Every entry runs an ordinary `hikma` command, so the confirmation questions before a push, an update, or a file write are the ones that command always asks.
 - It clears the screen and stays open. After each task it shows the result and asks "What next?": go back to the menu or quit. Errors are shown there too, so a failed task never closes the menu.
-- The equivalent command is printed after a task that worked, not after a failure or a cancel. When some skills of an install fail, it prints the command that ran and the command that retries only the ones that failed.
+- The equivalent command is printed after a task that worked, not after a failure or a cancel. When some skills of an install fail, it prints the command that ran and the command that retries only the ones that can still work.
 - Ctrl-C or Esc inside a task goes back to the menu without doing anything: at a question, while a registry is being read, or while a command runs (a second Ctrl-C while it is stopping ends hikma). The same goes for "What next?". At the menu itself they leave. On a long list Esc clears the filter instead, and Ctrl-C goes back.
 - The cursor stays on the entry you used last.
 - A mistyped registry asks for another one without asking for your agent again.

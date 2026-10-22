@@ -19,10 +19,13 @@ type skillResult struct {
 }
 
 // installFailed is returned when some, but not all, of the skills named with
-// --skill could not be installed. The menu reads Failed to offer a retry.
+// --skill could not be installed. The menu reads Retryable to offer a retry.
+// Retryable is the part of Failed that trying again could fix: a skill that is
+// already installed fails the same way every time, without --force.
 type installFailed struct {
-	Failed []string
-	Total  int
+	Failed    []string
+	Retryable []string
+	Total     int
 }
 
 // Error is short on purpose: the summary above it already names each skill.
@@ -130,14 +133,19 @@ func installMany(cmd *cobra.Command, sc scope, src source.Source, co source.Chec
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	var failed []string
+	var failed, retryable []string
 	for _, r := range res {
-		if r.Err != nil {
-			failed = append(failed, r.Name)
+		if r.Err == nil {
+			continue
+		}
+		failed = append(failed, r.Name)
+		var already *alreadyInstalledError
+		if !errors.As(r.Err, &already) {
+			retryable = append(retryable, r.Name)
 		}
 	}
 	if len(failed) > 0 {
-		return &installFailed{Failed: failed, Total: len(res)}
+		return &installFailed{Failed: failed, Retryable: retryable, Total: len(res)}
 	}
 	return nil
 }

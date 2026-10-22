@@ -166,13 +166,14 @@ func inputValidator(validate func(string) error) func(string) error {
 func (huhPrompter) Spinner(message string, fn func(ctx context.Context) error) error {
 	if accessible() {
 		// The widget is animated; a screen reader and a dumb terminal get a line.
-		fmt.Println(message)
+		// Progress goes to stderr, so what a command prints on stdout stays clean.
+		fmt.Fprintln(os.Stderr, message)
 		return fn(context.Background())
 	}
 	applyNoColor()
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	err := spinner.New().Title(message).Context(ctx).ActionWithErr(fn).Run()
+	err := spinner.New().Title(message).Context(ctx).WithOutput(os.Stderr).ActionWithErr(fn).Run()
 	if errors.Is(err, tea.ErrInterrupted) || errors.Is(err, context.Canceled) {
 		return errCancelled
 	}

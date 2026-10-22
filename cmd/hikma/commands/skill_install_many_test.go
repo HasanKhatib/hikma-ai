@@ -94,7 +94,7 @@ func TestInstallSeveralReportsWhichFailed(t *testing.T) {
 	}
 	out, err := run(t, "skill", "install", reg, "--skill", "alpha", "--skill", "beta", "--skill", "gamma", "--agent", "claude")
 	var f *installFailed
-	if !errors.As(err, &f) || len(f.Failed) != 1 || f.Failed[0] != "beta" {
+	if !errors.As(err, &f) || len(f.Failed) != 1 || f.Failed[0] != "beta" || len(f.Retryable) != 0 {
 		t.Fatalf("got %v, want beta reported as failed\n%s", err, out)
 	}
 	if !installed(proj, "alpha") || !installed(proj, "gamma") {
