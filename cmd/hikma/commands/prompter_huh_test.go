@@ -1,8 +1,12 @@
 package commands
 
 import (
+	"bytes"
+	"context"
 	"errors"
+	"io"
 	"os"
+	"strings"
 	"testing"
 
 	"github.com/hasankhatib/hikma-ai/internal/ui"
@@ -75,4 +79,51 @@ func TestInputWithAValidatorMayBeLeftEmpty(t *testing.T) {
 	if err := inputValidator(required)(""); err == nil || err.Error() != "enter owner/repo" {
 		t.Errorf("the caller's own message should be used, got %v", err)
 	}
+}
+
+func TestSpinnerProgressGoesToStderrNotStdout(t *testing.T) {
+	t.Setenv("ACCESSIBLE", "1")
+	stdout, stderr := captureStreams(t, func() {
+		if err := (huhPrompter{}).Spinner("Reading the registry", func(context.Context) error { return nil }); err != nil {
+			t.Fatal(err)
+		}
+	})
+	if stdout != "" {
+		t.Errorf("progress leaked onto stdout: %q", stdout)
+	}
+	if !strings.Contains(stderr, "Reading the registry") {
+		t.Errorf("want the message on stderr, got %q", stderr)
+	}
+}
+
+// captureStreams runs fn with os.Stdout and os.Stderr redirected to pipes and
+// returns what each received.
+func captureStreams(t *testing.T, fn func()) (string, string) {
+	t.Helper()
+	oldOut, oldErr := os.Stdout, os.Stderr
+	outR, outW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	errR, errW, err := os.Pipe()
+	if err != nil {
+		t.Fatal(err)
+	}
+	os.Stdout, os.Stderr = outW, errW
+	done := make(chan [2]string)
+	go func() {
+		var o, e bytes.Buffer
+		finished := make(chan struct{}, 2)
+		go func() { _, _ = io.Copy(&o, outR); finished <- struct{}{} }()
+		go func() { _, _ = io.Copy(&e, errR); finished <- struct{}{} }()
+		<-finished
+		<-finished
+		done <- [2]string{o.String(), e.String()}
+	}()
+	fn()
+	os.Stdout, os.Stderr = oldOut, oldErr
+	outW.Close()
+	errW.Close()
+	r := <-done
+	return r[0], r[1]
 }

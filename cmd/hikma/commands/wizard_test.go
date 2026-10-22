@@ -308,7 +308,7 @@ func TestWizardRetriesOnlyTheSkillsThatFailed(t *testing.T) {
 	err := runWizard(p, &out, func(_ context.Context, a []string) error {
 		ran = append(ran, a)
 		if len(ran) == 1 {
-			return &installFailed{Failed: []string{"beta"}, Total: 3}
+			return &installFailed{Failed: []string{"beta"}, Retryable: []string{"beta"}, Total: 3}
 		}
 		return nil
 	})
@@ -321,6 +321,11 @@ func TestWizardRetriesOnlyTheSkillsThatFailed(t *testing.T) {
 	}
 	if !reflect.DeepEqual(ran, want) {
 		t.Errorf("ran %v, want %v", ran, want)
+	}
+	// After the retry worked, the equivalent command is the whole install, not the
+	// one skill that was retried.
+	if !strings.Contains(out.String(), "Equivalent command for the whole install:\n  hikma skill install --skill=alpha --skill=beta --skill=gamma") {
+		t.Errorf("want the whole install as the equivalent:\n%s", out.String())
 	}
 }
 
@@ -857,7 +862,7 @@ func TestPartialInstallShowsWhatRanAndHowToRetryTheRest(t *testing.T) {
 		p.scripted, p.quitNext = true, true
 		p.picks = pathTo(t, "Install skills from your registry")
 		return nil, runWizard(p, &out, func(context.Context, []string) error {
-			return &installFailed{Failed: []string{"beta"}, Total: 2}
+			return &installFailed{Failed: []string{"beta"}, Retryable: []string{"beta"}, Total: 2}
 		})
 	}()
 	if err != nil {
@@ -866,7 +871,7 @@ func TestPartialInstallShowsWhatRanAndHowToRetryTheRest(t *testing.T) {
 	for _, want := range []string{
 		"error: 1 of 2 skills were not installed",
 		"Equivalent command:\n  hikma skill install --skill=alpha --skill=beta",
-		"Retry only the ones that failed:\n  hikma skill install --skill=beta",
+		"Retry only the ones that can still work:\n  hikma skill install --skill=beta",
 	} {
 		if !strings.Contains(out.String(), want) {
 			t.Errorf("missing %q in:\n%s", want, out.String())
@@ -937,5 +942,50 @@ func TestWizardCreateDescriptionIsOptionalAndBounded(t *testing.T) {
 	}
 	if want := []string{"skill", "create", "s", "--description=-not a flag"}; !reflect.DeepEqual(ran, want) {
 		t.Errorf("ran %v, want %v", ran, want)
+	}
+}
+
+func TestRetryIsNotOfferedForSkillsThatAreAlreadyInstalled(t *testing.T) {
+	project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	t.Setenv("HIKMA_AGENT", "claude")
+	stubSkills(t, "alpha", "beta")
+	p := &fakePrompter{scripted: true, multi: []int{0, 1}, picks: append(pathTo(t, "Install skills from your registry"), 0, len(wizardEntries))}
+	var out bytes.Buffer
+	err := runWizard(p, &out, func(context.Context, []string) error {
+		// Both failed, but only because they are already installed: trying again,
+		// without --force, would fail the same way.
+		return &installFailed{Failed: []string{"alpha", "beta"}, Retryable: nil, Total: 2}
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, o := range p.options {
+		if o == wizardRetry {
+			t.Errorf("a retry that cannot succeed was offered: %v", p.options)
+		}
+	}
+	if strings.Contains(out.String(), "Retry only") {
+		t.Errorf("no retry command should be printed:\n%s", out.String())
+	}
+	if !strings.Contains(out.String(), "2 already installed, so trying again would not help") {
+		t.Errorf("the user should be told why, and what to do:\n%s", out.String())
+	}
+}
+
+func TestContextLineSaysWhenTheSkillsFolderCannotBeRead(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_AGENT", "claude")
+	if got := wizardContext(); !strings.Contains(got, "0 installed here") {
+		t.Fatalf("an empty project is 0 installed: %q", got)
+	}
+	// A skills folder that is a file cannot be listed. That is not "0 installed".
+	write(t, filepath.Join(dir, ".claude", "skills"), "not a folder")
+	got := wizardContext()
+	if strings.Contains(got, "0 installed") {
+		t.Skipf("this system lists an unreadable folder as empty: %q", got)
+	}
+	if !strings.Contains(got, "unknown") {
+		t.Errorf("want the unreadable folder named as unknown, got %q", got)
 	}
 }

@@ -24,7 +24,7 @@ esac
 
 ## JSON output
 
-Commands with `--json` print one JSON document on stdout. Progress, warnings, and errors go to stderr, so the output is safe to pipe.
+Commands with `--json` print one JSON document on stdout. Progress, warnings, and errors go to stderr, so the output is safe to pipe. This includes the spinner and the one-line progress messages shown while a registry is read.
 
 Every document has a `version` field, currently `1`. Within a major version, fields can be added but existing fields keep their names and meaning, so ignore fields you do not know. Arrays are always present, empty (`[]`) rather than `null`.
 

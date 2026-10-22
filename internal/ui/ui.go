@@ -51,3 +51,12 @@ func Pad(s string, width int) string {
 	}
 	return s
 }
+
+// Truncate cuts s to at most width terminal columns, ending in "..." when it had to
+// cut. It counts columns, not bytes or characters, so wide characters fit.
+func Truncate(s string, width int) string {
+	if Width(s) <= width {
+		return s
+	}
+	return ansi.Truncate(s, width, "...")
+}

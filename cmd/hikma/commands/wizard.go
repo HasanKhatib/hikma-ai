@@ -262,13 +262,7 @@ func registryLabel(repo string) string {
 }
 
 // shortLabel keeps a long registry name from wrapping a narrow terminal.
-func shortLabel(s string) string {
-	const max = 40
-	if r := []rune(s); len(r) > max {
-		return string(r[:max-3]) + "..."
-	}
-	return s
-}
+func shortLabel(s string) string { return ui.Truncate(s, 40) }
 
 // installedFor reports whether name is already installed in this project for any
 // of the agents the install would write to. Another agent's copy does not count.
@@ -620,11 +614,12 @@ func wizardContext() string {
 			agent = e.Value
 		}
 	}
-	n := 0
+	// A folder that cannot be read is not an empty one: say so, instead of "0".
+	installed := "installed here: unknown (cannot read the skills folders)"
 	if names, err := projectSkillNames(); err == nil {
-		n = len(names)
+		installed = fmt.Sprintf("%d installed here", len(names))
 	}
-	return fmt.Sprintf("registry: %s | agent: %s | %d installed here", registry, agent, n)
+	return fmt.Sprintf("registry: %s | agent: %s | %s", registry, agent, installed)
 }
 
 func entryLabels(entries []wizardEntry, last string) []string {
@@ -679,9 +674,15 @@ func printEquivalent(out io.Writer, heading string, args []string) {
 }
 
 // execute runs each planned command, shows what happened, and returns the command
-// that would retry the skills that failed, or nil.
-func execute(out io.Writer, cmds [][]string, run func(ctx context.Context, args []string) error) []string {
+// that would retry the skills that failed and could succeed on a second try, or
+// nil. shown is the command to print as the equivalent when it is not the one that
+// ran: after a retry, the whole install, not just the skills retried.
+func execute(out io.Writer, cmds [][]string, run func(ctx context.Context, args []string) error, shown []string) []string {
 	for _, args := range cmds {
+		show := args
+		if shown != nil {
+			show = shown
+		}
 		err := withInterrupt(func(ctx context.Context) error { return run(ctx, args) })
 		switch {
 		case errors.Is(err, errCancelled):
@@ -690,17 +691,27 @@ func execute(out io.Writer, cmds [][]string, run func(ctx context.Context, args 
 		case err != nil:
 			fmt.Fprintf(out, "\nerror: %s\n", err)
 			var f *installFailed
-			if errors.As(err, &f) {
-				// Some skills went in: say what ran, and how to redo only the rest.
-				retry := retryArgs(args, f.Failed)
-				printEquivalent(out, "Equivalent command:", args)
-				printEquivalent(out, "Retry only the ones that failed:", retry)
-				return retry
+			if !errors.As(err, &f) {
+				return nil
 			}
-			return nil
+			// Some skills went in: say what ran, and how to redo only the rest.
+			printEquivalent(out, "Equivalent command:", show)
+			if kept := len(f.Failed) - len(f.Retryable); kept > 0 {
+				fmt.Fprintf(out, "\n%s\n", ui.Dim(out, fmt.Sprintf("%d already installed, so trying again would not help. To replace them, use Update installed skills.", kept)))
+			}
+			if len(f.Retryable) == 0 {
+				return nil
+			}
+			retry := retryArgs(args, f.Retryable)
+			printEquivalent(out, "Retry only the ones that can still work:", retry)
+			return retry
 		}
 		// The equivalent command comes last, and only for a task that worked.
-		printEquivalent(out, "Equivalent command:", args)
+		heading := "Equivalent command:"
+		if shown != nil {
+			heading = "Equivalent command for the whole install:"
+		}
+		printEquivalent(out, heading, show)
 	}
 	return nil
 }
@@ -748,7 +759,7 @@ func runWizard(p Prompter, out io.Writer, run func(ctx context.Context, args []s
 		if errors.Is(err, errCancelled) {
 			continue
 		}
-		var retry []string
+		var retry, whole []string
 		var note notice
 		switch {
 		case errors.As(err, &note):
@@ -757,7 +768,10 @@ func runWizard(p Prompter, out io.Writer, run func(ctx context.Context, args []s
 			fmt.Fprintf(out, "\nerror: %s\n", err)
 		default:
 			fmt.Fprintln(out)
-			retry = execute(out, cmds, run)
+			retry = execute(out, cmds, run, nil)
+			if retry != nil {
+				whole = cmds[0]
+			}
 		}
 
 		// Hold the result on screen: the next loop clears it.
@@ -778,7 +792,7 @@ func runWizard(p Prompter, out io.Writer, run func(ctx context.Context, args []s
 				break
 			}
 			fmt.Fprintln(out)
-			retry = execute(out, [][]string{retry}, run)
+			retry = execute(out, [][]string{retry}, run, whole)
 		}
 	}
 }
