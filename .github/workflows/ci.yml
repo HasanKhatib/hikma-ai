@@ -13,7 +13,37 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  # Decides which of the jobs below a change can affect, so a docs-only pull
+  # request does not run the Go matrix. hygiene and vulncheck always run, which also
+  # keeps a run named CI on every commit for the release gate to wait for.
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      go: ${{ steps.paths.outputs.go }}
+      release: ${{ steps.paths.outputs.release }}
+      scripts: ${{ steps.paths.outputs.scripts }}
+      docs: ${{ steps.paths.outputs.docs }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: paths
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          # No usable base (a new branch, a force-push, or an API error) means no
+          # file list, and scripts/ci-changes.sh then runs every job.
+          files=""
+          if [ -n "$BASE" ] && [ "$BASE" != "0000000000000000000000000000000000000000" ]; then
+            files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE...$HEAD" \
+              --jq '.files[] | .filename, (.previous_filename // empty)') || files=""
+          fi
+          printf '%s\n' "$files" | bash scripts/ci-changes.sh | tee -a "$GITHUB_OUTPUT"
+
   test:
+    needs: changes
+    if: needs.changes.outputs.go == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -25,9 +55,11 @@ jobs:
       - uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
+          # Windows spent ~34s in this step with the cache on. Off there to measure whether
+          # it was the cache; turn it back on if the step is no faster.
+          cache: ${{ runner.os != 'Windows' }}
       - run: go vet ./...
       - run: go test -short ./...
-      - run: go build ./...
 
   hygiene:
     runs-on: ubuntu-latest
@@ -63,6 +95,8 @@ jobs:
             echo "::error::The pull request title decides the version and becomes the release note. Start it with feat:, fix:, perf:, docs:, chore:, ci:, test:, refactor:, style:, build:, or revert: (see AGENTS.md)."
             exit 1
           fi
+      - name: CI path filters
+        run: bash scripts/test-ci-changes.sh
       - name: gofmt
         run: test -z "$(gofmt -l cmd internal)"
       - name: go mod tidy
@@ -82,6 +116,8 @@ jobs:
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 
   install-script:
+    needs: changes
+    if: needs.changes.outputs.scripts == 'true'
     strategy:
       fail-fast: false
       matrix:
@@ -105,7 +141,11 @@ jobs:
         if: runner.os != 'Windows'
         run: bash scripts/test-formula.sh
 
+  # A pull request gets the dry run. On main the release workflow does the real
+  # build moments later, so a second one here would only repeat it.
   release-dry-run:
+    needs: changes
+    if: github.event_name == 'pull_request' && needs.changes.outputs.release == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
@@ -122,6 +162,8 @@ jobs:
           args: release --snapshot --clean
 
   docs-build:
+    needs: changes
+    if: needs.changes.outputs.docs == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
