@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -42,6 +43,27 @@ var (
 	}
 	upgradeExec = func(cmd *exec.Cmd) error { return cmd.Run() }
 
+	// upgradeBrewStable is the version the tap offers right now, read from
+	// Homebrew after 'brew update'. Unlike 'brew outdated' it does not depend on
+	// whether the formula is pinned.
+	upgradeBrewStable = func() (string, error) {
+		out, err := exec.Command("brew", "info", "--json=v2", brewFormula).Output()
+		if err != nil {
+			return "", err
+		}
+		var info struct {
+			Formulae []struct {
+				Versions struct {
+					Stable string `json:"stable"`
+				} `json:"versions"`
+			} `json:"formulae"`
+		}
+		if err := json.Unmarshal(out, &info); err != nil || len(info.Formulae) == 0 || info.Formulae[0].Versions.Stable == "" {
+			return "", errors.New("no version in the answer from brew info")
+		}
+		return info.Formulae[0].Versions.Stable, nil
+	}
+
 	// upgradeInstalled is the version that is installed after an upgrade: what
 	// Homebrew reports, or what the replaced binary says about itself.
 	upgradeInstalled = func(brew bool, exe string) (string, error) {
@@ -65,8 +87,7 @@ var (
 )
 
 func newUpgradeCmd() *cobra.Command {
-	var dryRun bool
-	var yes bool
+	var dryRun, yes, verbose bool
 	cmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Upgrade hikma to the latest release",
@@ -79,13 +100,18 @@ upgrades at once, then checks that the new version is what got installed.
 hikma works out how it was installed. With Homebrew it runs 'brew update' and
 'brew upgrade'. Otherwise it runs the install script, which checks the download
 against the release checksums and, when gh is signed in, its build attestation,
-and replaces the binary where it is now. --dry-run shows what would run and
-changes nothing.`,
+and replaces the binary where it is now. What brew or the script print is held
+back and shown only if a step fails; --verbose shows it as it happens. --dry-run
+shows what would run and changes nothing.
+
+This upgrades the hikma binary only. To update installed skills, run
+'hikma skill update'.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return runUpgrade(cmd, dryRun)
+			return runUpgrade(cmd, dryRun, verbose)
 		},
 	}
 	cmd.Flags().BoolVar(&dryRun, "dry-run", false, "show the versions and what would run, and change nothing")
+	cmd.Flags().BoolVar(&verbose, "verbose", false, "show the output of brew or the install script, not only when it fails")
 	// Upgrading no longer asks; the flag stays so scripts that pass it keep working.
 	cmd.Flags().BoolVarP(&yes, "yes", "y", false, "accepted and ignored: upgrade no longer asks")
 	_ = cmd.Flags().MarkHidden("yes")
@@ -175,7 +201,7 @@ func latestRelease() (string, error) {
 	return strings.TrimPrefix(rel.Tag, "v"), nil
 }
 
-func runUpgrade(cmd *cobra.Command, dryRun bool) error {
+func runUpgrade(cmd *cobra.Command, dryRun, verbose bool) error {
 	out := cmd.OutOrStdout()
 	exe, err := upgradeExe()
 	if err != nil {
@@ -217,10 +243,22 @@ func runUpgrade(cmd *cobra.Command, dryRun bool) error {
 	fmt.Fprintf(out, "Upgrading with %s...\n", how)
 
 	if brew {
-		if err := upgradeExec(upgradeStep(cmd, "brew", "update", "--quiet")); err != nil {
+		updated := true
+		if err := upgradeRun(cmd, verbose, exec.Command("brew", "update", "--quiet")); err != nil {
+			updated = false
 			fmt.Fprintf(out, "warning: brew update failed (%v); the tap may be out of date.\n", err)
 		}
-		if err := upgradeExec(upgradeStep(cmd, "brew", "upgrade", brewFormula)); err != nil {
+		// Only a tap that was just refreshed can say the formula is behind. After a
+		// failed update it says nothing, so go on and let the check after the upgrade
+		// speak.
+		if updated {
+			if stable, err := upgradeBrewStable(); err == nil {
+				if c, ok := compareVersions(stable, latest); ok && c < 0 {
+					return fmt.Errorf("hikma %s is out, but Homebrew still offers %s: the tap may not have the new formula yet, so try again in a few minutes", latest, stable)
+				}
+			}
+		}
+		if err := upgradeRun(cmd, verbose, exec.Command("brew", "upgrade", brewFormula)); err != nil {
 			return fmt.Errorf("the upgrade failed (hikma was not changed by hikma itself): %w", err)
 		}
 	} else {
@@ -242,9 +280,9 @@ func runUpgrade(cmd *cobra.Command, dryRun bool) error {
 		if err := os.WriteFile(path, script, 0o600); err != nil {
 			return err
 		}
-		run := upgradeStep(cmd, "bash", path)
+		run := exec.Command("bash", path)
 		run.Env = append(os.Environ(), "HIKMA_INSTALL_DIR="+filepath.Dir(exe))
-		if err := upgradeExec(run); err != nil {
+		if err := upgradeRun(cmd, verbose, run); err != nil {
 			return fmt.Errorf("the upgrade failed (hikma was not changed by hikma itself): %w", err)
 		}
 	}
@@ -265,10 +303,20 @@ func runUpgrade(cmd *cobra.Command, dryRun bool) error {
 	return nil
 }
 
-// upgradeStep is a child process whose output goes where hikma's goes.
-func upgradeStep(cmd *cobra.Command, name string, args ...string) *exec.Cmd {
-	c := exec.Command(name, args...)
-	c.Stdout = cmd.OutOrStdout()
-	c.Stderr = cmd.ErrOrStderr()
-	return c
+// upgradeRun runs one step of the upgrade. What the step prints is held back so
+// the upgrade reads as a few lines, and shown only when the step fails, because
+// then it says why. With verbose it goes straight through.
+func upgradeRun(cmd *cobra.Command, verbose bool, c *exec.Cmd) error {
+	if verbose {
+		c.Stdout = cmd.OutOrStdout()
+		c.Stderr = cmd.ErrOrStderr()
+		return upgradeExec(c)
+	}
+	var held bytes.Buffer
+	c.Stdout, c.Stderr = &held, &held
+	err := upgradeExec(c)
+	if err != nil && held.Len() > 0 {
+		fmt.Fprint(cmd.ErrOrStderr(), held.String())
+	}
+	return err
 }

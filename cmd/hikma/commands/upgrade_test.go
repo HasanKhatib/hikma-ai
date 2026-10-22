@@ -3,6 +3,7 @@ package commands
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strings"
 	"testing"
@@ -19,7 +20,7 @@ type upgradeRig struct {
 func rigUpgrade(t *testing.T, exe, current, latest string) *upgradeRig {
 	t.Helper()
 	r := &upgradeRig{installed: latest}
-	oe, of, ox, oi, ov := upgradeExe, upgradeFetch, upgradeExec, upgradeInstalled, version
+	oe, of, ox, oi, ov, ob := upgradeExe, upgradeFetch, upgradeExec, upgradeInstalled, version, upgradeBrewStable
 	upgradeExe = func() (string, error) { return exe, nil }
 	upgradeFetch = func(url string) ([]byte, error) {
 		r.fetched = append(r.fetched, url)
@@ -33,8 +34,11 @@ func rigUpgrade(t *testing.T, exe, current, latest string) *upgradeRig {
 	}
 	upgradeExec = func(c *exec.Cmd) error { r.ran = append(r.ran, strings.Join(c.Args, " ")); return nil }
 	upgradeInstalled = func(bool, string) (string, error) { return r.installed, nil }
+	upgradeBrewStable = func() (string, error) { return latest, nil }
 	version = current
-	t.Cleanup(func() { upgradeExe, upgradeFetch, upgradeExec, upgradeInstalled, version = oe, of, ox, oi, ov })
+	t.Cleanup(func() {
+		upgradeExe, upgradeFetch, upgradeExec, upgradeInstalled, version, upgradeBrewStable = oe, of, ox, oi, ov, ob
+	})
 	return r
 }
 
@@ -132,6 +136,125 @@ func TestUpgradeSaysWhenHomebrewHasNotCaughtUpWithTheRelease(t *testing.T) {
 	}
 	if strings.Contains(out, "Done.") {
 		t.Errorf("must not claim success:\n%s", out)
+	}
+}
+
+func TestUpgradeStopsBeforeBrewUpgradeWhenTheFormulaIsBehind(t *testing.T) {
+	r := rigUpgrade(t, brewExe, "1.2.0", "1.3.0")
+	upgradeBrewStable = func() (string, error) { return "1.2.0", nil }
+	out, err := runUpgradeCmd(t)
+	if err == nil || !strings.Contains(err.Error(), "Homebrew still offers 1.2.0") || !strings.Contains(err.Error(), "try again") {
+		t.Fatalf("want the stale formula named with the version it offers, got %v", err)
+	}
+	for _, c := range r.ran {
+		if strings.Contains(c, "brew upgrade") {
+			t.Errorf("brew upgrade must not run when there is nothing newer to install: %v", r.ran)
+		}
+	}
+	if strings.Contains(out, "Done.") {
+		t.Errorf("must not claim success:\n%s", out)
+	}
+}
+
+func TestUpgradeDoesNotBlameTheTapAfterAFailedBrewUpdate(t *testing.T) {
+	r := rigUpgrade(t, brewExe, "1.2.0", "1.3.0")
+	// The tap was not refreshed, so what it offers says nothing about the release.
+	upgradeBrewStable = func() (string, error) { return "1.2.0", nil }
+	upgradeExec = func(c *exec.Cmd) error {
+		r.ran = append(r.ran, strings.Join(c.Args, " "))
+		if strings.Contains(strings.Join(c.Args, " "), "brew update") {
+			return errors.New("offline")
+		}
+		return nil
+	}
+	out, err := runUpgradeCmd(t)
+	if err != nil {
+		t.Fatalf("a failed update alone must not stop the upgrade: %v", err)
+	}
+	if !strings.Contains(out, "brew update failed") || !strings.Contains(out, "Done.") {
+		t.Errorf("want the warning, then the upgrade:\n%s", out)
+	}
+	if !strings.Contains(strings.Join(r.ran, "\n"), "brew upgrade") {
+		t.Errorf("brew upgrade should still run: %v", r.ran)
+	}
+}
+
+func TestUpgradeGoesAheadWhenTheTapVersionCannotBeRead(t *testing.T) {
+	r := rigUpgrade(t, brewExe, "1.2.0", "1.3.0")
+	upgradeBrewStable = func() (string, error) { return "", errors.New("brew info failed") }
+	if _, err := runUpgradeCmd(t); err != nil {
+		t.Fatalf("not knowing is not a reason to stop: %v", err)
+	}
+	if !strings.Contains(strings.Join(r.ran, "\n"), "brew upgrade") {
+		t.Errorf("brew upgrade should run: %v", r.ran)
+	}
+}
+
+func TestUpgradeFromADevelopmentBuildNamesTheVersionHomebrewOffers(t *testing.T) {
+	rigUpgrade(t, brewExe, "dev", "1.3.0")
+	upgradeBrewStable = func() (string, error) { return "1.2.0", nil }
+	_, err := runUpgradeCmd(t)
+	if err == nil || !strings.Contains(err.Error(), "Homebrew still offers 1.2.0") || strings.Contains(err.Error(), "dev") {
+		t.Fatalf("want the tap's version, not the build's, got %v", err)
+	}
+}
+
+// noisy makes every process print something, as brew and the install script do.
+func noisy(c *exec.Cmd, fail bool) error {
+	fmt.Fprintln(c.Stdout, "==> Downloading hikma (lots of brew detail)")
+	if fail {
+		return errors.New("exit status 1")
+	}
+	return nil
+}
+
+func TestUpgradeHoldsBackWhatBrewPrintsWhenItWorks(t *testing.T) {
+	r := rigUpgrade(t, brewExe, "1.2.0", "1.3.0")
+	upgradeExec = func(c *exec.Cmd) error { r.ran = append(r.ran, strings.Join(c.Args, " ")); return noisy(c, false) }
+	var out, errOut bytes.Buffer
+	cmd := Root()
+	cmd.SetArgs([]string{"upgrade"})
+	cmd.SetOut(&out)
+	cmd.SetErr(&errOut)
+	if err := cmd.Execute(); err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out.String()+errOut.String(), "lots of brew detail") {
+		t.Errorf("brew's output should be held back on success:\nstdout:\n%s\nstderr:\n%s", out.String(), errOut.String())
+	}
+	if !strings.Contains(out.String(), "1.2.0 -> 1.3.0") || !strings.Contains(out.String(), "Done.") {
+		t.Errorf("want the short result:\n%s", out.String())
+	}
+}
+
+func TestUpgradeShowsWhatBrewPrintedWhenItFails(t *testing.T) {
+	r := rigUpgrade(t, brewExe, "1.2.0", "1.3.0")
+	upgradeExec = func(c *exec.Cmd) error {
+		r.ran = append(r.ran, strings.Join(c.Args, " "))
+		return noisy(c, strings.Contains(strings.Join(c.Args, " "), "brew upgrade"))
+	}
+	var errOut bytes.Buffer
+	cmd := Root()
+	cmd.SetArgs([]string{"upgrade"})
+	cmd.SetOut(&bytes.Buffer{})
+	cmd.SetErr(&errOut)
+	if err := cmd.Execute(); err == nil {
+		t.Fatal("want the failure")
+	}
+	if !strings.Contains(errOut.String(), "lots of brew detail") {
+		t.Errorf("a failure should show why:\n%s", errOut.String())
+	}
+}
+
+func TestUpgradeVerboseShowsWhatBrewPrints(t *testing.T) {
+	r := rigUpgrade(t, brewExe, "1.2.0", "1.3.0")
+	upgradeExec = func(c *exec.Cmd) error { r.ran = append(r.ran, strings.Join(c.Args, " ")); return noisy(c, false) }
+	out, err := runUpgradeCmd(t, "--verbose")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out, "lots of brew detail") {
+		t.Errorf("--verbose should pass brew's output through:\n%s", out)
 	}
 }
 
