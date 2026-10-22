@@ -5,6 +5,7 @@ Upgrade hikma to the latest release.
 ```bash
 hikma upgrade             # show both versions, upgrade, check the result
 hikma upgrade --dry-run   # show both versions and what would run; change nothing
+hikma upgrade --verbose   # also show what brew or the install script print
 ```
 
 It shows the version you have and the latest release, and when they differ it upgrades at once, with no question:
@@ -18,6 +19,8 @@ Upgrading with Homebrew (brew update, then brew upgrade HasanKhatib/tap/hikma)..
 Done.
 ```
 
+The latest version comes first, before anything is changed, so you know straight away whether an upgrade will happen. What `brew` or the install script print is held back to keep this short, and shown only if a step fails, because then it says why. Use `--verbose` to see it as it happens.
+
 When you already have the latest, it says so and changes nothing. A development build (`dev`) has no version to compare with, so it upgrades.
 
 hikma works out how it was installed:
@@ -27,11 +30,12 @@ hikma works out how it was installed:
 
 ## Checking the result
 
-A release is published before the Homebrew formula catches up. After the upgrade, hikma checks that the version now installed is the one it announced. If Homebrew still provides the old one, it says so instead of printing "Done.", and suggests trying again in a few minutes.
+A release is published before the Homebrew formula catches up. With Homebrew, hikma refreshes the tap and then reads the version the tap offers. If that is older than the release, it stops there and says so, with the version Homebrew offers, instead of running an upgrade that would change nothing. If the refresh itself fails, hikma warns and carries on, because a tap that was not refreshed says nothing about the release. After an upgrade, hikma checks that the version now installed is the one it announced. If Homebrew still provides the old one, it says so instead of printing "Done.", and suggests trying again in a few minutes.
 
 ## Notes
 
 - Running `hikma upgrade` is the confirmation: it replaces the hikma you ran it with, and says which release it is installing. Use `--dry-run` to look first. `--yes` is still accepted so existing scripts keep working, and does nothing.
 - Without a terminal it does not wait for anything, so it can run in a script.
 - If GitHub cannot be reached to learn the latest release, nothing is changed, and the error names the command to run yourself.
+- This upgrades the hikma binary only. To update installed skills, run [`hikma skill update`](/commands/skill-update).
 - On Windows the install script needs Git Bash.
