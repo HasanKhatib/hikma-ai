@@ -33,6 +33,19 @@ task docs:pages       # same, from a clean npm install
 task docs:stop        # stop a docs server these tasks started
 ```
 
+## What CI runs
+
+`hygiene` (commit and title rules, gofmt, `go mod tidy`) and `vulncheck` run on every change. The other jobs run only when the change can affect them, decided by `scripts/ci-changes.sh` from the changed files:
+
+| Job | Runs when these change |
+|---|---|
+| `test` (Linux, macOS, Windows) | `cmd/`, `internal/`, `e2e/`, `go.mod`, `go.sum`, `.goreleaser.yml` |
+| `release-dry-run` (pull requests only) | the same, plus `scripts/` and `release.yml` |
+| `install-script` | `scripts/`, `.goreleaser.yml` |
+| `docs-build` | `docs/site/`, `pages.yml` |
+
+A change to `ci.yml` or `scripts/ci-changes.sh` runs everything, and so does a change CI cannot list (no base commit, or more than 300 files). The pty tests have their own path filter in `terminal.yml`. Skipping a job never skips the check you should run yourself: the commands above are the full list, and `task ci` runs them all.
+
 ## Docs hosting
 
 The docs site is published at **https://hikma.alkhatib.tech/**. It is built from `docs/site` and deployed by `.github/workflows/pages.yml` to GitHub Pages whenever `docs/site/**` changes on `main`.
