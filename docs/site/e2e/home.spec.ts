@@ -247,3 +247,19 @@ test("the social card is wired", async ({ page }) => {
   expect(res.ok()).toBeTruthy();
   expect(res.headers()["content-type"]).toContain("image/png");
 });
+
+test.describe("first visit", () => {
+  // A system that asks for light must still see the dark theme on a first visit.
+  test.use({ colorScheme: "light" });
+
+  test("opens in dark with no saved choice", async ({ page }) => {
+    await page.goto("");
+    await expect(page.locator("html")).toHaveClass(/dark/);
+  });
+
+  test("a saved light choice is kept", async ({ page }) => {
+    await page.addInitScript(() => localStorage.setItem("vitepress-theme-appearance", "light"));
+    await page.goto("");
+    await expect(page.locator("html")).not.toHaveClass(/dark/);
+  });
+});

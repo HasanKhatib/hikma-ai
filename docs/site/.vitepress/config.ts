@@ -26,6 +26,8 @@ export default defineConfig({
     "Skills follow you. Define your source, publish to a registry repo you own, and install into any agent with one CLI.",
   base,
   cleanUrls: true,
+  // First-time visitors get the dark theme whatever their system setting; the toggle still wins and is remembered.
+  appearance: "dark",
   lastUpdated: true,
   head: [
     ["link", { rel: "icon", href: `${base}logo/favicon.ico`, sizes: "48x48" }],
