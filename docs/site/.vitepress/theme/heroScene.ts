@@ -12,11 +12,15 @@ export const SLOW = 1.6; // real seconds per scene second
 export const LOOP = (STORY + INTRO) * SLOW; // real length of one loop
 
 // The canvas can be wider than the stage. The story stays centered; the world fills the rest.
+// On a narrow screen (a phone) the canvas is narrower than the stage and a camera follows the character.
+const MIN_VW = 112;
 let VW = W;
 let OFF = 0;
+let SHIFT = 0; // where the stage's left edge sits on the canvas right now: the centering offset, or minus the camera
 export function setView(width: number) {
-  VW = Math.max(W, Math.min(MAX_VW, Math.round(width)));
-  OFF = Math.floor((VW - W) / 2);
+  VW = Math.max(MIN_VW, Math.min(MAX_VW, Math.round(width)));
+  OFF = Math.max(0, Math.floor((VW - W) / 2));
+  SHIFT = OFF;
   return VW;
 }
 
@@ -38,11 +42,14 @@ const JUMP_B = 23.8;
 type Palette = Record<string, string>;
 
 const PAL: Palette = {
-  h: "#e0ae4e", // hood
-  y: "#f2b84b", // hoodie
-  k: "#f6d9b0", // face
+  u: "#f4f1e6", // ghutra, the white headcloth
+  a: "#1c1a18", // agal, the black ring that holds it
+  k: "#d8a574", // face
   e: "#14201e", // eyes
-  l: "#d3ccb8", // legs
+  t: "#f7f4ea", // thobe
+  T: "#d9d3c0", // thobe shade
+  r: "#c98f2e", // gold collar
+  l: "#8a6a45", // sandals
   b: "#2fa89f", // bot
   w: "#f1ede2", // bot eye
   o: "#ff9a6b", // antenna tip
@@ -56,18 +63,23 @@ const PAL: Palette = {
 };
 
 const CHAR = [
-  "..hhhh..",
-  ".hhhhhh.",
-  ".hkkkkh.",
-  ".hkekeh.",
-  "..kkkk..",
-  ".yyyyyy.",
-  "yyyyyyyy",
-  "y.yyyy.y",
-  ".yyyyyy.",
+  "..uuuuuu..",
+  ".uuuuuuuu.",
+  ".uaaaaaau.",
+  ".uukkkkuu.",
+  ".uukekeuu.",
+  ".uukkkkuu.",
+  "..uuuuuu..",
+  "...rrrr...",
+  "..tttttt..",
+  "..ttTttt..",
+  ".tttTtttt.",
+  ".tttTtttt.",
+  ".tttttttt.",
 ];
-const LEGS_A = ["..l..l.."];
-const LEGS_B = [".l....l."];
+const CH = 28; // sprite height in scene pixels: 14 rows at 2x
+const LEGS_A = ["...l..l..."];
+const LEGS_B = ["..l....l.."];
 
 const PET = ["...o....", "...b....", ".bbbbbb.", "bbwbbwbb", "bbbbbbbb", ".bb..bb."];
 const PET_BLINK = ["...o....", "...b....", ".bbbbbb.", "bbbbbbbb", "bbbbbbbb", ".bb..bb."];
@@ -81,30 +93,43 @@ const CHEST = ["..mmmmmmmmmm..", ".mssssssssssm.", ".mmmmmsmmmmmm.", ".mmmmmmmmm
 const SIGN = ["wwwww", "wlllw", "wwwww", "..d..", "..d.."];
 const FLAG = ["d", "d", "d", "d", "d", "d", "d", "d", "d", "d"];
 
-type Sprite = HTMLCanvasElement;
-let sprites: Record<string, Sprite> | null = null;
+type Sprite = HTMLCanvasElement & { pad?: number };
+const sprites: Partial<Record<"dark" | "light", Record<string, Sprite>>> = {};
 
-function make(rows: string[], override: Palette = {}): Sprite {
-  const c = document.createElement("canvas");
-  c.width = rows[0].length;
-  c.height = rows.length;
+// An outline keeps the white robes readable on the pale daytime sky.
+function make(rows: string[], override: Palette = {}, outline?: string): Sprite {
+  const pad = outline ? 1 : 0;
+  const c: Sprite = document.createElement("canvas");
+  c.width = rows[0].length + pad * 2;
+  c.height = rows.length + pad * 2;
+  c.pad = pad;
   const x = c.getContext("2d")!;
+  const cells: [number, number, string][] = [];
   rows.forEach((row, j) =>
     [...row].forEach((ch, i) => {
       const color = override[ch] ?? PAL[ch];
-      if (ch === "." || !color) return;
-      x.fillStyle = color;
-      x.fillRect(i, j, 1, 1);
+      if (ch !== "." && color) cells.push([i + pad, j + pad, color]);
     }),
   );
+  if (outline) {
+    x.fillStyle = outline;
+    for (const [i, j] of cells) for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) x.fillRect(i + dx, j + dy, 1, 1);
+  }
+  for (const [i, j, color] of cells) {
+    x.fillStyle = color;
+    x.fillRect(i, j, 1, 1);
+  }
   return c;
 }
 
-function getSprites() {
-  if (sprites) return sprites;
-  sprites = {
-    charA: make([...CHAR, ...LEGS_A]),
-    charB: make([...CHAR, ...LEGS_B]),
+function getSprites(dark: boolean) {
+  const key = dark ? "dark" : "light";
+  const have = sprites[key];
+  if (have) return have;
+  const edge = dark ? undefined : "#3b2f22";
+  const made = {
+    charA: make([...CHAR, ...LEGS_A], {}, edge),
+    charB: make([...CHAR, ...LEGS_B], {}, edge),
     pet0: make(PET, { b: PET_COLORS[0] }),
     pet1: make(PET, { b: PET_COLORS[1] }),
     pet2: make(PET, { b: PET_COLORS[2] }),
@@ -116,13 +141,15 @@ function getSprites() {
     chest: make(CHEST),
     sign: make(SIGN),
   };
-  return sprites;
+  sprites[key] = made;
+  return made;
 }
 
 const SC = 2; // sprite scale: each sprite pixel is 2x2 scene pixels
 
-function blit(ctx: CanvasRenderingContext2D, img: HTMLCanvasElement, x: number, y: number) {
-  ctx.drawImage(img, Math.round(x), Math.round(y), img.width * SC, img.height * SC);
+function blit(ctx: CanvasRenderingContext2D, img: Sprite, x: number, y: number) {
+  const pad = (img.pad ?? 0) * SC;
+  ctx.drawImage(img, Math.round(x) - pad, Math.round(y) - pad, img.width * SC, img.height * SC);
 }
 
 const clamp = (v: number, a = 0, b = 1) => Math.min(b, Math.max(a, v));
@@ -145,12 +172,23 @@ function charX(t: number): number {
   return lerp(178, 188, seg(t, JUMP_B, STORY));
 }
 
+// What the camera looks at: the character, then the chest while a skill is pushed, and the checkpoint after the fall.
+function camTarget(t: number): number {
+  if (t >= FALL_B && t < RESPAWN + 0.6) return lerp(146, FLAG_X, ease(seg(t, FALL_B, RESPAWN + 0.6)));
+  const chest = seg(t, 11.8, 12.8) * (1 - seg(t, 14.6, 14.9));
+  return lerp(charX(t), CHEST_X - 20, chest);
+}
+
+function applyCamera(t: number) {
+  SHIFT = VW >= W ? OFF : -clamp(camTarget(t) + 8 - VW * 0.42, 0, W - VW);
+}
+
 function charMoving(t: number): boolean {
   return (t > 3 && t < 8) || (t > 16.4 && t < FALL_B) || t > JUMP_A;
 }
 
 function charY(t: number): number {
-  let y = GROUND - 20;
+  let y = GROUND - CH;
   if (t >= FALL_A && t < FALL_B) y += ((t - FALL_A) / (FALL_B - FALL_A)) ** 2 * 60;
   if (t >= JUMP_A && t < JUMP_B) y -= Math.sin(Math.PI * seg(t, JUMP_A, JUMP_B)) * 34;
   return y;
@@ -209,18 +247,18 @@ function burst(ctx: CanvasRenderingContext2D, cx: number, cy: number, t0: number
 
 const THEMES = {
   dark: { sky: "#0b1514", mid: "#0f1d1b", low: "#12302d", hills: "#163d39", grass: "#2fa89f", soil: "#136761", dirt: "#0b3b37", speck: "#0f4a45", hole: "#050b0a" },
-  light: { sky: "#cfe7e1", mid: "#dcefe9", low: "#e9f5f1", hills: "#b4d9cf", grass: "#2a8f84", soil: "#5aa79c", dirt: "#8cc2b8", speck: "#7bb5aa", hole: "#1b2f2c" },
+  light: { sky: "#e4d2a6", mid: "#e9d9b0", low: "#eddfba", hills: "#cdbb90", grass: "#6f7d2e", soil: "#a8803f", dirt: "#b9915a", speck: "#a8834f", hole: "#2a2118" },
 };
 
 // World 2: a lava land.
 const LAVA = {
   dark: { sky: "#150808", mid: "#2a0d0a", low: "#4a170d", hills: "#3a120c", grass: "#8a3a1c", soil: "#4a1a10", dirt: "#2a0e09", speck: "#3a150d", hole: "#ff5a1f" },
-  light: { sky: "#f3c9a8", mid: "#f0b48a", low: "#e99a70", hills: "#c9714f", grass: "#9b4a2a", soil: "#b5603d", dirt: "#8f4527", speck: "#a0522f", hole: "#ff5a1f" },
+  light: { sky: "#e8b98c", mid: "#e5ab79", low: "#dd9868", hills: "#b9694a", grass: "#8d4a2a", soil: "#a85a37", dirt: "#85442a", speck: "#97502f", hole: "#ff5a1f" },
 };
 
 function drawLava(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
-  const HA = HOLE_A + OFF;
-  const HB = HOLE_B + OFF;
+  const HA = HOLE_A + SHIFT;
+  const HB = HOLE_B + SHIFT;
   const c = dark ? LAVA.dark : LAVA.light;
   px(ctx, c.sky, 0, 0, VW, H);
   px(ctx, c.mid, 0, 28, VW, 30);
@@ -236,8 +274,7 @@ function drawLava(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
   }
   px(ctx, "#ff7a2a", VW - 50, GROUND - 52, 12, 2);
   px(ctx, "#ffd24a", VW - 47, GROUND - 53, 6, 1);
-  // a red sun and drifting embers
-  px(ctx, dark ? "#b3261e" : "#d9482b", 28, 26, 16, 16);
+  // drifting embers
   for (let i = 0; i < 16; i++) {
     const ex = (i * 47 + t * 6) % VW;
     const ey = (GROUND - ((t * 14 + i * 23) % (GROUND + 10))) | 0;
@@ -262,8 +299,8 @@ function drawLava(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
 }
 
 function drawWorld(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
-  const HA = HOLE_A + OFF;
-  const HB = HOLE_B + OFF;
+  const HA = HOLE_A + SHIFT;
+  const HB = HOLE_B + SHIFT;
   if (t >= W2) return drawLava(ctx, t, dark);
   const c = dark ? THEMES.dark : THEMES.light;
   px(ctx, c.sky, 0, 0, VW, H);
@@ -277,17 +314,17 @@ function drawWorld(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
   if (dark) {
     for (let i = 0; i < 18; i++) {
       const sx = (i * 53) % VW;
-      const sy = 22 + ((i * 29) % 36); // below the nav bar that sits over the top of the page
+      const sy = 40 + ((i * 29) % 36); // below the nav bar that sits over the top of the page
       if (Math.floor(t * 1.5 + i) % 3) px(ctx, "#f2c46d", sx, sy);
     }
   } else {
     // a blocky sun and two slow clouds
-    px(ctx, "#f2c46d", VW - 44, 24, 14, 14);
-    px(ctx, "#ffe39a", VW - 41, 27, 8, 8);
-    for (const [cx, cy] of [[30, 28], [120, 42]] as const) {
+    px(ctx, "#d79921", VW - 92, 30, 10, 10);
+    px(ctx, "#ebbd5a", VW - 90, 32, 6, 6);
+    for (const [cx, cy] of [[30, 60], [120, 74]] as const) {
       const x = ((cx + t * 3) % (VW + 40)) - 20;
-      px(ctx, "#ffffff", x, cy, 22, 5);
-      px(ctx, "#ffffff", x + 5, cy - 4, 12, 4);
+      px(ctx, "#f7edd2", x, cy, 22, 5);
+      px(ctx, "#f7edd2", x + 5, cy - 4, 12, 4);
     }
   }
   // ground, with a hole
@@ -328,11 +365,11 @@ function drawGems(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sp
   if (t >= 3 && t < 6.6) {
     const bob = Math.sin(t * 4) * 1.5;
     let x = 104;
-    let y = GROUND - 38 + bob;
+    let y = GROUND - 46 + bob;
     if (t >= 5.6) {
       const p = ease(seg(t, 5.6, 6.6));
       x = lerp(104, pet.x + 3, p);
-      y = lerp(GROUND - 38, pet.y - 10, p);
+      y = lerp(GROUND - 46, pet.y - 10, p);
     }
     blit(ctx, s.gem, x, y);
   }
@@ -341,11 +378,11 @@ function drawGems(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sp
   if (t >= 10 && t < 14) {
     const bob = Math.sin(t * 4) * 1.5;
     let x = charX(t) + 3;
-    let y = GROUND - 46 + bob;
+    let y = GROUND - 52 + bob;
     if (t >= 12.4) {
       const p = seg(t, 12.4, 14);
       x = lerp(charX(t) + 3, CHEST_X + 9, p);
-      y = lerp(GROUND - 46, GROUND - 16, p) - Math.sin(Math.PI * p) * 40;
+      y = lerp(GROUND - 52, GROUND - 16, p) - Math.sin(Math.PI * p) * 40;
     }
     blit(ctx, s.gem2, x, y);
   }
@@ -423,12 +460,13 @@ function sceneTime(raw: number): number {
 
 export function drawScene(ctx: CanvasRenderingContext2D, raw: number, dark = true) {
   const t = sceneTime(raw);
+  applyCamera(t);
   const story = t + INTRO;
-  const s = getSprites();
+  const s = getSprites(dark);
   ctx.imageSmoothingEnabled = false;
   drawWorld(ctx, t, dark);
   ctx.save();
-  ctx.translate(OFF, 0);
+  ctx.translate(SHIFT, 0);
   drawProps(ctx, t, s);
   drawGems(ctx, t, s);
   drawPet(ctx, t, s);
@@ -439,7 +477,7 @@ export function drawScene(ctx: CanvasRenderingContext2D, raw: number, dark = tru
   fade = Math.max(fade, 1 - seg(story, 0, 0.3), seg(t, STORY - 0.4, STORY));
   if (fade > 0) {
     ctx.globalAlpha = fade;
-    px(ctx, dark ? "#0b1514" : "#e9f5f1", 0, 0, VW, H);
+    px(ctx, dark ? "#0b1514" : "#eadfc4", 0, 0, VW, H);
     ctx.globalAlpha = 1;
   }
   const card = cardAlpha(t);
@@ -452,71 +490,70 @@ export function drawScene(ctx: CanvasRenderingContext2D, raw: number, dark = tru
 
 // ── Text overlays ────────────────────────────────────────────────────────────
 
-export type Balloon = { who: "char" | "pet"; text: string; x: number; y: number };
+export type Who = "char" | "pet";
+export type CliLine = { out: boolean; text: string };
+// One speech bubble: what the speaker says, then the terminal lines that follow in the same bubble.
+export type Bubble = { who: Who; quote: string | null; lines: CliLine[]; x: number; y: number };
 
-const BALLOONS: { a: number; b: number; who: "char" | "pet"; text: string }[] = [
+const QUOTES: { a: number; b: number; who: Who; text: string }[] = [
   { a: 0.3, b: 3.0, who: "char", text: "New repo." },
   { a: 3.4, b: 7.2, who: "char", text: "Great skill for my agent!" },
-  { a: 8.2, b: 13.2, who: "pet", text: "I learned a lot. Let's make walking-above-holes." },
+  { a: 8.2, b: 10.6, who: "pet", text: "I learned a lot. Let's make walking-above-holes." },
   { a: 17.1, b: 17.9, who: "char", text: "Hole!" },
   { a: 19.8, b: 21, who: "char", text: "No skills." },
   { a: 22.1, b: 23.2, who: "pet", text: "Watch this." },
 ];
 
-export function balloonAt(raw: number): Balloon | null {
-  const t = sceneTime(raw);
-  const b = BALLOONS.find((x) => t >= x.a && t < x.b);
-  if (!b) return null;
-  const p = b.who === "pet" ? petPos(t) : { x: charX(t), y: charY(t) };
-  const edge = 58 / VW; // keep a balloon inside the picture
-  const x = clamp((p.x + 8 + OFF) / VW, edge, 1 - edge) * 100;
-  const y = ((p.y - (b.who === "pet" ? 14 : 6)) / H) * 100;
-  return { who: b.who, text: b.text, x, y };
-}
-
 type Cmd = { at: number; text: string; out?: boolean; group: number };
 
+// Commands start about a second after the quote, so the speaker talks first and the terminal follows.
 const CLI: Cmd[] = [
-  { group: 1, at: 0.4, text: "hikma init" },
-  { group: 1, at: 1.4, text: "Created AGENTS.md", out: true },
-  { group: 1, at: 1.7, text: "Wrote .hikma/config.json", out: true },
-  { group: 2, at: 3.4, text: "hikma skill install go-blue" },
-  { group: 2, at: 5.3, text: "-> .claude/skills/go-blue/ (1 files)", out: true },
-  { group: 3, at: 8.2, text: "hikma skill create walking-above-holes" },
-  { group: 3, at: 9.8, text: "Created .claude/skills/walking-above-holes/", out: true },
-  { group: 4, at: 10.4, text: "hikma skill push walking-above-holes" },
-  { group: 4, at: 12.2, text: "Pushed to myghaccount/myrepo", out: true },
-  { group: 5, at: 19.8, text: "hikma sync" },
+  { group: 1, at: 1.1, text: "hikma init" },
+  { group: 1, at: 1.7, text: "Created AGENTS.md", out: true },
+  { group: 1, at: 2.0, text: "Wrote .hikma/config.json", out: true },
+  { group: 2, at: 4.3, text: "hikma skill install go-blue" },
+  { group: 2, at: 5.4, text: "-> .claude/skills/go-blue/ (1 files)", out: true },
+  { group: 3, at: 9.0, text: "hikma skill create walking-above-holes" },
+  { group: 3, at: 10.2, text: "Created .claude/skills/walking-above-holes/", out: true },
+  { group: 4, at: 10.9, text: "hikma skill push walking-above-holes" },
+  { group: 4, at: 12.3, text: "Pushed to myghaccount/myrepo", out: true },
+  { group: 5, at: 20.5, text: "hikma sync" },
   { group: 5, at: 21.2, text: "restored .claude/skills/go-blue", out: true },
   { group: 5, at: 21.5, text: "restored .claude/skills/walking-above-holes", out: true },
   { group: 5, at: 21.8, text: "Done: 2 restored, 0 failed", out: true },
 ];
 
-const GROUPS: [number, number, number][] = [
-  [1, 0.4, 3.2],
-  [2, 3.4, 8.0],
-  [3, 8.2, 10.3],
-  [4, 10.4, 14.2],
-  [5, 19.8, 24.4],
+// [group, start, end, who speaks]
+const GROUPS: [number, number, number, Who][] = [
+  [1, 0.4, 3.2, "char"],
+  [2, 3.4, 8.0, "char"],
+  [3, 8.2, 10.8, "pet"],
+  [4, 10.8, 14.2, "char"],
+  [5, 19.8, 22.0, "char"],
 ];
 
-export type CliLine = { out: boolean; text: string };
-
-export function cliAt(raw: number): CliLine[] {
-  const t = sceneTime(raw);
-  const g = GROUPS.find(([, a, b]) => t >= a && t < b);
-  if (!g) return [];
+function cliLines(t: number, group: number): CliLine[] {
   const lines: CliLine[] = [];
   for (const c of CLI) {
-    if (c.group !== g[0] || t < c.at) continue;
-    if (c.out) {
-      lines.push({ out: true, text: c.text });
-    } else {
-      const n = Math.min(c.text.length, Math.floor((t - c.at) / 0.045));
-      lines.push({ out: false, text: c.text.slice(0, n) });
-    }
+    if (c.group !== group || t < c.at) continue;
+    if (c.out) lines.push({ out: true, text: c.text });
+    else lines.push({ out: false, text: c.text.slice(0, Math.floor((t - c.at) / 0.03)) });
   }
   return lines.slice(-3);
+}
+
+export function bubbleAt(raw: number): Bubble | null {
+  const t = sceneTime(raw);
+  applyCamera(t);
+  const quote = QUOTES.find((q) => t >= q.a && t < q.b);
+  const group = GROUPS.find(([, a, b]) => t >= a && t < b);
+  if (!quote && !group) return null;
+  const who: Who = group ? group[3] : quote!.who;
+  const lines = group ? cliLines(t, group[0]) : [];
+  const p = who === "pet" ? petPos(t) : { x: charX(t), y: charY(t) };
+  const x = ((p.x + 8 + SHIFT) / VW) * 100;
+  const y = ((p.y - (who === "pet" ? 14 : 6)) / H) * 100;
+  return { who, quote: quote ? quote.text : null, lines, x, y };
 }
 
 export const TRANSCRIPT =
@@ -543,6 +580,25 @@ export function stageAt(raw: number): number {
     if (r >= st.start) active = i;
   });
   return active;
+}
+
+// The scroll runway maps onto the story: each stage gets an equal share, and the end stops
+// just before the loop fades out.
+export const END = at(STORY - 0.5);
+const stageEnd = (i: number) => (i + 1 < STAGES.length ? STAGES[i + 1].start : END);
+
+// Real seconds into the loop -> 0..1 along the timeline.
+export function progressAt(raw: number): number {
+  const r = Math.min(END, ((raw % LOOP) + LOOP) % LOOP);
+  const i = stageAt(r);
+  return (i + seg(r, STAGES[i].start, stageEnd(i))) / STAGES.length;
+}
+
+// 0..1 along the timeline -> real seconds into the loop.
+export function timeAtProgress(p: number): number {
+  const q = clamp(p) * STAGES.length;
+  const i = Math.min(STAGES.length - 1, Math.floor(q));
+  return lerp(STAGES[i].start, stageEnd(i), q - i);
 }
 
 export type Title = { alpha: number; main: string; sub: string };

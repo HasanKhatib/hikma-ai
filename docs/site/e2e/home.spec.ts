@@ -25,7 +25,7 @@ async function canvasPixel(page: Page, x: number, y: number) {
 
 for (const theme of ["dark", "light"] as const) {
   test.describe(`home page, ${theme}`, () => {
-    test("is one screen: the page cannot scroll and nothing is cut off", async ({ page }, info) => {
+    test("the hero fits the window and nothing is cut off", async ({ page }, info) => {
       const sizes = isPhone(info.project.name)
         ? [{ width: 390, height: 664 }]
         : [{ width: 1366, height: 650 }, { width: 1280, height: 720 }, { width: 1440, height: 800 }, { width: 1920, height: 1080 }];
@@ -33,18 +33,29 @@ for (const theme of ["dark", "light"] as const) {
         await page.setViewportSize(size);
         await openHome(page, theme);
         const m = await page.evaluate(() => ({
-          overflow: getComputedStyle(document.documentElement).overflow,
           dockBottom: document.querySelector(".hk-dock")!.getBoundingClientRect().bottom,
           installRight: document.querySelector(".hk-getit")!.getBoundingClientRect().right,
           sceneHeight: document.querySelector(".hk-scene")!.getBoundingClientRect().height,
+          headlineBottom: document.querySelector(".hk-headline")!.getBoundingClientRect().bottom,
+          dockTop: document.querySelector(".hk-dock")!.getBoundingClientRect().top,
+          // The grass line is 92/135 down the canvas; the dock must sit below it so it never covers the feet.
+          groundLine: (() => {
+            const c = document.querySelector(".hk-scene canvas")!.getBoundingClientRect();
+            return c.bottom - c.height * (43 / 135);
+          })(),
+          dockPadding: getComputedStyle(document.querySelector(".hk-dock")!).paddingTop,
           h: window.innerHeight,
           w: window.innerWidth,
         }));
         const at = `${size.width}x${size.height}`;
-        expect(m.overflow, `${at} can scroll`).toBe("hidden");
         expect(m.dockBottom, `${at}: the dock is cut off`).toBeLessThanOrEqual(m.h + 1);
         expect(m.installRight, `${at}: the install box is cut off`).toBeLessThanOrEqual(m.w + 1);
         expect(m.sceneHeight, `${at}: the scene got squeezed`).toBeGreaterThan(200);
+        expect(m.headlineBottom, `${at}: the headline runs into the dock`).toBeLessThan(m.dockTop);
+        if (!isPhone(info.project.name)) {
+          expect(m.dockTop, `${at}: the dock covers the character's feet`).toBeGreaterThanOrEqual(m.groundLine - 1);
+          expect(m.dockPadding, `${at}: the dock keeps its 20px vertical padding`).toBe("20px");
+        }
       }
     });
 
@@ -76,30 +87,76 @@ for (const theme of ["dark", "light"] as const) {
 }
 
 test.describe("scene controls", () => {
-  test("each stage button jumps the scene and lights up", async ({ page }) => {
+  const steps = (page: Page) => page.locator(".hk-rail ol button");
+
+  test("each step button jumps the scene and lights up", async ({ page }) => {
     await openHome(page, "dark");
-    const stages = page.locator(".hk-stages button:not(.hk-scene-toggle)");
-    await expect(stages).toHaveCount(4);
+    await expect(steps(page)).toHaveCount(4);
 
-    await stages.nth(3).click(); // hikma sync
-    await expect(stages.nth(3)).toHaveAttribute("aria-current", "step");
-    await expect(page.locator(".hk-scene-cli")).toContainText("hikma sync", { timeout: 15_000 });
+    await steps(page).nth(3).click(); // hikma sync
+    await expect(steps(page).nth(3)).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".hk-bubble")).toContainText("hikma sync", { timeout: 15_000 });
 
-    await stages.nth(1).click(); // skill install
-    await expect(stages.nth(1)).toHaveAttribute("aria-current", "step");
-    await expect(page.locator(".hk-scene-cli")).toContainText("skill install", { timeout: 10_000 });
+    await steps(page).nth(1).click(); // skill install
+    await expect(steps(page).nth(1)).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".hk-bubble")).toContainText("skill install", { timeout: 10_000 });
 
-    await stages.nth(0).click(); // back to the start
-    await expect(stages.nth(0)).toHaveAttribute("aria-current", "step");
+    await steps(page).nth(0).click(); // back to the start
+    await expect(steps(page).nth(0)).toHaveAttribute("aria-current", "step");
     await expect(page.locator(".hk-scene-title")).toBeVisible();
   });
 
-  test("a later stage dims until it is reached", async ({ page }) => {
+  test("scrolling down moves the story forward and scrolling up goes back", async ({ page }) => {
     await openHome(page, "dark");
-    const last = page.locator(".hk-stages button:not(.hk-scene-toggle)").nth(3);
+    const range = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+    expect(range, "the page has scroll room for the story").toBeGreaterThan(300);
+
+    await page.evaluate((y) => window.scrollTo(0, y), range * 0.9); // the last stage
+    await expect(steps(page).nth(3)).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".hk-scene-toggle")).toHaveText("Pause"); // scrolling does not pause the story
+
+    await page.evaluate((y) => window.scrollTo(0, y), range * 0.3); // the second stage
+    await expect(steps(page).nth(1)).toHaveAttribute("aria-current", "step");
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await expect(steps(page).nth(0)).toHaveAttribute("aria-current", "step");
+  });
+
+  test("scrolling to the end keeps playing and the story loops by itself", async ({ page }) => {
+    await page.clock.install();
+    await openHome(page, "dark");
+    const range = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+    await page.evaluate((y) => window.scrollTo(0, y), range); // the very end
+    await expect(steps(page).nth(3)).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".hk-scene-toggle")).toHaveText("Pause");
+    await page.clock.runFor(4000);
+    await expect(steps(page).nth(0)).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".hk-scene-toggle")).toHaveText("Pause");
+  });
+
+  test("a story paused with the button stays paused while the reader scrolls", async ({ page }) => {
+    await openHome(page, "dark");
+    await page.locator(".hk-scene-toggle").click();
+    await expect(page.locator(".hk-scene-toggle")).toHaveText("Play");
+    const range = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+    await page.evaluate((y) => window.scrollTo(0, y), range * 0.6);
+    await expect(steps(page).nth(2)).toHaveAttribute("aria-current", "step");
+    await page.waitForTimeout(800);
+    await expect(steps(page).nth(2)).toHaveAttribute("aria-current", "step");
+    await expect(page.locator(".hk-scene-toggle")).toHaveText("Play");
+  });
+
+  test("the navbar stays put while the story scrolls", async ({ page }) => {
+    await openHome(page, "dark");
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight * 0.5));
+    await expect(steps(page).nth(2)).toHaveAttribute("aria-current", "step");
+    const top = await page.evaluate(() => Math.round(document.querySelector(".VPNavBar")!.getBoundingClientRect().top));
+    expect(top).toBe(0);
+  });
+
+  test("a later step dims until it is reached", async ({ page }) => {
+    await openHome(page, "dark");
+    const last = steps(page).nth(3);
     await expect(last).not.toHaveClass(/on|done/);
-    const opacity = await last.evaluate((el) => Number(getComputedStyle(el).opacity));
-    expect(opacity).toBeLessThan(0.9);
   });
 
   test("pause stops the clock and play resumes it", async ({ page }) => {
@@ -108,10 +165,10 @@ test.describe("scene controls", () => {
     await expect(toggle).toHaveText("Pause");
     await toggle.click();
     await expect(toggle).toHaveText("Play");
-    const cliText = () => page.evaluate(() => document.querySelector(".hk-scene-cli")?.textContent ?? "");
-    const before = await cliText();
+    const bubbleText = () => page.evaluate(() => document.querySelector(".hk-bubble")?.textContent ?? "");
+    const before = await bubbleText();
     await page.waitForTimeout(1500);
-    const after = await cliText();
+    const after = await bubbleText();
     expect(after).toBe(before);
     await toggle.click();
     await expect(toggle).toHaveText("Pause");
@@ -140,7 +197,7 @@ test.describe("install line", () => {
   test("the command is readable and Copy confirms", async ({ page, context }, info) => {
     test.skip(info.project.name !== "chromium", "clipboard permission is Chromium-only");
     await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-    await openHome(page, "light");
+    await openHome(page, "light", "?os=mac");
     const code = page.locator(".hk-install-line code");
     await expect(code).toContainText("brew install HasanKhatib/tap/hikma");
     // The command once rendered dark green on a dark box in light mode.
@@ -157,6 +214,29 @@ test.describe("install line", () => {
 
     await page.getByRole("button", { name: "Copy" }).click();
     await expect(page.getByRole("button", { name: /Copied/ })).toBeVisible();
+  });
+});
+
+test.describe("install detection", () => {
+  test("shows the command for the system, and the full command is what Copy keeps", async ({ page }, info) => {
+    await openHome(page, "dark", "?os=mac");
+    await expect(page.locator(".hk-install-os")).toContainText("macOS");
+    await expect(page.locator(".hk-install-line code")).toContainText("brew install");
+
+    await openHome(page, "dark", "?os=linux");
+    await expect(page.locator(".hk-install-os")).toContainText("Linux");
+    await expect(page.locator(".hk-install-line code")).toContainText("curl -fsSL");
+
+    await openHome(page, "dark", "?os=windows");
+    await expect(page.locator(".hk-install-os")).toContainText("Git Bash");
+    // Phones drop the link to keep the top of the page short.
+    if (!isPhone(info.project.name)) await expect(page.getByRole("link", { name: "Other ways to install" })).toBeVisible();
+  });
+
+  test("the credit sits under the install box next to the other-ways link, not in a floating pill", async ({ page }) => {
+    await openHome(page, "dark");
+    await expect(page.locator(".hk-getit .hk-install-foot .hk-built")).toContainText("Hasan Alkhatib");
+    await expect(page.locator(".hk-credit")).toBeHidden();
   });
 });
 

@@ -21,7 +21,7 @@ npx agentkan validate docs/board         # after any change under docs/board
 
 - `cmd/hikma/commands/`: one file per command, each with a `_test.go` beside it. Commands are thin; shared logic lives in `internal/`.
 - `internal/source`: resolves skill sources and checks skill folders. `internal/lock`: the lockfile. `internal/config`: layered config, registry settings, and the agent layout table (`agents.go`, `customagents.go`). `internal/scaffold`: templates for `init` and `skill create`. `internal/ui`: output, color, banner.
-- `docs/site/`: user docs, one page per command. `docs/board/`: roadmap. `docs/migration-plan.md`: the product plan changes must stay aligned with.
+- `docs/site/`: user docs, one page per command, published at https://hikma.alkhatib.tech/ (GitHub Pages with a custom domain; see CONTRIBUTING.md). `docs/board/`: roadmap. `docs/migration-plan.md`: the product plan changes must stay aligned with.
 - `.claude/skills/`: local skills for working on this repo. They are not shipped. Skills that make videos or animations start with `video-` (`video-tech-demo`, `video-pixel-scene`).
 
 ## Code and tests

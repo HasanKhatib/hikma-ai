@@ -26,7 +26,7 @@ async function worker() {
   const page = await ctx.newPage();
   for (let i = next++; i < total; i = next++) {
     const t = Math.max(0.001, i / FPS).toFixed(3);
-    await page.goto(`http://localhost:4311/hikma-ai/?t=${t}`, { waitUntil: "load" });
+    await page.goto(`http://localhost:4311/?t=${t}`, { waitUntil: "load" });
     // Hide the Pause button and freeze CSS animation so every frame is a clean still.
     await page.addStyleTag({ content: ".hk-scene-toggle{display:none!important}*{animation:none!important;transition:none!important}" });
     const scene = page.locator(".hk-scene");

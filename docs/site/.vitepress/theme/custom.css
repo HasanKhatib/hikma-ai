@@ -1,24 +1,24 @@
 /* Hikma docs theme. The homepage extends VitePress's shared layout and navigation. */
 
 :root {
-  --paper: #f6f2e8;
-  --paper-2: #ece6d6;
-  --ink: #14201e;
-  --muted: #5a615a;
-  --line: #d3ccb8;
-  --panel: #fcfaf4;
-  --forest: #0b4f4a;
+  --paper: #eadfc4;
+  --paper-2: #e1d3b0;
+  --ink: #2b2620;
+  --muted: #5c5040;
+  --line: #cdbd9a;
+  --panel: #f3e9d0;
+  --forest: #1f5f58;
   --forest-2: #136761;
   --signal: #f2b84b;
-  --orange: #b4532a;
-  --grid-line: rgba(11, 79, 74, 0.14);
+  --orange: #9a4120;
+  --grid-line: rgba(120, 90, 40, 0.16);
   --code: #0c1615;
   --code-muted: #91a69f;
   --code-text: #f2f6f1;
   --code-text-2: #b7c6c0;
   --code-text-3: #9dafaa;
   --code-line: rgba(226, 239, 233, 0.19);
-  --shadow: 0 24px 64px rgba(11, 60, 56, 0.18);
+  --shadow: 0 24px 64px rgba(90, 60, 20, 0.18);
   --vp-c-bg: var(--paper);
   --vp-c-bg-alt: var(--paper-2);
   --vp-c-bg-elv: var(--panel);
@@ -171,7 +171,8 @@ kbd,
    which made the command dark green on the dark box in light mode. */
 .vp-doc .hk-install-line code {
   min-width: 0;
-  overflow-x: auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
   white-space: nowrap;
   padding: 0;
   background: transparent;
@@ -195,57 +196,63 @@ kbd,
   outline: 2px solid var(--signal);
   outline-offset: 2px;
 }
-.hk-install-alt {
-  max-width: 460px;
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-
-/* Home: the animation fills the window under the nav. The commands, headline and install sit below it.
-   Fixed to the window so the page never scrolls. */
+/* Home: the scene fills the window under the nav. The page scrolls through a tall runway, and the
+   scroll position is the story's position: the hero is fixed, the runway only gives scroll room. */
 html:has(.hk-hero-wrap) {
-  overflow: hidden;
+  --vp-nav-bg-color: transparent;
 }
-html:has(.hk-hero-wrap) .VPNavBar {
-  background: color-mix(in srgb, var(--paper) 72%, transparent);
-  backdrop-filter: blur(8px);
+/* VitePress only fixes the navbar from 960px up; the home page scrolls through its runway, so it stays pinned at every width. */
+html:has(.hk-hero-wrap) .VPNav {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
 }
-html:has(.hk-hero-wrap) .VPNavBar .divider-line {
+/* The navbar borrows the sky from the scene, so it reads as part of the picture. */
+html:has(.hk-hero-wrap) .VPNavBar,
+html:has(.hk-hero-wrap) .VPNavBar .content-body {
+  background: color-mix(in srgb, var(--hk-sky, var(--paper)) 62%, transparent);
+  backdrop-filter: blur(10px);
+}
+html:has(.hk-hero-wrap) .VPNavBar .divider-line,
+html:has(.hk-hero-wrap) .VPNavBar .divider {
   display: none;
+}
+html:has(.hk-hero-wrap) .hk-credit {
+  display: none;
+}
+.hk-runway {
+  height: 500svh;
 }
 .hk-hero-wrap {
   position: fixed;
   inset: 0;
   z-index: 1;
-  display: flex;
-  flex-direction: column;
-  background: radial-gradient(var(--grid-line) 1px, transparent 1.2px) 0 0 / 22px 22px, var(--paper);
+  background: var(--paper);
+  pointer-events: none;
+}
+.hk-hero-wrap > * {
+  pointer-events: auto;
 }
 .hk-scene-wrap {
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  min-height: 0;
-  min-width: 0;
+  position: absolute;
+  inset: 0;
 }
 
-/* The scene. The canvas keeps a 16:9 box at the bottom; a wide window gets a wider canvas instead. */
+/* The scene. The picture keeps square pixels at a laptop-friendly size and sits at the bottom;
+   the sky fills the rest and holds the headline. A wide window gets a wider world instead of bigger pixels. */
 .hk-scene {
-  position: relative;
-  flex: 1;
-  min-height: 0;
+  position: absolute;
+  inset: 0;
   margin: 0;
   overflow: hidden;
   container-type: size;
-  background: #cfe7e1;
 }
 .hk-box {
   position: absolute;
   inset: auto 0 0;
-  height: min(100cqh, 100cqw * 9 / 16);
+  /* About 4 to 5 screen pixels per scene pixel: the character stays 110 to 135px tall on a 14 or 16 inch laptop. */
+  height: min(100cqh, 100cqw * 9 / 16, clamp(530px, 64cqh, 680px));
 }
 .hk-scene canvas {
   display: block;
@@ -253,34 +260,68 @@ html:has(.hk-hero-wrap) .VPNavBar .divider-line {
   height: 100%;
   image-rendering: pixelated;
 }
-.hk-scene-balloon {
+
+/* The speech bubble: the quote, then the terminal in the same bubble. */
+.hk-bubble {
+  --bw: min(340px, 78vw);
+  --gutter-l: 16px;
+  --gutter-r: 64px; /* keeps the bubble clear of the timeline */
   position: absolute;
-  max-width: 46%;
-  padding: 5px 9px;
+  width: var(--bw);
+  left: clamp(calc(var(--bw) / 2 + var(--gutter-l)), var(--x, 50%), calc(100% - var(--bw) / 2 - var(--gutter-r)));
   border: 2px solid #14201e;
   border-radius: 2px;
   background: #f1ede2;
   color: #14201e;
-  font: 600 12px/1.3 var(--vp-font-family-mono);
-  transform: translate(-50%, -100%);
+  transform: translate(-50%, calc(-100% - 8px));
   pointer-events: none;
+  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.28);
 }
-.hk-scene-balloon::after {
+.hk-bubble.pet .hk-quote {
+  background: #d6f3ee;
+}
+.hk-bubble::after {
   content: "";
   position: absolute;
-  left: 50%;
-  bottom: -8px;
+  left: var(--tail, 50%);
+  bottom: -9px;
   width: 8px;
   height: 8px;
-  background: #f1ede2;
+  background: #14201e;
   border-right: 2px solid #14201e;
   border-bottom: 2px solid #14201e;
   transform: translateX(-50%) rotate(45deg);
 }
-.hk-scene-balloon.pet,
-.hk-scene-balloon.pet::after {
-  background: #d6f3ee;
+.hk-bubble .hk-quote {
+  margin: 0;
+  padding: 6px 10px;
+  background: #f1ede2;
+  font: 700 13px/1.35 var(--vp-font-family-mono);
 }
+.hk-term {
+  min-height: 24px;
+  padding: 6px 10px;
+  background: #14201e;
+  color: #e8e6da;
+  font: 13px/1.5 var(--vp-font-family-mono);
+}
+.hk-term .cmd {
+  overflow: hidden;
+  white-space: nowrap;
+}
+.hk-term .cmd b {
+  color: #ff9a6b;
+}
+.hk-term .out {
+  overflow: hidden;
+  color: #8fd3b8;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hk-caret {
+  animation: hk-blink 1s steps(2, start) infinite;
+}
+
 .hk-scene-title {
   position: absolute;
   inset: 0;
@@ -312,155 +353,261 @@ html:has(.hk-hero-wrap) .VPNavBar .divider-line {
   }
 }
 
-/* The strip under the scene: what is being typed, and the four steps. */
-.hk-strip {
+/* The timeline: four steps on a rail at the right edge, centered. The fill follows the story; click a step, or scroll. */
+.hk-rail {
+  position: absolute;
+  top: 50%;
+  right: 14px;
+  z-index: 3;
   display: flex;
-  flex: none;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px 24px;
-  padding: 12px 24px 0;
-  border-top: 4px solid var(--forest-2);
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 14px;
+  transform: translateY(-50%);
 }
-.hk-scene-cli {
-  flex: 1;
-  min-width: 0;
-  min-height: 63px;
-  overflow: hidden;
-  color: var(--ink);
-  font: 13px/1.55 var(--vp-font-family-mono);
+.hk-rail-track {
+  position: relative;
 }
-.hk-scene-cli .cmd b {
-  color: var(--orange);
-}
-.hk-scene-cli .out {
-  overflow: hidden;
-  color: var(--forest);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.hk-caret {
-  animation: hk-blink 1s steps(2, start) infinite;
-}
-.hk-stages {
+.hk-rail ol {
+  position: relative;
+  z-index: 1;
   display: flex;
-  flex: none;
+  flex-direction: column;
+  gap: 30px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+/* VitePress adds a top margin to every list item after the first; the rail spaces itself. */
+.hk-rail ol li,
+.hk-rail ol li + li {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0;
+  padding: 0;
+}
+.hk-rail-line {
+  position: absolute;
+  top: 14px;
+  right: 13px;
+  width: 2px;
+  height: calc(100% - 28px);
+  background: var(--line);
+  pointer-events: none;
+}
+.hk-rail-line span {
+  display: block;
+  width: 100%;
+  height: calc(var(--p, 0) * 100% * 4 / 3);
+  max-height: 100%;
+  background: var(--vp-c-brand-1);
+}
+.hk-rail ol button {
+  position: relative;
+  display: flex;
+  flex-direction: row-reverse;
   align-items: center;
-  gap: 8px;
-}
-.hk-stages button {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 10px;
-  border: 1px solid var(--line);
-  border-radius: 2px;
+  gap: 10px;
+  padding: 0;
+  border: 0;
   background: transparent;
   color: var(--muted);
   cursor: pointer;
-  opacity: 0.55;
-  transition: opacity 0.25s, border-color 0.25s, background 0.25s;
 }
-.hk-stages button.done {
-  opacity: 0.85;
-}
-.hk-stages button.on {
-  opacity: 1;
-  border-color: var(--vp-c-brand-1);
-  background: var(--vp-c-brand-soft);
-  color: var(--ink);
-}
-.hk-stages button:hover {
-  opacity: 1;
-}
-.hk-stages button:focus-visible,
-.hk-scene-toggle:focus-visible {
-  outline: 2px solid var(--vp-c-brand-1);
-  outline-offset: 2px;
-}
-.hk-stages i {
+.hk-rail i {
   display: grid;
   flex: none;
   place-items: center;
-  width: 20px;
-  height: 20px;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--line);
   border-radius: 2px;
-  background: var(--line);
+  background: var(--paper);
   color: var(--ink);
-  font: 700 11px/1 var(--vp-font-family-mono);
+  font: 700 12px/1 var(--vp-font-family-mono);
   font-style: normal;
+  transition: background 0.25s, border-color 0.25s;
 }
-.hk-stages button.on i {
+.hk-rail button.done i {
+  border-color: var(--vp-c-brand-1);
+}
+.hk-rail button.on i {
+  border-color: var(--vp-c-brand-1);
   background: var(--vp-c-brand-1);
   color: var(--paper);
 }
-.hk-stages code {
-  min-width: 0;
-  padding: 0;
-  background: transparent;
-  color: inherit;
-  font-size: 13px;
-  white-space: nowrap;
-}
-.hk-stages .hk-scene-toggle {
-  padding: 6px 4px;
-  border-color: transparent;
+/* The label slides out to the left on hover and on focus. */
+.hk-rail code {
+  position: absolute;
+  right: calc(100% + 10px);
+  padding: 3px 8px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
   font-size: 12px;
+  white-space: nowrap;
+  opacity: 0;
+  transform: translateX(4px);
+  transition: opacity 0.2s, transform 0.2s;
+  pointer-events: none;
+}
+.hk-rail button:hover code,
+.hk-rail button:focus-visible code {
   opacity: 1;
+  transform: none;
 }
-
-/* The dock: headline on the left, install on the right. */
-.hk-dock {
-  display: flex;
+.hk-rail button:focus-visible,
+.hk-scene-toggle:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 3px;
+}
+.hk-scene-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 30px;
+  padding: 0 11px 0 9px;
+  border: 2px solid var(--line);
+  border-radius: 2px;
+  background: var(--paper);
+  color: var(--ink);
+  font: 700 12px/1 var(--vp-font-family-mono);
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.hk-scene-toggle svg {
   flex: none;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px 32px;
-  padding: 12px 24px 18px;
+  color: var(--vp-c-brand-1);
+  shape-rendering: crispEdges;
 }
+.hk-scene-toggle:hover {
+  border-color: var(--vp-c-brand-1);
+}
+/* Paused is the state that needs noticing, so it is filled. */
+.hk-scene-toggle.paused {
+  border-color: var(--vp-c-brand-1);
+  background: var(--vp-c-brand-1);
+  color: var(--paper);
+}
+.hk-scene-toggle.paused svg {
+  color: var(--paper);
+}
+/* The headline sits in the sky, the quietest part of the picture. */
 .hk-headline {
-  min-width: 0;
+  position: absolute;
+  top: 78px;
+  left: 28px;
+  right: 72px;
+  z-index: 2;
+  pointer-events: none;
+}
+.hk-headline .hk-prompt {
+  margin: 0 0 6px;
+  color: var(--muted);
+  font: 600 13px/1 var(--vp-font-family-mono);
+}
+.hk-prompt span {
+  color: var(--orange);
+}
+.hk-prompt i {
+  font-style: normal;
+  animation: hk-blink 1s steps(2, start) infinite;
 }
 .hk-hero h1,
-.hk-dock h1 {
-  max-width: 760px;
-  margin: 0 0 6px;
+.hk-headline h1 {
+  max-width: 720px;
+  margin: 0;
   padding: 0;
   border: 0;
   color: var(--ink);
-  font-size: clamp(26px, 3vw, 42px);
+  font-size: clamp(28px, 3.6vw, 56px);
   font-weight: 800;
   line-height: 1.02;
   letter-spacing: -0.05em;
 }
-.hk-dock h1 em {
+.hk-headline h1 em {
   color: var(--forest);
   font-style: normal;
 }
-.hk-hero-tagline {
-  max-width: 640px;
-  margin: 0;
-  color: var(--muted);
-  font-size: 15px;
-  line-height: 1.5;
+
+/* The dock sits in the ground: the tagline and links on the left, install on the right. */
+.hk-dock {
+  position: absolute;
+  right: 24px;
+  bottom: 15px;
+  left: 24px;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1fr minmax(0, 460px);
+  grid-template-areas: "copy getit";
+  align-items: end;
+  gap: 8px 32px;
+  padding: 20px 14px;
+  border: 1px solid var(--line);
+  border-radius: 2px;
+  background: color-mix(in srgb, var(--paper) 95%, transparent);
+  backdrop-filter: blur(6px);
+}
+/* At night the dock is glass: the ground shows through. */
+.dark .hk-dock {
+  background: color-mix(in srgb, #1018166b 95%, #00000000);
+}
+.hk-dock-copy {
+  grid-area: copy;
+  align-self: center;
+  min-width: 0;
 }
 .hk-getit {
+  grid-area: getit;
   display: flex;
-  flex: none;
   flex-direction: column;
-  gap: 6px;
-  width: min(100%, 460px);
-  /* Leaves room for the credit pill in the bottom right corner. */
-  padding-bottom: 28px;
+  gap: 5px;
+  min-width: 0;
+}
+.hk-dock .hk-hero-tagline {
+  max-width: 720px;
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.4;
+}
+.hk-getit .hk-install-os {
+  margin: 0;
+  color: var(--muted);
+  font: 600 11px/1.2 var(--vp-font-family-mono);
+  letter-spacing: 0.02em;
+}
+.hk-install-os span {
+  color: var(--forest);
+  font-size: 9px;
 }
 .hk-getit .hk-install-line {
+  max-width: none;
   margin: 0;
-  padding: 8px 10px 8px 14px;
+  padding: 7px 8px 7px 14px;
   border-radius: 2px;
 }
-.hk-getit .hk-install-alt {
+.hk-getit .hk-install-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 2px 16px;
   margin: 0;
   font-size: 12px;
+  line-height: 1.3;
+}
+.hk-getit .hk-built {
+  color: var(--muted);
+  font: 12px/1.3 var(--vp-font-family-mono);
+  text-decoration: none;
+}
+.hk-getit .hk-built b {
+  color: var(--forest);
+}
+.hk-getit .hk-built:hover {
+  text-decoration: underline;
 }
 .hk-hero-actions {
   display: flex;
@@ -489,7 +636,8 @@ html:has(.hk-hero-wrap) .VPNavBar .divider-line {
   color: #1a1407;
 }
 .hk-button:focus-visible,
-.hk-text-link:focus-visible {
+.hk-text-link:focus-visible,
+.hk-built:focus-visible {
   outline: 3px solid color-mix(in srgb, var(--orange) 55%, transparent);
   outline-offset: 2px;
 }
@@ -507,77 +655,86 @@ html:has(.hk-hero-wrap) .VPNavBar .divider-line {
   color: var(--forest);
 }
 
-/* Short laptop screens: give the scene the room, trim the dock. */
-@media (min-width: 761px) and (max-height: 760px) {
+/* Narrow laptops: the install column gives up its extras before the picture does. */
+@media (min-width: 761px) and (max-width: 1100px) {
   .hk-dock {
-    padding-bottom: 10px;
+    grid-template-columns: 1fr minmax(0, 400px);
   }
-  .hk-hero-tagline {
-    font-size: 14px;
-    line-height: 1.4;
-  }
-  .hk-getit .hk-install-alt {
+  .hk-dock .hk-hero-tagline {
     display: none;
-  }
-  .hk-getit {
-    padding-bottom: 24px;
   }
 }
 
-/* Phones: the strip and dock stack, and the extras go. */
+/* Phones: the headline, install and Get started stack at the top, and the scene is bigger, following the character. */
 @media (max-width: 760px) {
-  .hk-strip {
-    flex-direction: column;
-    gap: 8px;
-    padding: 8px 16px 0;
+  .hk-box {
+    height: min(62cqh, 100cqw * 135 / 130);
   }
-  .hk-scene-cli {
-    flex: none;
-    width: 100%;
-    min-height: 42px;
-    font-size: 12px;
+  .hk-bubble {
+    --gutter-l: 8px;
+    --gutter-r: 44px;
   }
-  .hk-scene-cli .out:nth-of-type(n + 3) {
+  .hk-bubble .hk-quote,
+  .hk-term {
+    font-size: 11px;
+  }
+  .vp-doc .hk-install-line code {
+    font-size: 11px;
+  }
+  .hk-getit .hk-install-line {
+    padding-left: 10px;
+  }
+  .hk-rail {
+    right: 6px;
+  }
+  .hk-rail code {
     display: none;
   }
-  .hk-stages {
-    width: 100%;
-    gap: 6px;
-  }
-  .hk-stages button {
-    flex: 1;
+  .hk-scene-toggle {
+    width: 30px;
+    padding: 0;
     justify-content: center;
-    padding: 6px 4px;
   }
-  .hk-stages code {
+  .hk-scene-toggle span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .hk-prompt {
     display: none;
   }
-  .hk-stages .hk-scene-toggle {
-    flex: none;
+  .hk-headline {
+    top: 76px;
+    left: 16px;
+    right: 52px;
   }
   .hk-dock {
-    flex-direction: column;
-    gap: 10px;
-    padding: 10px 16px 40px;
+    top: 150px;
+    right: 16px;
+    bottom: auto;
+    left: 16px;
+    grid-template-columns: 1fr;
+    grid-template-areas: "getit" "copy";
+    gap: 8px;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    backdrop-filter: none;
   }
-  .hk-hero-tagline {
-    display: none;
-  }
-  .hk-getit {
-    width: 100%;
-    padding-bottom: 0;
-  }
-  .hk-getit .hk-install-alt,
+  .hk-dock .hk-hero-tagline,
+  .hk-getit .hk-install-os,
+  .hk-getit .hk-install-foot a:not(.hk-built),
   .hk-text-link {
     display: none;
   }
-  .hk-scene-balloon {
-    font-size: 10px;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
-  .hk-stages button,
+  .hk-rail i,
+  .hk-rail code,
   .hk-caret,
+  .hk-prompt i,
   .hk-scene-title span {
     animation: none;
     transition: none;

@@ -33,6 +33,14 @@ task docs:pages       # same, from a clean npm install
 task docs:stop        # stop a docs server these tasks started
 ```
 
+## Docs hosting
+
+The docs site is published at **https://hikma.alkhatib.tech/**. It is built from `docs/site` and deployed by `.github/workflows/pages.yml` to GitHub Pages whenever `docs/site/**` changes on `main`.
+
+- The address comes from a custom domain on GitHub Pages. `docs/site/public/CNAME` holds it, so keep that file. The site is built with base `/`; set `VITEPRESS_BASE` only to serve it from a sub-path.
+- DNS is a `hikma` CNAME to `hasankhatib.github.io`, set to DNS only (not proxied) so GitHub can issue the HTTPS certificate. It lives in the owner's Cloudflare account.
+- The old `hasankhatib.github.io/hikma-ai/` address redirects to the new one.
+
 ## Registry boundary
 
 Hikma AI is the CLI repository only. Do not add a top-level `skills/` registry folder here. Tests build their registries on the fly in temporary directories; do not commit registry content.
