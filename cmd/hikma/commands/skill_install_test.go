@@ -8,6 +8,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/lock"
 )
 
@@ -39,6 +40,10 @@ func project(t *testing.T) string {
 		t.Fatal(err)
 	}
 	t.Chdir(dir)
+	// No test asks GitHub how publishing would go.
+	oldAccess := publishAccess
+	publishAccess = func(config.Registry) registryAccess { return registryAccess{} }
+	t.Cleanup(func() { publishAccess = oldAccess })
 	return dir
 }
 

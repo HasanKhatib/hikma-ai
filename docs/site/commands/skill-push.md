@@ -37,7 +37,7 @@ Nothing is force-pushed:
 | `--pr` | Open a pull request even if you can write to the registry |
 | `--codeowners` | Also add the skill owner to `.github/CODEOWNERS` in the registry. Requires `--pr`, since it changes who reviews |
 | `--registry <source>` | Registry to publish to, for this command |
-| `--agent <list>` | Which agent's folder to read the skill from |
+| `--agent <list>` | Which agent's folder to read the skill from. If the skill is in another agent's folder, the error names the `--agent` that finds it |
 
 Executable files keep their executable bit, and binary files are preserved.
 

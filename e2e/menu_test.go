@@ -15,7 +15,7 @@ const menuWait = 20 * time.Second
 
 func TestMenuDrawsWithoutTerminalReplies(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
 	tm.waitFor("Setup and settings", menuWait)
@@ -28,7 +28,7 @@ func TestMenuDrawsWithoutTerminalReplies(t *testing.T) {
 
 func TestMenuQuitExitsCleanly(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
 	tm.settle()
@@ -47,7 +47,7 @@ func TestMenuQuitExitsCleanly(t *testing.T) {
 
 func TestMenuClearsAndComesBackAfterACommand(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	tm := startTerm(t, sb.project, sb.env)
 	tm.waitFor("What do you want to do?", menuWait)
 	tm.settle()
@@ -103,7 +103,7 @@ func registryRepo(t *testing.T) string {
 
 func TestMenuInstallsASkillEndToEnd(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	reg := registryRepo(t)
 	tm := startTerm(t, sb.project, sb.with("HIKMA_REGISTRY="+reg, "HIKMA_AGENT=claude"))
 	tm.waitFor("What do you want to do?", menuWait)
@@ -133,7 +133,7 @@ func TestMenuInstallsASkillEndToEnd(t *testing.T) {
 
 func TestEscInsideATaskComesBackToTheMenu(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	reg := registryRepo(t)
 	tm := startTerm(t, sb.project, sb.with("HIKMA_REGISTRY="+reg, "HIKMA_AGENT=claude"))
 	tm.waitFor("What do you want to do?", menuWait)
@@ -175,7 +175,7 @@ func clearsOnStart(t *testing.T, env []string, dir string) int {
 
 func TestAccessibleModeUsesNumberedPromptsAndNeverClears(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	normal := clearsOnStart(t, sb.env, sb.project)
 	accessible := clearsOnStart(t, sb.with("ACCESSIBLE=1"), sb.project)
 	if accessible >= normal {
@@ -198,7 +198,7 @@ var crossedOut = regexp.MustCompile(`\x1b\[(?:[0-9]+;)*9m\[installed\] alpha`)
 
 func TestInstalledSkillsAreListedCrossedOutAndMarked(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	reg := registryRepo(t)
 	sb.writeSkill(t, "alpha") // already installed for claude
 	tm := startTerm(t, sb.project, sb.with("HIKMA_REGISTRY="+reg, "HIKMA_AGENT=claude", "TERM=xterm-256color"))
@@ -222,7 +222,7 @@ func TestInstalledSkillsAreListedCrossedOutAndMarked(t *testing.T) {
 
 func TestEverythingInstalledIsANoticeNotAnError(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	reg := registryRepo(t)
 	sb.writeSkill(t, "alpha")
 	sb.writeSkill(t, "beta")
@@ -250,7 +250,7 @@ func TestEverythingInstalledIsANoticeNotAnError(t *testing.T) {
 
 func TestCreatingASkillAsksForADescriptionAndLinksTheGuide(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	tm := startTerm(t, sb.project, sb.with("HIKMA_AGENT=claude"))
 	tm.waitFor("What do you want to do?", menuWait)
 	tm.settle()
@@ -284,15 +284,15 @@ func TestCreatingASkillAsksForADescriptionAndLinksTheGuide(t *testing.T) {
 
 func TestPublishPickerMarksSkillsThatAlreadyExistInTheRegistry(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	reg := registryRepo(t) // has alpha and beta
 	sb.writeSkill(t, "alpha")
 	sb.writeSkill(t, "gamma")
 	tm := startTerm(t, sb.project, sb.with("HIKMA_REGISTRY="+reg, "HIKMA_AGENT=claude"))
 	tm.waitFor("What do you want to do?", menuWait)
 	tm.settle()
-	tm.choose("Publish a skill to your registry", menuWait)
-	tm.waitFor("Skill to publish:", menuWait)
+	tm.choose("Publish skills to your registry", menuWait)
+	tm.waitFor("Skills to publish:", menuWait)
 	tm.waitFor("[exists] alpha", menuWait)
 	screen := plain(tm.output())
 	if strings.Contains(screen, "[exists] gamma") {
@@ -301,4 +301,20 @@ func TestPublishPickerMarksSkillsThatAlreadyExistInTheRegistry(t *testing.T) {
 	tm.settle()
 	tm.press("\x1b") // back to the menu without publishing
 	tm.waitFor("What do you want to do?", menuWait)
+}
+
+func TestMenuOffersSetupFirstInAProjectThatHasNone(t *testing.T) {
+	skipShort(t)
+	sb := newSandbox(t) // a git repository with no .hikma/config.json
+	tm := startTerm(t, sb.project, sb.env)
+	tm.waitFor("Set up this project now?", menuWait)
+	if strings.Contains(plain(tm.output()), "What do you want to do?") {
+		t.Fatalf("the menu opened before setup was offered:\n%s", plain(tm.output()))
+	}
+	tm.settle()
+	tm.press("n", "\r") // not now: the menu opens and nothing is written
+	tm.waitFor("What do you want to do?", menuWait)
+	if _, err := os.Stat(filepath.Join(sb.project, ".hikma", "config.json")); err == nil {
+		t.Error("declining setup must not write the project config")
+	}
 }

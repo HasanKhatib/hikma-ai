@@ -7,10 +7,12 @@ import (
 	"io"
 	"os"
 	"os/signal"
+	"path"
 	"sort"
 	"strings"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
+	"github.com/hasankhatib/hikma-ai/internal/scaffold"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/mattn/go-isatty"
@@ -469,6 +471,16 @@ func collectInstall(p Prompter, out io.Writer) ([][]string, error) {
 	return [][]string{append(args, agentArgs...)}, nil
 }
 
+// collectVerify says what the check does before it runs, because its output is a
+// list of "ok" lines that does not explain itself.
+func collectVerify(_ Prompter, out io.Writer) ([][]string, error) {
+	fmt.Fprintln(out, "Compares each installed skill with the hashes recorded in .hikma/lock.json when it was installed.")
+	fmt.Fprintln(out, "It works offline and changes nothing. A skill listed as FAIL was edited, or has files added or removed, since.")
+	fmt.Fprintln(out, "Skills not installed by hikma have no record, so they are not checked.")
+	fmt.Fprintln(out)
+	return [][]string{{"skill", "verify"}}, nil
+}
+
 func collectUpdate(p Prompter) ([]string, error) {
 	names, err := projectSkillNames()
 	if err != nil {
@@ -487,16 +499,76 @@ func collectUpdate(p Prompter) ([]string, error) {
 	return []string{"skill", "update", names[idx-1]}, nil
 }
 
-// collectPublish picks a local skill to publish. It asks for the registry first
-// when none is set, because it reads the registry to mark the skills that already
-// exist there ("[exists]"; publishing one again updates it). A registry that
-// cannot be read, such as a brand-new empty one, only means no marks.
-func collectPublish(p Prompter, out io.Writer) ([][]string, error) {
-	names, err := projectSkillNames()
+// localSkill is a skill folder in this project, and the agent that reads it.
+type localSkill struct{ Name, Dir, Agent string }
+
+// agentForDir names an agent whose skills folder is dir, or "".
+func agentForDir(set config.LayoutSet, dir string) string {
+	for _, a := range set.Names() {
+		if set.Layout(a).SkillsDir == dir {
+			return string(a)
+		}
+	}
+	return ""
+}
+
+// projectLocalSkills lists the skills in every agent folder of this project, not
+// only the active agent's, with the folder each one lives in.
+func projectLocalSkills() ([]localSkill, error) {
+	rows, err := listInstalledSkills(projectScope())
 	if err != nil {
 		return nil, err
 	}
-	if len(names) == 0 {
+	set, err := config.Layouts()
+	if err != nil {
+		return nil, err
+	}
+	out := make([]localSkill, 0, len(rows))
+	for _, r := range rows {
+		dir := path.Dir(r.Path)
+		out = append(out, localSkill{Name: r.Name, Dir: dir, Agent: agentForDir(set, dir)})
+	}
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Name != out[j].Name {
+			return out[i].Name < out[j].Name
+		}
+		return out[i].Dir < out[j].Dir
+	})
+	return out, nil
+}
+
+// activeSkillDirs is the skills folders push reads without --agent.
+func activeSkillDirs() map[string]bool {
+	dirs := map[string]bool{}
+	targets, err := config.ResolveTargets("")
+	if err != nil {
+		return dirs
+	}
+	for _, t := range targets {
+		dirs[t.Layout.SkillsDir] = true
+	}
+	return dirs
+}
+
+// publishAccess is how the menu asks what publishing will do. Tests replace it.
+var publishAccess = detectRegistryAccess
+
+// collectPublish picks the local skills to publish. It asks for the registry first
+// when none is set, because it reads the registry to mark the skills that already
+// exist there ("[exists]"; publishing one again updates it). A registry that
+// cannot be read, such as a brand-new empty one, only means no marks.
+//
+// Skills from every agent folder are offered, with the folder shown when there is
+// more than one. A skill outside the active agent's folder gets --agent, so the
+// command finds it. The user ticks any number and confirms once; each skill is
+// then published by its own command, so each lands as its own commit (or pull
+// request). The commands carry --yes because the plan above was the confirmation.
+func collectPublish(p Prompter, out io.Writer) ([][]string, error) {
+	skills, err := projectLocalSkills()
+	if err != nil {
+		return nil, err
+	}
+	if len(skills) == 0 {
 		return nil, errors.New("no skills in this project's agent folders yet: create one first (hikma skill create <name>) or install one")
 	}
 
@@ -510,27 +582,96 @@ func collectPublish(p Prompter, out io.Writer) ([][]string, error) {
 	}
 	label := registryLabel(repo)
 	published := map[string]bool{}
-	skills, err := readRegistry(p, label, repo)
+	remote, err := readRegistry(p, label, repo)
 	switch {
 	case errors.Is(err, errCancelled):
 		return nil, err
 	case err != nil:
 		fmt.Fprintf(out, "%s\n\n", ui.Dim(out, "Could not read "+shortLabel(label)+" to see what exists there, so nothing is marked: "+firstLine(err)))
 	default:
-		for _, s := range skills {
+		for _, s := range remote {
 			published[strings.ToLower(s.Name)] = true
 		}
 	}
 
-	idx, err := p.Select("Skill to publish:", markLabels(names, func(n string) bool { return published[strings.ToLower(n)] }, "exists"), 0)
+	folders := map[string]bool{}
+	for _, s := range skills {
+		folders[s.Dir] = true
+	}
+	names := make([]string, len(skills))
+	nameOf := map[string]string{} // picker text -> skill name
+	for i, s := range skills {
+		names[i] = s.Name
+		if len(folders) > 1 {
+			names[i] = s.Name + "  (" + s.Dir + ")"
+		}
+		nameOf[names[i]] = s.Name
+	}
+	labels := markLabels(names, func(n string) bool { return published[strings.ToLower(nameOf[n])] }, "exists")
+
+	var picked []localSkill
+	for len(picked) == 0 {
+		idxs, err := p.MultiSelect("Skills to publish:", labels, nil, 1)
+		if err != nil {
+			return nil, err
+		}
+		if len(idxs) == 0 {
+			return nil, errCancelled
+		}
+		sort.Ints(idxs)
+		seen := map[string]bool{}
+		dup := ""
+		for _, i := range idxs {
+			if i < 0 || i >= len(skills) {
+				continue
+			}
+			if seen[skills[i].Name] {
+				dup = skills[i].Name
+			}
+			seen[skills[i].Name] = true
+			picked = append(picked, skills[i])
+		}
+		if dup != "" {
+			fmt.Fprintf(out, "\n%s is ticked from two folders. Tick one copy.\n\n", dup)
+			picked = nil
+		}
+	}
+
+	registry, origin, err := resolvePushRegistry(repo)
 	if err != nil {
 		return nil, err
 	}
-	args := []string{"skill", "push", names[idx]}
-	if repo != "" {
-		args = append(args, "--registry", repo)
+	noun := "skill"
+	if len(picked) != 1 {
+		noun = "skills"
 	}
-	return [][]string{args}, nil
+	fmt.Fprintf(out, "\nWill publish %d %s to %s (%s), each on its own:\n", len(picked), noun, registry.FullName(), origin)
+	for _, s := range picked {
+		fmt.Fprintf(out, "  %s  (%s)\n", s.Name, s.Dir)
+	}
+	fmt.Fprintf(out, "How: %s\n", publishAccess(registry).publishLine())
+	ok, err := p.Confirm("Publish "+noun+" to "+registry.FullName()+"?", false)
+	if err != nil {
+		return nil, err
+	}
+	if !ok {
+		fmt.Fprintf(out, "\n%s\n", ui.Dim(out, "Nothing was published."))
+		return nil, errCancelled
+	}
+
+	active := activeSkillDirs()
+	cmds := make([][]string, 0, len(picked))
+	for _, s := range picked {
+		args := []string{"skill", "push", s.Name}
+		if repo != "" {
+			args = append(args, "--registry", repo)
+		}
+		if !active[s.Dir] && s.Agent != "" {
+			args = append(args, "--agent", s.Agent)
+		}
+		cmds = append(cmds, append(args, "--yes"))
+	}
+	return cmds, nil
 }
 
 // firstLine is the first line of an error, for a one-line note.
@@ -582,9 +723,9 @@ var wizardEntries = []wizardEntry{
 	{label: "Install skills from your registry", collect: collectInstall},
 	{label: "Browse skills in your registry", collect: one(withSource(nil, "skill", "list"))},
 	{label: "Update installed skills", collect: one(collectUpdate)},
-	{label: "Verify installed skills", collect: one(fixed("skill", "verify"))},
+	{label: "Check installed skills for local edits", collect: collectVerify},
 	{label: "Create a new skill", collect: collectCreate},
-	{label: "Publish a skill to your registry", collect: collectPublish},
+	{label: "Publish skills to your registry", collect: collectPublish},
 	{label: "Setup and settings", sub: setupEntries},
 }
 
@@ -678,7 +819,7 @@ func printEquivalent(out io.Writer, heading string, args []string) {
 // nil. shown is the command to print as the equivalent when it is not the one that
 // ran: after a retry, the whole install, not just the skills retried.
 func execute(out io.Writer, cmds [][]string, run func(ctx context.Context, args []string) error, shown []string) []string {
-	for _, args := range cmds {
+	for i, args := range cmds {
 		show := args
 		if shown != nil {
 			show = shown
@@ -692,6 +833,12 @@ func execute(out io.Writer, cmds [][]string, run func(ctx context.Context, args 
 			fmt.Fprintf(out, "\nerror: %s\n", err)
 			var f *installFailed
 			if !errors.As(err, &f) {
+				if rest := cmds[i+1:]; len(rest) > 0 {
+					fmt.Fprintf(out, "\n%s\n", ui.Dim(out, "These did not run:"))
+					for _, r := range rest {
+						fmt.Fprintf(out, "  %s\n", ui.Cyan(out, equivalent(r)))
+					}
+				}
 				return nil
 			}
 			// Some skills went in: say what ran, and how to redo only the rest.
@@ -829,7 +976,7 @@ func rootRun(cmd *cobra.Command, _ []string) error {
 	if !isInteractive() || !isTerminalWriter(out) {
 		return cmd.Help()
 	}
-	return runWizard(prompter, out, func(ctx context.Context, args []string) error {
+	run := func(ctx context.Context, args []string) error {
 		// Root() rebinds the global flags to their defaults, so carry the
 		// values the user passed over to the command the menu runs.
 		keepNoInput, keepNoColor := noInput, ui.NoColor
@@ -837,5 +984,60 @@ func rootRun(cmd *cobra.Command, _ []string) error {
 		noInput, ui.NoColor = keepNoInput, keepNoColor
 		inner.SetArgs(args)
 		return inner.ExecuteContext(ctx)
-	})
+	}
+	if quit, err := offerSetup(prompter, out, run); quit || err != nil {
+		return quietCancel(err)
+	}
+	return runWizard(prompter, out, run)
+}
+
+// needsSetup reports whether this is a git repository that hikma has not been
+// set up in: no .hikma/config.json here or in a parent. A variable so tests can
+// choose.
+var needsSetup = func() bool {
+	if p, err := config.ProjectConfigPath(); err != nil || p != "" {
+		return false
+	}
+	cwd, err := os.Getwd()
+	if err != nil {
+		return false
+	}
+	_, inRepo := scaffold.FindGitRoot(cwd)
+	return inRepo
+}
+
+// offerSetup is the first thing the menu does in a project that is not set up:
+// it offers the same setup as "Set up this project for your agent" (the agents
+// and a registry), because every other entry works better after it. Saying no, or
+// Esc, goes to the menu. quit is true when the user chose to leave afterwards.
+func offerSetup(p Prompter, out io.Writer, run func(ctx context.Context, args []string) error) (quit bool, err error) {
+	if !needsSetup() {
+		return false, nil
+	}
+	fmt.Fprint(out, ui.Banner(out))
+	fmt.Fprintf(out, "\nThis project is not set up for hikma yet (there is no .hikma/config.json).\n")
+	fmt.Fprintln(out, "Setup records your agent, and a registry if you have one, so everyone on the project shares them.")
+	fmt.Fprintln(out)
+	ok, err := p.Confirm("Set up this project now?", true)
+	if errors.Is(err, errCancelled) || (err == nil && !ok) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+	cmds, err := one(collectInit)(p, out)
+	if errors.Is(err, errCancelled) {
+		return false, nil
+	}
+	if err != nil {
+		fmt.Fprintf(out, "\nerror: %s\n", err)
+	} else {
+		fmt.Fprintln(out)
+		execute(out, cmds, run, nil)
+	}
+	next, err := p.Select("What next?", []string{"Continue to the menu", wizardQuit}, 0)
+	if errors.Is(err, errCancelled) {
+		return false, nil
+	}
+	return err != nil || next == 1, err
 }
