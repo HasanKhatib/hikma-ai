@@ -109,7 +109,7 @@ Ctrl-C or Esc inside a task comes back here. At this menu they quit.
 
 If a skills folder cannot be read, the last part says `installed here: unknown (cannot read the skills folders)` instead of `0`, so an unreadable folder is not mistaken for an empty one.
 
-In a git repository that Hikma has not been set up in yet (no `.hikma/config.json`), the menu first offers to set it up: it asks for your agents and a registry, runs `hikma init`, and then opens the menu. Say no, or press Esc, to go straight to the menu; it asks again next time until the project is set up. Outside a git repository it does not ask.
+When no registry is set (in the environment, the project, or your user config), the menu first asks for one: type `owner/repo` and it runs `hikma config registry`, or press Enter or Esc to skip to the menu. When a registry is set, it does not ask.
 
 Pick an entry and Hikma asks for anything it needs, then runs the same command you could type yourself. It asks only for what is missing: the registry when none is set, the agent when none is chosen, a skill from this project's agent folders when you publish or update, and the agents to set up for a new project. Agent, registry, project setup, completion, and the setup check live under "Setup and settings".
 

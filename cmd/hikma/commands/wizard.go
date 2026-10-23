@@ -12,7 +12,6 @@ import (
 	"strings"
 
 	"github.com/hasankhatib/hikma-ai/internal/config"
-	"github.com/hasankhatib/hikma-ai/internal/scaffold"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 	"github.com/hasankhatib/hikma-ai/internal/ui"
 	"github.com/mattn/go-isatty"
@@ -985,56 +984,47 @@ func rootRun(cmd *cobra.Command, _ []string) error {
 		inner.SetArgs(args)
 		return inner.ExecuteContext(ctx)
 	}
-	if quit, err := offerSetup(prompter, out, run); quit || err != nil {
+	if quit, err := offerRegistry(prompter, out, run); quit || err != nil {
 		return quietCancel(err)
 	}
 	return runWizard(prompter, out, run)
 }
 
-// needsSetup reports whether this is a git repository that hikma has not been
-// set up in: no .hikma/config.json here or in a parent. A variable so tests can
-// choose.
-var needsSetup = func() bool {
-	if p, err := config.ProjectConfigPath(); err != nil || p != "" {
-		return false
-	}
-	cwd, err := os.Getwd()
-	if err != nil {
-		return false
-	}
-	_, inRepo := scaffold.FindGitRoot(cwd)
-	return inRepo
-}
+// needsRegistry reports whether no registry is configured anywhere (environment,
+// project, or your user config). The registry is what the menu works from, so it
+// is the one thing worth asking for up front; a project config file is not. A
+// variable so tests can choose.
+var needsRegistry = func() bool { return !registryConfigured() }
 
-// offerSetup is the first thing the menu does in a project that is not set up:
-// it offers the same setup as "Set up this project for your agent" (the agents
-// and a registry), because every other entry works better after it. Saying no, or
-// Esc, goes to the menu. quit is true when the user chose to leave afterwards.
-func offerSetup(p Prompter, out io.Writer, run func(ctx context.Context, args []string) error) (quit bool, err error) {
-	if !needsSetup() {
+// offerRegistry is the first thing the menu does when no registry is set: it asks
+// for one, and runs the same command as "Set your registry". Enter or Esc skips
+// to the menu. When a registry is already set it asks nothing. quit is true when
+// the user chose to leave afterwards.
+func offerRegistry(p Prompter, out io.Writer, run func(ctx context.Context, args []string) error) (quit bool, err error) {
+	if !needsRegistry() {
 		return false, nil
 	}
 	fmt.Fprint(out, ui.Banner(out))
-	fmt.Fprintf(out, "\nThis project is not set up for hikma yet (there is no .hikma/config.json).\n")
-	fmt.Fprintln(out, "Setup records your agent, and a registry if you have one, so everyone on the project shares them.")
+	fmt.Fprintln(out, "\nNo registry is set. A registry is the GitHub repository your skills live in.")
 	fmt.Fprintln(out)
-	ok, err := p.Confirm("Set up this project now?", true)
-	if errors.Is(err, errCancelled) || (err == nil && !ok) {
+	r, err := p.Input("Registry (owner/repo), or press Enter to skip:", func(s string) error {
+		if strings.TrimSpace(s) == "" {
+			return nil
+		}
+		return validRegistry(s)
+	})
+	if errors.Is(err, errCancelled) {
 		return false, nil
 	}
 	if err != nil {
 		return false, err
 	}
-	cmds, err := one(collectInit)(p, out)
-	if errors.Is(err, errCancelled) {
+	r = strings.TrimSpace(r)
+	if r == "" {
 		return false, nil
 	}
-	if err != nil {
-		fmt.Fprintf(out, "\nerror: %s\n", err)
-	} else {
-		fmt.Fprintln(out)
-		execute(out, cmds, run, nil)
-	}
+	fmt.Fprintln(out)
+	execute(out, [][]string{{"config", "registry", r}}, run, nil)
 	next, err := p.Select("What next?", []string{"Continue to the menu", wizardQuit}, 0)
 	if errors.Is(err, errCancelled) {
 		return false, nil

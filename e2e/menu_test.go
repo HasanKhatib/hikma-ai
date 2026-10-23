@@ -303,18 +303,28 @@ func TestPublishPickerMarksSkillsThatAlreadyExistInTheRegistry(t *testing.T) {
 	tm.waitFor("What do you want to do?", menuWait)
 }
 
-func TestMenuOffersSetupFirstInAProjectThatHasNone(t *testing.T) {
+func TestMenuAsksForARegistryFirstWhenNoneIsSet(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t) // a git repository with no .hikma/config.json
+	sb := newSandbox(t) // no registry in the environment, project, or user config
 	tm := startTerm(t, sb.project, sb.env)
-	tm.waitFor("Set up this project now?", menuWait)
+	tm.waitFor("Registry (owner/repo), or press Enter to skip:", menuWait)
 	if strings.Contains(plain(tm.output()), "What do you want to do?") {
-		t.Fatalf("the menu opened before setup was offered:\n%s", plain(tm.output()))
+		t.Fatalf("the menu opened before the registry was asked for:\n%s", plain(tm.output()))
 	}
 	tm.settle()
-	tm.press("n", "\r") // not now: the menu opens and nothing is written
+	tm.press("\r") // skip: the menu opens and nothing is written
 	tm.waitFor("What do you want to do?", menuWait)
 	if _, err := os.Stat(filepath.Join(sb.project, ".hikma", "config.json")); err == nil {
-		t.Error("declining setup must not write the project config")
+		t.Error("skipping must not write a project config")
+	}
+}
+
+func TestMenuDoesNotAskWhenARegistryIsSet(t *testing.T) {
+	skipShort(t)
+	sb := newSandbox(t)
+	tm := startTerm(t, sb.project, sb.with("HIKMA_REGISTRY=acme/skills"))
+	tm.waitFor("What do you want to do?", menuWait)
+	if strings.Contains(plain(tm.output()), "Registry (owner/repo)") {
+		t.Errorf("a configured registry must not be asked for again:\n%s", plain(tm.output()))
 	}
 }

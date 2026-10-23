@@ -30,7 +30,7 @@ hikma skill import owner/repo some-skill         # bring a skill you found into 
 hikma init --agent claude,codex --skill my-skill # set up a whole repo for your agents
 ```
 
-Run `hikma` with no arguments in a terminal for a menu of the common tasks. It stays open until you quit, so you can install, update, and publish in one sitting. In a git repository that is not set up yet, it offers to set it up first.
+Run `hikma` with no arguments in a terminal for a menu of the common tasks. It stays open until you quit, so you can install, update, and publish in one sitting. When no registry is set, it asks for one first. In a git repository that is not set up yet, it offers to set it up first.
 
 Guides: [agents and folders](https://hikma.alkhatib.tech/guides/agents), [skill format](https://hikma.alkhatib.tech/guides/skill-format), and [running a registry](https://hikma.alkhatib.tech/guides/registry).
 
