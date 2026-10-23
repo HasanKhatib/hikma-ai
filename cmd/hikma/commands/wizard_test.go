@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/hasankhatib/hikma-ai/internal/config"
 	"github.com/hasankhatib/hikma-ai/internal/source"
 )
 
@@ -755,45 +756,56 @@ func TestPushFindsASkillInAnotherAgentsFolderAndSaysSo(t *testing.T) {
 	}
 }
 
-func TestSetupIsOfferedOnceInAProjectThatHasNone(t *testing.T) {
+func TestRegistryIsAskedForWhenNoneIsSet(t *testing.T) {
 	project(t)
 	var ran [][]string
 	run := func(_ context.Context, a []string) error { ran = append(ran, a); return nil }
 	var out bytes.Buffer
-	p := &fakePrompter{picks: []int{agentIndex(t, "claude"), 0}, multi: []int{agentIndex(t, "claude")}, inputs: []string{"acme/skills"}}
-	quit, err := offerSetup(p, &out, run)
+	p := &fakePrompter{inputs: []string{"acme/skills"}}
+	quit, err := offerRegistry(p, &out, run)
 	if err != nil || quit {
 		t.Fatalf("quit=%v err=%v", quit, err)
 	}
-	want := [][]string{{"init", "--agent", "claude", "--registry", "acme/skills"}}
-	if !reflect.DeepEqual(ran, want) {
+	if want := [][]string{{"config", "registry", "acme/skills"}}; !reflect.DeepEqual(ran, want) {
 		t.Errorf("ran %v, want %v", ran, want)
 	}
-	if !strings.Contains(out.String(), "not set up for hikma yet") {
+	if !strings.Contains(out.String(), "No registry is set") {
 		t.Errorf("missing explanation:\n%s", out.String())
 	}
 }
 
-func TestSetupOfferCanBeDeclinedAndIsSkippedWhenSetUp(t *testing.T) {
-	dir := project(t)
+func TestRegistryQuestionCanBeSkipped(t *testing.T) {
+	project(t)
 	var out bytes.Buffer
-	quit, err := offerSetup(&fakePrompter{confirms: []bool{false}}, &out, nil)
-	if err != nil || quit {
-		t.Fatalf("declining goes to the menu: quit=%v err=%v", quit, err)
+	ran := false
+	run := func(context.Context, []string) error { ran = true; return nil }
+	if quit, err := offerRegistry(&fakePrompter{inputs: []string{"  "}}, &out, run); quit || err != nil || ran {
+		t.Errorf("Enter skips to the menu and writes nothing: quit=%v err=%v ran=%v", quit, err, ran)
 	}
-	write(t, filepath.Join(dir, ".hikma", "config.json"), "{\"version\":1}")
-	out.Reset()
-	p := &fakePrompter{}
-	if quit, err := offerSetup(p, &out, nil); quit || err != nil || len(p.asked) != 0 || out.Len() != 0 {
-		t.Errorf("a set-up project is not asked: quit=%v err=%v asked=%v out=%q", quit, err, p.asked, out.String())
+	if quit, err := offerRegistry(&fakePrompter{err: errCancelled}, &out, run); quit || err != nil || ran {
+		t.Errorf("Esc skips to the menu: quit=%v err=%v ran=%v", quit, err, ran)
 	}
 }
 
-func TestSetupIsNotOfferedOutsideAGitRepository(t *testing.T) {
+func TestNothingIsAskedWhenARegistryIsSet(t *testing.T) {
 	project(t)
-	t.Chdir(t.TempDir())
-	if needsSetup() {
-		t.Error("a folder that is not a git repository must not be offered setup")
+	for name, set := range map[string]func(){
+		"environment": func() { t.Setenv("HIKMA_REGISTRY", "acme/skills") },
+		"user config": func() {
+			t.Setenv("HIKMA_REGISTRY", "")
+			if err := config.Set(config.ScopeUser, config.KeyRegistry, "acme/skills"); err != nil {
+				t.Fatal(err)
+			}
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			set()
+			var out bytes.Buffer
+			p := &fakePrompter{}
+			if quit, err := offerRegistry(p, &out, nil); quit || err != nil || len(p.asked) != 0 || out.Len() != 0 {
+				t.Errorf("a set registry is not asked: quit=%v err=%v asked=%v out=%q", quit, err, p.asked, out.String())
+			}
+		})
 	}
 }
 
