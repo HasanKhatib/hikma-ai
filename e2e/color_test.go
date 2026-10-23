@@ -8,7 +8,7 @@ import (
 
 func TestDoctorColorsOnATerminalAndNotUnderNoColor(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 
 	colored := startTerm(t, sb.project, sb.with("TERM=xterm-256color"), "doctor")
 	if exited, _ := colored.waitDone(30 * time.Second); !exited {
@@ -29,7 +29,7 @@ func TestDoctorColorsOnATerminalAndNotUnderNoColor(t *testing.T) {
 
 func TestBareHikmaPrintsHelpWhenNotATerminal(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	out, err := runPlain(t, sb, "--help")
 	if err != nil || !strings.Contains(out, "Usage:") {
 		t.Fatalf("err=%v out=%s", err, out)

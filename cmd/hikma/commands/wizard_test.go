@@ -21,6 +21,7 @@ type fakePrompter struct {
 	inputs   []string
 	confirms []bool
 	multi    []int
+	multis   [][]int // when set, successive MultiSelect calls take these in order
 	err      error
 	asked    []string
 	options  []string
@@ -61,6 +62,11 @@ func (f *fakePrompter) Spinner(message string, fn func(context.Context) error) e
 func (f *fakePrompter) MultiSelect(message string, options []string, defaults []int, min int) ([]int, error) {
 	f.asked = append(f.asked, message)
 	f.options, f.picker, f.gotDefs, f.gotMin = options, options, defaults, min
+	if len(f.multis) > 0 {
+		m := f.multis[0]
+		f.multis = f.multis[1:]
+		return m, f.err
+	}
 	return f.multi, f.err
 }
 
@@ -472,7 +478,7 @@ func TestEveryWizardEntryIsARealCommand(t *testing.T) {
 	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
 	root := Root()
 	for _, e := range leaves() {
-		cmds, err := e.collect(&fakePrompter{inputs: []string{"acme/skills", "a description"}, picks: []int{0}, multi: []int{0}}, io.Discard)
+		cmds, err := e.collect(&fakePrompter{inputs: []string{"acme/skills", "a description"}, picks: []int{0}, multi: []int{0}, confirms: []bool{true}}, io.Discard)
 		if err != nil {
 			t.Fatalf("%s: %v", e.label, err)
 		}
@@ -601,43 +607,112 @@ func TestWizardRejectsABadRegistry(t *testing.T) {
 	}
 }
 
-func TestWizardPublishPicksALocalSkill(t *testing.T) {
+func skillFile(t *testing.T, dir, folder, name string) {
+	t.Helper()
+	write(t, filepath.Join(dir, folder, name, "SKILL.md"), "---\nname: "+name+"\ndescription: d\n---\n")
+}
+
+func TestWizardPublishTakesSeveralSkillsAsOneCommandEach(t *testing.T) {
 	dir := project(t)
 	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	t.Setenv("HIKMA_AGENT", "claude")
 	stubSkills(t) // nothing published yet, so nothing is marked
-	write(t, filepath.Join(dir, ".claude/skills/beta/SKILL.md"), "---\nname: beta\ndescription: d\n---\n")
-	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
-	p := &fakePrompter{picks: []int{1}} // names are sorted: alpha, beta
-	ran, err := runEntry(t, "Publish a skill to your registry", p)
+	for _, n := range []string{"alpha", "beta", "gamma"} {
+		skillFile(t, dir, ".claude/skills", n)
+	}
+	p := &fakePrompter{multi: []int{0, 2}, confirms: []bool{true}}
+	var out bytes.Buffer
+	ran, err := runEntryTo(t, "Publish skills to your registry", p, &out)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := []string{"skill", "push", "beta"}; !reflect.DeepEqual(ran, want) {
+	want := [][]string{{"skill", "push", "alpha", "--yes"}, {"skill", "push", "gamma", "--yes"}}
+	if !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v: one push, so one commit, per skill", ran, want)
+	}
+	if !reflect.DeepEqual(p.picker, []string{"alpha", "beta", "gamma"}) {
+		t.Errorf("picker options = %v", p.picker)
+	}
+	if !strings.Contains(out.String(), "Will publish 2 skills to acme/skills") {
+		t.Errorf("missing plan:\n%s", out.String())
+	}
+}
+
+func TestWizardPublishDeclineWritesNothing(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	stubSkills(t)
+	skillFile(t, dir, ".claude/skills", "alpha")
+	var out bytes.Buffer
+	ran, err := runEntryTo(t, "Publish skills to your registry", &fakePrompter{multi: []int{0}, confirms: []bool{false}}, &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(ran) != 0 || !strings.Contains(out.String(), "Nothing was published.") {
+		t.Errorf("ran %v:\n%s", ran, out.String())
+	}
+}
+
+func TestWizardPublishOffersEveryAgentFolderAndPassesTheAgentForOtherFolders(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	t.Setenv("HIKMA_AGENT", "codex") // .agents/skills is active
+	stubSkills(t)
+	skillFile(t, dir, ".agents/skills", "mine")
+	skillFile(t, dir, ".claude/skills", "video-pixel-scene")
+	p := &fakePrompter{multi: []int{0, 1}, confirms: []bool{true}}
+	ran, err := runEntryAll(t, "Publish skills to your registry", p)
+	if err != nil {
+		t.Fatal(err)
+	}
+	wantOpts := []string{"mine  (.agents/skills)", "video-pixel-scene  (.claude/skills)"}
+	if !reflect.DeepEqual(p.picker, wantOpts) {
+		t.Errorf("picker options = %q, want %q: the folder is shown when there are several", p.options, wantOpts)
+	}
+	want := [][]string{
+		{"skill", "push", "mine", "--yes"},
+		{"skill", "push", "video-pixel-scene", "--agent", "claude", "--yes"},
+	}
+	if !reflect.DeepEqual(ran, want) {
 		t.Errorf("ran %v, want %v", ran, want)
 	}
-	if !reflect.DeepEqual(p.options, []string{"alpha", "beta"}) {
-		t.Errorf("picker options = %v", p.options)
+}
+
+func TestWizardPublishRefusesTheSameSkillFromTwoFolders(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	t.Setenv("HIKMA_AGENT", "claude")
+	stubSkills(t)
+	skillFile(t, dir, ".agents/skills", "twin")
+	skillFile(t, dir, ".claude/skills", "twin")
+	var out bytes.Buffer
+	_, err := runEntryTo(t, "Publish skills to your registry", &fakePrompter{multis: [][]int{{0, 1}, {1}}, confirms: []bool{true}}, &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(out.String(), "twin is ticked from two folders") {
+		t.Errorf("want the duplicate named:\n%s", out.String())
 	}
 }
 
 func TestWizardPublishMarksTheSkillsThatAlreadyExistInTheRegistry(t *testing.T) {
 	dir := project(t)
 	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	t.Setenv("HIKMA_AGENT", "claude")
 	stubSkills(t, "Beta", "other") // the registry has Beta (any letter case) and a skill we do not have
 	for _, n := range []string{"alpha", "beta"} {
-		write(t, filepath.Join(dir, ".claude/skills/"+n+"/SKILL.md"), "---\nname: "+n+"\ndescription: d\n---\n")
+		skillFile(t, dir, ".claude/skills", n)
 	}
-	p := &fakePrompter{picks: []int{1}}
-	var out bytes.Buffer
-	ran, err := runEntryTo(t, "Publish a skill to your registry", p, &out)
+	p := &fakePrompter{multi: []int{1}, confirms: []bool{true}}
+	ran, err := runEntryAll(t, "Publish skills to your registry", p)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := [][]string{{"skill", "push", "beta"}}; !reflect.DeepEqual(ran, want) {
+	if want := [][]string{{"skill", "push", "beta", "--yes"}}; !reflect.DeepEqual(ran, want) {
 		t.Errorf("ran %v, want %v", ran, want)
 	}
 	want := []string{"         alpha", "[exists] beta"}
-	if !reflect.DeepEqual(p.options, want) {
+	if !reflect.DeepEqual(p.picker, want) {
 		t.Errorf("picker options = %q, want %q: marked in words, names aligned", p.options, want)
 	}
 }
@@ -645,20 +720,104 @@ func TestWizardPublishMarksTheSkillsThatAlreadyExistInTheRegistry(t *testing.T) 
 func TestWizardPublishStillWorksWhenTheRegistryCannotBeRead(t *testing.T) {
 	dir := project(t)
 	t.Setenv("HIKMA_REGISTRY", "acme/skills")
+	t.Setenv("HIKMA_AGENT", "claude")
 	old := registrySkills
 	registrySkills = func(context.Context, string) ([]source.Skill, error) { return nil, errors.New("repository is empty") }
 	t.Cleanup(func() { registrySkills = old })
-	write(t, filepath.Join(dir, ".claude/skills/alpha/SKILL.md"), "---\nname: alpha\ndescription: d\n---\n")
+	skillFile(t, dir, ".claude/skills", "alpha")
 	var out bytes.Buffer
-	ran, err := runEntryTo(t, "Publish a skill to your registry", &fakePrompter{}, &out)
+	ran, err := runEntryTo(t, "Publish skills to your registry", &fakePrompter{multi: []int{0}, confirms: []bool{true}}, &out)
 	if err != nil {
 		t.Fatalf("an unreadable registry must not stop a publish: %v", err)
 	}
-	if want := [][]string{{"skill", "push", "alpha"}}; !reflect.DeepEqual(ran, want) {
+	if want := [][]string{{"skill", "push", "alpha", "--yes"}}; !reflect.DeepEqual(ran, want) {
 		t.Errorf("ran %v, want %v", ran, want)
 	}
 	if !strings.Contains(out.String(), "nothing is marked") || !strings.Contains(out.String(), "repository is empty") {
 		t.Errorf("the user should be told why nothing is marked:\n%s", out.String())
+	}
+}
+
+func TestPushFindsASkillInAnotherAgentsFolderAndSaysSo(t *testing.T) {
+	dir := project(t)
+	t.Setenv("HIKMA_AGENT", "codex")
+	skillFile(t, dir, ".claude/skills", "video-pixel-scene")
+	err := skillNotFound("video-pixel-scene", filepath.Join(".agents", "skills", "video-pixel-scene"))
+	if err == nil || !strings.Contains(err.Error(), "hikma skill push video-pixel-scene --agent claude") {
+		t.Errorf("want the --agent that finds it, got %v", err)
+	}
+	if strings.Contains(err.Error(), "skill create") {
+		t.Errorf("a scaffold would create a second copy: %v", err)
+	}
+	err = skillNotFound("nope", filepath.Join(".agents", "skills", "nope"))
+	if err == nil || !strings.Contains(err.Error(), "hikma skill create nope") {
+		t.Errorf("a missing skill still points at create, got %v", err)
+	}
+}
+
+func TestSetupIsOfferedOnceInAProjectThatHasNone(t *testing.T) {
+	project(t)
+	var ran [][]string
+	run := func(_ context.Context, a []string) error { ran = append(ran, a); return nil }
+	var out bytes.Buffer
+	p := &fakePrompter{picks: []int{agentIndex(t, "claude"), 0}, multi: []int{agentIndex(t, "claude")}, inputs: []string{"acme/skills"}}
+	quit, err := offerSetup(p, &out, run)
+	if err != nil || quit {
+		t.Fatalf("quit=%v err=%v", quit, err)
+	}
+	want := [][]string{{"init", "--agent", "claude", "--registry", "acme/skills"}}
+	if !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	if !strings.Contains(out.String(), "not set up for hikma yet") {
+		t.Errorf("missing explanation:\n%s", out.String())
+	}
+}
+
+func TestSetupOfferCanBeDeclinedAndIsSkippedWhenSetUp(t *testing.T) {
+	dir := project(t)
+	var out bytes.Buffer
+	quit, err := offerSetup(&fakePrompter{confirms: []bool{false}}, &out, nil)
+	if err != nil || quit {
+		t.Fatalf("declining goes to the menu: quit=%v err=%v", quit, err)
+	}
+	write(t, filepath.Join(dir, ".hikma", "config.json"), "{\"version\":1}")
+	out.Reset()
+	p := &fakePrompter{}
+	if quit, err := offerSetup(p, &out, nil); quit || err != nil || len(p.asked) != 0 || out.Len() != 0 {
+		t.Errorf("a set-up project is not asked: quit=%v err=%v asked=%v out=%q", quit, err, p.asked, out.String())
+	}
+}
+
+func TestSetupIsNotOfferedOutsideAGitRepository(t *testing.T) {
+	project(t)
+	t.Chdir(t.TempDir())
+	if needsSetup() {
+		t.Error("a folder that is not a git repository must not be offered setup")
+	}
+}
+
+func TestVerifyEntryExplainsWhatItChecks(t *testing.T) {
+	project(t)
+	var out bytes.Buffer
+	ran, err := runEntryTo(t, "Check installed skills for local edits", &fakePrompter{}, &out)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := [][]string{{"skill", "verify"}}; !reflect.DeepEqual(ran, want) {
+		t.Errorf("ran %v, want %v", ran, want)
+	}
+	if !strings.Contains(out.String(), ".hikma/lock.json") || !strings.Contains(out.String(), "changes nothing") {
+		t.Errorf("explain the check before running it:\n%s", out.String())
+	}
+}
+
+func TestAFailedCommandSaysWhichOnesDidNotRun(t *testing.T) {
+	var out bytes.Buffer
+	run := func(_ context.Context, a []string) error { return errors.New("boom") }
+	execute(&out, [][]string{{"skill", "push", "a"}, {"skill", "push", "b"}}, run, nil)
+	if !strings.Contains(out.String(), "did not run") || !strings.Contains(out.String(), "hikma skill push b") {
+		t.Errorf("want the skipped command listed:\n%s", out.String())
 	}
 }
 
@@ -675,7 +834,7 @@ func TestMarkLabelsAddsNoColumnWhenNothingIsMarked(t *testing.T) {
 
 func TestWizardPublishAndUpdateSayWhatToDoWithNoSkills(t *testing.T) {
 	project(t)
-	for _, label := range []string{"Publish a skill to your registry", "Update installed skills"} {
+	for _, label := range []string{"Publish skills to your registry", "Update installed skills"} {
 		_, err := runEntry(t, label, &fakePrompter{})
 		if err == nil || !strings.Contains(err.Error(), "first") {
 			t.Errorf("%s: want an error saying what to do first, got %v", label, err)
@@ -758,7 +917,7 @@ func (c *cancelNextPrompter) Select(message string, options []string, def int) (
 
 func TestMenuRemembersTheCursor(t *testing.T) {
 	project(t)
-	verify := indexOf(t, "Verify installed skills")
+	verify := indexOf(t, "Check installed skills for local edits")
 	// Verify, then "Back to the menu", then Quit from the menu.
 	p := &fakePrompter{scripted: true, picks: []int{verify, 0, len(wizardEntries)}}
 	var out bytes.Buffer
@@ -883,7 +1042,7 @@ func TestAccessibleModeDrawsTheBannerOnce(t *testing.T) {
 	project(t)
 	t.Setenv("ACCESSIBLE", "1")
 	// Check your setup, back; Verify, back; then Quit from the menu.
-	picks := append(pathTo(t, "Check your setup"), 0, indexOf(t, "Verify installed skills"), 0, len(wizardEntries))
+	picks := append(pathTo(t, "Check your setup"), 0, indexOf(t, "Check installed skills for local edits"), 0, len(wizardEntries))
 	p := &fakePrompter{scripted: true, picks: picks}
 	var out bytes.Buffer
 	if err := runWizard(p, &out, func(context.Context, []string) error { return nil }); err != nil {

@@ -100,14 +100,16 @@ Ctrl-C or Esc inside a task comes back here. At this menu they quit.
 > Install skills from your registry
   Browse skills in your registry
   Update installed skills
-  Verify installed skills
+  Check installed skills for local edits
   Create a new skill
-  Publish a skill to your registry
+  Publish skills to your registry
   Setup and settings >
   Quit
 ```
 
 If a skills folder cannot be read, the last part says `installed here: unknown (cannot read the skills folders)` instead of `0`, so an unreadable folder is not mistaken for an empty one.
+
+In a git repository that Hikma has not been set up in yet (no `.hikma/config.json`), the menu first offers to set it up: it asks for your agents and a registry, runs `hikma init`, and then opens the menu. Say no, or press Esc, to go straight to the menu; it asks again next time until the project is set up. Outside a git repository it does not ask.
 
 Pick an entry and Hikma asks for anything it needs, then runs the same command you could type yourself. It asks only for what is missing: the registry when none is set, the agent when none is chosen, a skill from this project's agent folders when you publish or update, and the agents to set up for a new project. Agent, registry, project setup, completion, and the setup check live under "Setup and settings".
 
@@ -140,13 +142,17 @@ If some skills fail, the others are still installed, the result names each one t
 
 **Create a new skill** asks for the name and a one-line description (Enter to fill it in later), and links the [guide on writing a skill](/guides/write-a-skill). It prints the command it ran, with `--description` in it.
 
-**Publish a skill to your registry** reads your registry first and marks the skills that already exist there with `[exists]`, so you can see what publishing again would update. If the registry cannot be read, for example because it is empty, you can still publish; nothing is marked.
+**Publish skills to your registry** reads your registry first and marks the skills that already exist there with `[exists]`, so you can see what publishing again would update. If the registry cannot be read, for example because it is empty, you can still publish; nothing is marked.
+
+You can tick several skills. It lists the skills in every agent folder of the project, not only your agent's, and shows the folder beside each name when there is more than one, for example `video-pixel-scene  (.claude/skills)`. A skill outside your agent's folder is published with `--agent` so the command finds it. You confirm once, with the registry and how it will be published (a direct commit or a pull request), and then each skill is published by its own `hikma skill push <name> --yes`, so each one is its own commit or pull request. If one fails, the menu lists the ones that did not run. The same skill ticked from two folders is refused: tick one copy.
+
+**Check installed skills for local edits** runs `hikma skill verify`. Before it runs, the menu says what it does: it compares each installed skill with the hashes recorded in `.hikma/lock.json` at install time, offline, and changes nothing. `FAIL` means the skill was edited, or files were added or removed, since. Skills that Hikma did not install have no record and are not checked.
 
 Lists where you tick several options show a checkbox, `[ ]` or `[x]`, so a ticked option reads the same without color.
 
 ### What the menu does and does not do
 
-- It is a front end. Every entry runs an ordinary `hikma` command, so the confirmation questions before a push, an update, or a file write are the ones that command always asks.
+- It is a front end. Every entry runs an ordinary `hikma` command, so the confirmation questions before an update or a file write are the ones that command always asks. Publishing asks once in the menu instead, for all the ticked skills, and the command it prints carries `--yes`.
 - It clears the screen and stays open. After each task it shows the result and asks "What next?": go back to the menu or quit. Errors are shown there too, so a failed task never closes the menu.
 - The equivalent command is printed after a task that worked, not after a failure or a cancel. When some skills of an install fail, it prints the command that ran and the command that retries only the ones that can still work.
 - Ctrl-C or Esc inside a task goes back to the menu without doing anything: at a question, while a registry is being read, or while a command runs (a second Ctrl-C while it is stopping ends hikma). The same goes for "What next?". At the menu itself they leave. On a long list Esc clears the filter instead, and Ctrl-C goes back.

@@ -34,7 +34,7 @@ func slowGit(t *testing.T) (pathDir, pidFile string) {
 
 func TestCtrlCDuringAClonePutsTheMenuBackAndStopsGit(t *testing.T) {
 	skipShort(t)
-	sb := newSandbox(t)
+	sb := newMenuSandbox(t)
 	shim, pidFile := slowGit(t)
 	env := sb.with("HIKMA_REGISTRY=acme/skills", "HIKMA_AGENT=claude", "PATH="+shim+string(os.PathListSeparator)+os.Getenv("PATH"))
 	tm := startTerm(t, sb.project, env)

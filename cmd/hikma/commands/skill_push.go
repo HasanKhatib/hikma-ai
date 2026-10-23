@@ -579,7 +579,7 @@ it is pushed to your fork and a pull request is opened. Nothing is force-pushed.
 				return err
 			}
 			if !dirExists(skillDir) {
-				return fmt.Errorf("skill '%s' not found at %s/\n  run 'hikma skill create %s' to scaffold it first", name, skillDir, name)
+				return skillNotFound(name, skillDir)
 			}
 
 			fmt.Fprintf(out, "Validating %s...\n", name)
@@ -656,4 +656,20 @@ func resolvePushRegistry(flagRegistry string) (config.Registry, string, error) {
 		return config.Registry{}, "", fmt.Errorf("push needs a GitHub registry (owner/repo); %s is a %s source", src.Display, src.Kind)
 	}
 	return config.Registry{Owner: src.Owner, Repo: src.Repo, Raw: src.Raw}, origin, nil
+}
+
+// skillNotFound explains a skill that is missing from the folder push looked in.
+// When the skill sits in another agent's folder, it says which --agent finds it,
+// instead of suggesting a scaffold that would create a second copy.
+func skillNotFound(name, skillDir string) error {
+	set, err := config.Layouts()
+	if err == nil {
+		for _, a := range set.Names() {
+			dir := filepath.Join(filepath.FromSlash(set.Layout(a).SkillsDir), name)
+			if dirExists(dir) {
+				return fmt.Errorf("skill '%s' is not at %s/, but it is at %s/\n  publish that copy with: hikma skill push %s --agent %s", name, skillDir, dir, name, a)
+			}
+		}
+	}
+	return fmt.Errorf("skill '%s' not found at %s/\n  run 'hikma skill create %s' to scaffold it first", name, skillDir, name)
 }

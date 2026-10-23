@@ -80,6 +80,21 @@ func newSandbox(t *testing.T) sandbox {
 	return sandbox{home: home, project: project, env: env}
 }
 
+// newMenuSandbox is a sandbox where hikma is already set up, so the menu opens
+// straight away instead of first offering to set the project up.
+func newMenuSandbox(t *testing.T) sandbox {
+	t.Helper()
+	s := newSandbox(t)
+	dir := filepath.Join(s.project, ".hikma")
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(dir, "config.json"), []byte("{\"version\":1}\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	return s
+}
+
 func (s sandbox) with(kv ...string) []string { return append(append([]string{}, s.env...), kv...) }
 
 func (s sandbox) writeSkill(t *testing.T, name string) {
