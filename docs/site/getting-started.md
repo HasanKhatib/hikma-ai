@@ -1,3 +1,7 @@
+---
+description: "Install Hikma with Homebrew or a script, set up a project, and follow the path you need: install skills, publish your own, or import one."
+---
+
 # Getting started
 
 This page gets Hikma installed, then points you to the path you need.

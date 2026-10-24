@@ -1,5 +1,7 @@
 import { execFileSync } from "node:child_process";
-import { defineConfig } from "vitepress";
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from "node:fs";
+import { join, relative, resolve } from "node:path";
+import { defineConfig, type HeadConfig } from "vitepress";
 
 // The site is served from the root of hikma.alkhatib.tech. Override with VITEPRESS_BASE for a sub-path.
 const base = process.env.VITEPRESS_BASE ?? "/";
@@ -19,8 +21,95 @@ const latest = (() => {
   }
 })();
 
+const SITE = "https://hikma.alkhatib.tech";
+
+// The first paragraph of a page, as plain text, for pages that do not set their own description.
+// Search results and assistants quote it, so a page never inherits the home page's tagline.
+function firstParagraph(source: string): string {
+  const body = source.replace(/^---[\s\S]*?---\n/, "");
+  let inFence = false;
+  for (const block of body.split(/\n\s*\n/)) {
+    const text = block.trim();
+    if (text.startsWith("```")) inFence = !inFence;
+    if (!text || inFence || /^(#|```|:::|<|\||-|\d+\.)/.test(text)) continue;
+    const plain = text
+      .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
+      .replace(/[`*_]/g, "")
+      .replace(/\s+/g, " ");
+    return plain.length > 200 ? plain.slice(0, plain.lastIndexOf(" ", 197)) + "..." : plain;
+  }
+  return "";
+}
+
+// Every page's source, in one file, so an assistant can read the whole documentation in one request.
+function writeLlmsFull(srcDir: string, outDir: string) {
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const name of readdirSync(dir).sort()) {
+      const p = join(dir, name);
+      if (name.startsWith(".") || name === "node_modules" || name === "public") continue;
+      if (statSync(p).isDirectory()) walk(p);
+      else if (name.endsWith(".md")) files.push(p);
+    }
+  };
+  walk(srcDir);
+  const parts = ["# Hikma documentation\n\n> The whole of https://hikma.alkhatib.tech/ as one file. A short index is at /llms.txt.\n"];
+  for (const f of files) {
+    const rel = relative(srcDir, f).replace(/\\/g, "/");
+    if (rel === "index.md") continue;
+    const url = `${SITE}/${rel.replace(/(^|\/)index\.md$/, "$1").replace(/\.md$/, "")}`;
+    parts.push(`\n---\nSource: ${url}\n\n${readFileSync(f, "utf8").replace(/^---[\s\S]*?---\n/, "").trim()}\n`);
+  }
+  writeFileSync(join(outDir, "llms-full.txt"), parts.join(""));
+}
+
 export default defineConfig({
   lang: "en-US",
+  sitemap: { hostname: SITE },
+  transformPageData(pageData, { siteConfig }) {
+    if (pageData.frontmatter.description || pageData.isNotFound) return;
+    const file = resolve(siteConfig.srcDir, pageData.relativePath);
+    if (!existsSync(file)) return;
+    const text = firstParagraph(readFileSync(file, "utf8"));
+    if (text) pageData.description = text;
+  },
+  transformHead({ pageData }) {
+    if (pageData.isNotFound) return [];
+    const path = pageData.relativePath.replace(/(^|\/)index\.md$/, "$1").replace(/\.md$/, "");
+    const url = `${SITE}/${path}`;
+    const head: HeadConfig[] = [
+      ["link", { rel: "canonical", href: url }],
+      ["meta", { property: "og:url", content: url }],
+      ["meta", { property: "og:site_name", content: "Hikma" }],
+      ["meta", { property: "og:image:alt", content: "Hikma: a pixel-art scene of skills moving from a registry chest to a bot" }],
+    ];
+    if (pageData.relativePath === "index.md") {
+      head.push([
+        "script",
+        { type: "application/ld+json" },
+        JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "SoftwareApplication",
+          name: "Hikma",
+          alternateName: "hikma",
+          description:
+            "A command-line tool for scaffolding, sharing, and installing reusable AI agent skills through a GitHub repository you own.",
+          applicationCategory: "DeveloperApplication",
+          operatingSystem: "macOS, Linux, Windows",
+          url: SITE,
+          downloadUrl: "https://github.com/HasanKhatib/hikma-ai/releases",
+          codeRepository: "https://github.com/HasanKhatib/hikma-ai",
+          license: "https://opensource.org/licenses/MIT",
+          author: { "@type": "Person", name: "Hasan Alkhatib" },
+          offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
+        }),
+      ]);
+    }
+    return head;
+  },
+  buildEnd(siteConfig) {
+    writeLlmsFull(siteConfig.srcDir, siteConfig.outDir);
+  },
   title: "Hikma",
   description:
     "Skills follow you. Define your source, publish to a registry repo you own, and install into any agent with one CLI.",
@@ -114,6 +203,7 @@ export default defineConfig({
           { text: "Write and edit a skill", link: "/guides/write-a-skill" },
           { text: "Skill format", link: "/guides/skill-format" },
           { text: "Run a registry", link: "/guides/registry" },
+          { text: "Use in CI", link: "/guides/use-in-ci" },
           { text: "Troubleshooting", link: "/guides/troubleshooting" },
           { text: "Glossary", link: "/guides/glossary" },
         ],
@@ -128,7 +218,7 @@ export default defineConfig({
     },
     footer: {
       message: "Released under the MIT License.",
-      copyright: "Hikma means wisdom.",
+      copyright: "Hikma means wisdom. <a href=\"https://github.com/HasanKhatib/hikma-ai/releases\">Release history</a>",
     },
   },
 });

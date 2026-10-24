@@ -1,3 +1,7 @@
+---
+description: "Guides for Hikma: agents and folders, writing a skill, the skill format, running a registry, the menu, CI, and troubleshooting."
+---
+
 # Guides
 
 - [Agents and folders](/guides/agents): what Claude, Codex, Copilot, and OpenCode read, and global installs
@@ -6,4 +10,5 @@
 - [Run a registry](/guides/registry): publish skills for yourself or a team
 - [Glossary](/guides/glossary): the few terms Hikma uses, in plain words
 - [The menu](/guides/menu): run `hikma` with no arguments for a guided session
+- [Use in CI](/guides/use-in-ci): install a pinned version, restore skills, and fail on drift
 - [Troubleshooting](/guides/troubleshooting): the messages people hit most, and what to do

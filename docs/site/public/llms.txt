@@ -1,0 +1,47 @@
+# Hikma
+
+> Hikma (command: `hikma`) is a command-line tool for scaffolding, sharing, and installing reusable AI-agent skills through a GitHub repository you own, called a registry. It works with Claude, Codex, GitHub Copilot, OpenCode, and custom agent layouts. Skills follow you: publish them from any project, install them into any other.
+
+Install: `brew install HasanKhatib/tap/hikma`, or `curl -fsSL https://raw.githubusercontent.com/HasanKhatib/hikma-ai/main/scripts/install.sh | bash`. Source: https://github.com/HasanKhatib/hikma-ai (MIT licence).
+
+Hikma is not a marketplace and has no hosted registry: a registry is a plain GitHub repo you configure. To search for skills, use `gh skill`; Hikma's `skill import` copies one into your registry after a review.
+
+## Start here
+
+- [Getting started](https://hikma.alkhatib.tech/getting-started): install, set up a project, and pick a path
+- [The menu](https://hikma.alkhatib.tech/guides/menu): run `hikma` with no arguments for a guided session
+- [Glossary](https://hikma.alkhatib.tech/guides/glossary): skill, registry, agent, lockfile
+
+## Commands
+
+- [All commands](https://hikma.alkhatib.tech/commands/): grouped by workflow
+- [init](https://hikma.alkhatib.tech/commands/init): set up a repository for one or more agents
+- [skill install](https://hikma.alkhatib.tech/commands/skill-install): install skills from your registry
+- [skill import](https://hikma.alkhatib.tech/commands/skill-import): copy a skill from anywhere into your registry, after a review
+- [skill create](https://hikma.alkhatib.tech/commands/skill-create): scaffold a new skill
+- [skill push](https://hikma.alkhatib.tech/commands/skill-push): publish a skill to your registry
+- [skill update](https://hikma.alkhatib.tech/commands/skill-update): update installed skills
+- [skill verify](https://hikma.alkhatib.tech/commands/skill-verify): check installed skills against the lockfile, offline
+- [sync](https://hikma.alkhatib.tech/commands/sync): restore every skill recorded in the lockfile
+- [upgrade](https://hikma.alkhatib.tech/commands/upgrade): replace hikma with the latest release
+
+## Guides
+
+- [Agents and folders](https://hikma.alkhatib.tech/guides/agents): where each agent reads skills from
+- [Write and edit a skill](https://hikma.alkhatib.tech/guides/write-a-skill)
+- [Skill format](https://hikma.alkhatib.tech/guides/skill-format)
+- [Run a registry](https://hikma.alkhatib.tech/guides/registry)
+- [Use in CI](https://hikma.alkhatib.tech/guides/use-in-ci): pinned install, `sync --frozen`, exit codes
+- [Troubleshooting](https://hikma.alkhatib.tech/guides/troubleshooting)
+
+## Reference
+
+- [Exit codes and JSON](https://hikma.alkhatib.tech/reference/output)
+- [Configuration and environment](https://hikma.alkhatib.tech/reference/configuration)
+- [Flags and terminal behavior](https://hikma.alkhatib.tech/reference/flags)
+- [Versioning and deprecation](https://hikma.alkhatib.tech/reference/policy)
+
+## Optional
+
+- [The whole documentation as one file](https://hikma.alkhatib.tech/llms-full.txt)
+- [Releases](https://github.com/HasanKhatib/hikma-ai/releases)
