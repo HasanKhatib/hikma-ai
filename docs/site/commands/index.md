@@ -1,3 +1,7 @@
+---
+description: "Every hikma command, grouped by what you are trying to do: set up, install, share, keep in sync, and maintain."
+---
+
 # Commands
 
 ## Set up

@@ -740,3 +740,16 @@ html:has(.hk-hero-wrap) .hk-credit {
     transition: none;
   }
 }
+
+/* Text for crawlers and screen readers that the scene already shows as art. */
+.hk-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

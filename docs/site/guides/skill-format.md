@@ -1,3 +1,7 @@
+---
+description: "A skill is a folder with a SKILL.md file and optional supporting folders. What the file contains and where Hikma looks for skills."
+---
+
 # Skill format
 
 A skill is a folder with a `SKILL.md` file, and optional supporting folders:
