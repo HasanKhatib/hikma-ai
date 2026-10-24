@@ -13,7 +13,7 @@ const OUT = process.argv[2];
 const THEME = process.argv[3] ?? "dark";
 if (!OUT) throw new Error("usage: render-frames.mjs <out-dir> [dark|light]");
 const FPS = 15;
-const LOOP = 37.44; // LOOP in heroScene.ts, in real seconds
+const LOOP = 49.92; // LOOP in heroScene.ts, in real seconds
 const WORKERS = 6;
 const total = Math.floor(LOOP * FPS);
 
