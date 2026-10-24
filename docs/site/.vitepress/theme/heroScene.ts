@@ -6,7 +6,7 @@ export const W = 240; // the stage the story is drawn on; wider windows get more
 export const MAX_VW = 560;
 export const H = 135;
 export const GROUND = 92;
-export const STORY = 24.8; // length of the story, in scene seconds
+export const STORY = 29.8; // length of the story, in scene seconds
 export const INTRO = 1.4; // a title screen before the story starts
 export const SLOW = 1.6; // real seconds per scene second
 export const LOOP = (STORY + INTRO) * SLOW; // real length of one loop
@@ -27,17 +27,32 @@ export function setView(width: number) {
 const HOLE_A = 142;
 const HOLE_B = 172;
 const FLAG_X = 118;
-const CHEST_X = 206;
+const CHEST_X = 206; // the registry chest, in the right corner
+const CHEST_AT = 3; // it appears when init sets the registry
+const STRANGER_X = 142; // where the other character stands while the skill is imported
+const HERO_AT = 90; // where the hero meets them
+const HERO_AT2 = 110; // and where the hero waits for the install
+
+// The story, in scene seconds: init, import, install, then a second world for sync.
+const ARRIVE_A = 5.2; // the stranger walks in from the right
+const ARRIVE_B = 8;
+const COPY_A = 12.2; // a copy of their skill flies into the chest
+const COPY_B = 13.6;
+const LEAVE_A = 14.2; // and they walk off to the right, keeping their own
+const LEAVE_B = 18.4;
+const OPEN_A = 16.6; // the chest opens and hands the skill to the pet
+const OPEN_B = 18;
+const LEARN = 17.8; // the pet has it
 
 // Stage 4 happens in a second world: a "WORLD 2" card, then a lava land where the pet starts with no skills.
-const W2 = 15; // the world changes here, hidden under the card
-const FALL_A = 18; // the hero walks off the edge of the lava hole
-const FALL_B = 18.7;
-const RESPAWN = 19.5; // back at the checkpoint flag
-const SYNC_A = 21.3; // first skill restored
-const SYNC_B = 21.6; // second skill restored
-const JUMP_A = 22.2;
-const JUMP_B = 23.8;
+const W2 = 20; // the world changes here, hidden under the card
+const W2_WALK = 21.4; // the hero starts walking toward the hole
+const FALL_A = 23; // the hero walks off the edge of the lava hole
+const FALL_B = 23.7;
+const RESPAWN = 24.5; // back at the checkpoint flag
+const SYNC_A = 26.3; // the skill is restored
+const JUMP_A = 27.2;
+const JUMP_B = 28.8;
 
 type Palette = Record<string, string>;
 
@@ -53,13 +68,17 @@ const PAL: Palette = {
   b: "#2fa89f", // bot
   w: "#f1ede2", // bot eye
   o: "#ff9a6b", // antenna tip
-  g: "#4aa8ff", // first skill, blue like the bot it turns blue
+  g: "#4aa8ff", // the skill, blue like the bot it turns blue
   q: "#e6f3ff", // gem glint
   d: "#2468b3", // gem shade
-  n: "#a78bfa", // second skill, violet like the bot with two skills
-  v: "#6d4fc4", // second gem shade
   m: "#c4622f", // chest
   s: "#e8c27a", // chest trim
+  p: "#d94f9a", // the other character's beanie
+  y: "#f2b84b", // beanie band
+  K: "#a8693f", // their skin
+  j: "#3f5870", // their jacket
+  z: "#9fb4c8", // jacket zip
+  L: "#2a2a2a", // boots
 };
 
 const CHAR = [
@@ -84,12 +103,32 @@ const LEGS_B = ["..l....l.."];
 const PET = ["...o....", "...b....", ".bbbbbb.", "bbwbbwbb", "bbbbbbbb", ".bb..bb."];
 const PET_BLINK = ["...o....", "...b....", ".bbbbbb.", "bbbbbbbb", "bbbbbbbb", ".bb..bb."];
 
-// The pet is dark with no skills, turns blue with the first, and violet with two.
-const PET_COLORS = ["#44504e", "#4aa8ff", "#a78bfa"];
+// The pet is dark with no skills and turns blue with one.
+const PET_COLORS = ["#44504e", "#4aa8ff"];
+
+// The other character: a beanie, a darker skin tone, and a slate jacket, so they read apart from the hero.
+const STRANGER = [
+  "..pppppp..",
+  ".pppppppp.",
+  ".pyyyyyyp.",
+  "..KKKKKK..",
+  "..KeKeKK..",
+  "..KKKKKK..",
+  "..jjjjjj..",
+  ".jjjjzjjj.",
+  "jjjjjzjjjj",
+  ".jjjjzjjj.",
+  ".jjjjzjjj.",
+  ".jjjjjjjj.",
+  "..jjjjjj..",
+];
+const STRANGER_LEGS_A = ["...L..L..."];
+const STRANGER_LEGS_B = ["..L....L.."];
 
 const GEM = ["..g..", ".gqg.", "ggggg", ".gdg.", "..g.."];
-const GEM2 = ["..n..", ".nqn.", "nnnnn", ".nvn.", "..n.."];
 const CHEST = ["..mmmmmmmmmm..", ".mssssssssssm.", ".mmmmmsmmmmmm.", ".mmmmmmmmmmmm.", ".mmmmmmmmmmmm.", ".mmmmmmmmmmmm."];
+// Open: the lid stays up and light spills out through the gap.
+const CHEST_OPEN = ["..mmmmmmmmmm..", ".mssssssssssm.", ".qgqgqgqgqgqg.", ".mmmmmsmmmmmm.", ".mmmmmmmmmmmm.", ".mmmmmmmmmmmm."];
 const SIGN = ["wwwww", "wlllw", "wwwww", "..d..", "..d.."];
 const FLAG = ["d", "d", "d", "d", "d", "d", "d", "d", "d", "d"];
 
@@ -132,13 +171,13 @@ function getSprites(dark: boolean) {
     charB: make([...CHAR, ...LEGS_B], {}, edge),
     pet0: make(PET, { b: PET_COLORS[0] }),
     pet1: make(PET, { b: PET_COLORS[1] }),
-    pet2: make(PET, { b: PET_COLORS[2] }),
     petBlink0: make(PET_BLINK, { b: PET_COLORS[0] }),
     petBlink1: make(PET_BLINK, { b: PET_COLORS[1] }),
-    petBlink2: make(PET_BLINK, { b: PET_COLORS[2] }),
     gem: make(GEM),
-    gem2: make(GEM2),
     chest: make(CHEST),
+    chestOpen: make(CHEST_OPEN),
+    strangerA: make([...STRANGER, ...STRANGER_LEGS_A], {}, edge),
+    strangerB: make([...STRANGER, ...STRANGER_LEGS_B], {}, edge),
     sign: make(SIGN),
   };
   sprites[key] = made;
@@ -160,11 +199,13 @@ const ease = (p: number) => p * p * (3 - 2 * p);
 // ── Character and pet ────────────────────────────────────────────────────────
 
 function charX(t: number): number {
-  if (t < 3) return 28;
-  if (t < 8) return lerp(28, 92, seg(t, 3, 8));
-  if (t < W2) return 92;
-  if (t < 16.4) return 28;
-  if (t < FALL_A) return lerp(28, 134, seg(t, 16.4, FALL_A));
+  if (t < ARRIVE_A) return 28;
+  if (t < ARRIVE_B) return lerp(28, HERO_AT, seg(t, ARRIVE_A, ARRIVE_B));
+  if (t < 15.6) return HERO_AT;
+  if (t < 16.8) return lerp(HERO_AT, HERO_AT2, ease(seg(t, 15.6, 16.8)));
+  if (t < W2) return HERO_AT2;
+  if (t < W2_WALK) return 28;
+  if (t < FALL_A) return lerp(28, 134, seg(t, W2_WALK, FALL_A));
   if (t < FALL_B) return lerp(134, 146, seg(t, FALL_A, FALL_B));
   if (t < RESPAWN) return 146;
   if (t < JUMP_A) return FLAG_X;
@@ -172,11 +213,31 @@ function charX(t: number): number {
   return lerp(178, 188, seg(t, JUMP_B, STORY));
 }
 
-// What the camera looks at: the character, then the chest while a skill is pushed, and the checkpoint after the fall.
+// The other character comes in from beyond the right edge of whatever width the canvas has, and leaves the same way.
+function strangerOff(): number {
+  return (VW >= W ? W + OFF : W) + 30;
+}
+
+function strangerX(t: number): number {
+  if (t < ARRIVE_B) return lerp(strangerOff(), STRANGER_X, seg(t, ARRIVE_A, ARRIVE_B));
+  if (t < LEAVE_A) return STRANGER_X;
+  return lerp(STRANGER_X, strangerOff(), seg(t, LEAVE_A, LEAVE_B));
+}
+
+function strangerVisible(t: number): boolean {
+  return t >= ARRIVE_A && t < LEAVE_B && t < W2;
+}
+
+function strangerMoving(t: number): boolean {
+  return (t > ARRIVE_A && t < ARRIVE_B) || (t > LEAVE_A && t < LEAVE_B);
+}
+
+// What the camera looks at: the character, then the middle of the import (where the other character and the chest are),
+// and the checkpoint after the fall.
 function camTarget(t: number): number {
   if (t >= FALL_B && t < RESPAWN + 0.6) return lerp(146, FLAG_X, ease(seg(t, FALL_B, RESPAWN + 0.6)));
-  const chest = seg(t, 11.8, 12.8) * (1 - seg(t, 14.6, 14.9));
-  return lerp(charX(t), CHEST_X - 20, chest);
+  const look = seg(t, ARRIVE_A + 0.4, ARRIVE_A + 1.2) * (1 - seg(t, LEAVE_B, LEAVE_B + 0.6));
+  return lerp(charX(t), 130, look);
 }
 
 function applyCamera(t: number) {
@@ -184,7 +245,7 @@ function applyCamera(t: number) {
 }
 
 function charMoving(t: number): boolean {
-  return (t > 3 && t < 8) || (t > 16.4 && t < FALL_B) || t > JUMP_A;
+  return (t > ARRIVE_A && t < ARRIVE_B) || (t > 15.6 && t < 16.8) || (t > W2_WALK && t < FALL_B) || t > JUMP_A;
 }
 
 function charY(t: number): number {
@@ -203,9 +264,9 @@ function charVisible(t: number): boolean {
 function petPos(t: number): { x: number; y: number } {
   let x = charX(Math.max(0, t - 0.6)) - 22;
   let y = GROUND - 12 + Math.round(Math.sin(t * 5));
-  if (t >= FALL_A && t < 18.5) x = lerp(charX(FALL_A - 0.6) - 22, 138, seg(t, FALL_A, 18.5));
-  else if (t >= 18.5 && t < 19.2) {
-    const p = seg(t, 18.5, 19.2);
+  if (t >= FALL_A && t < FALL_A + 0.5) x = lerp(charX(FALL_A - 0.6) - 22, 138, seg(t, FALL_A, FALL_A + 0.5));
+  else if (t >= FALL_A + 0.5 && t < FALL_A + 1.2) {
+    const p = seg(t, FALL_A + 0.5, FALL_A + 1.2);
     x = lerp(138, 148, p);
     y += p * p * 62;
   }
@@ -217,15 +278,13 @@ function petPos(t: number): { x: number; y: number } {
 }
 
 function petVisible(t: number): boolean {
-  return !(t >= 19.2 && t < 19.6);
+  return !(t >= FALL_A + 1.2 && t < FALL_A + 1.6);
 }
 
-// The pet is dark with no skills, blue with the first, violet with two. It loses them in the new world.
+// The pet is dark with no skills and blue with one. It loses it in the new world, and sync gives it back.
 function skillCount(t: number): number {
-  if (t < 6.6 || (t >= W2 && t < SYNC_A)) return 0;
-  if (t >= SYNC_B) return 2;
-  if (t >= SYNC_A) return 1;
-  return t >= 10.6 ? 2 : 1;
+  if (t < LEARN || (t >= W2 && t < SYNC_A)) return 0;
+  return 1;
 }
 
 // ── Drawing ──────────────────────────────────────────────────────────────────
@@ -340,79 +399,114 @@ function drawWorld(ctx: CanvasRenderingContext2D, t: number, dark: boolean) {
   px(ctx, "#ff9a6b", HB, GROUND - 1, 2, 1);
 }
 
-function drawProps(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
+// A 3x5 pixel font, just the letters the registry name needs, for the tag on the chest.
+const FONT: Record<string, string[]> = {
+  m: ["101", "111", "111", "101", "101"],
+  y: ["101", "101", "010", "010", "010"],
+  g: ["111", "101", "111", "001", "111"],
+  h: ["100", "100", "111", "101", "101"],
+  a: ["010", "101", "111", "101", "101"],
+  c: ["111", "100", "100", "100", "111"],
+  o: ["111", "101", "101", "101", "111"],
+  u: ["101", "101", "101", "101", "111"],
+  n: ["110", "101", "101", "101", "101"],
+  t: ["111", "010", "010", "010", "010"],
+  r: ["110", "101", "110", "101", "101"],
+  e: ["111", "100", "111", "100", "111"],
+  p: ["111", "101", "111", "100", "100"],
+  "/": ["001", "001", "010", "100", "100"],
+};
+const TAG = "myghaccount/myrepo";
+
+function drawTag(ctx: CanvasRenderingContext2D, x: number, y: number, color: string) {
+  let cx = x;
+  for (const ch of TAG) {
+    FONT[ch].forEach((row, j) =>
+      [...row].forEach((bit, i) => {
+        if (bit === "1") px(ctx, color, cx + i, y + j);
+      }),
+    );
+    cx += 4;
+  }
+}
+
+function chestIsOpen(t: number): boolean {
+  return (t >= COPY_A + 0.3 && t < COPY_B + 0.5) || (t >= OPEN_A && t < OPEN_B);
+}
+
+function drawProps(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>, dark: boolean) {
   // signposts: the repo gets set up
   for (const [x, at] of [[46, 1.4], [62, 1.7]] as const) {
     const p = ease(seg(t, at, at + 0.4));
     if (p > 0 && t < W2) blit(ctx, s.sign, x, GROUND - 10 * p);
   }
   // checkpoint flag, in the lava world
-  if (t >= 16.4 && t < STORY) {
+  if (t >= W2_WALK && t < STORY) {
     px(ctx, "#f1ede2", FLAG_X - 14, GROUND - 22, 2, 22);
     px(ctx, "#ff9a6b", FLAG_X - 12, GROUND - 22, 9, 6);
   }
-  // registry chest
-  if (t >= 12 && t < W2) {
-    const rise = ease(seg(t, 12, 12.4));
-    blit(ctx, s.chest, CHEST_X, GROUND - 12 * rise);
-    if (t >= 14 && t < 14.8) px(ctx, "#fff7d6", CHEST_X + 4, GROUND - 16, 20, 3);
+  // the registry chest appears when init sets the registry, with its name on a tag
+  if (t >= CHEST_AT && t < W2) {
+    const rise = ease(seg(t, CHEST_AT, CHEST_AT + 0.4));
+    blit(ctx, chestIsOpen(t) ? s.chestOpen : s.chest, CHEST_X, GROUND - 12 * rise);
+    if (rise === 1 && t >= CHEST_AT + 0.5) {
+      const w = TAG.length * 4 + 2;
+      const tx = Math.min(CHEST_X + 14 - w / 2, W - w - 2);
+      px(ctx, dark ? "#0b1514" : "#fffaf0", tx, GROUND - 24, w, 9);
+      px(ctx, dark ? "#2fa89f" : "#3b2f22", tx, GROUND - 24, w, 1);
+      px(ctx, dark ? "#2fa89f" : "#3b2f22", tx, GROUND - 16, w, 1);
+      drawTag(ctx, tx + 1, GROUND - 22, dark ? "#e8e6da" : "#14201e");
+    }
+    burst(ctx, CHEST_X + 14, GROUND - 10, CHEST_AT + 0.4, t, "#e8c27a");
   }
 }
 
 function drawGems(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
   const pet = petPos(t);
-  // gem 1: found, then absorbed by the pet
-  if (t >= 3 && t < 6.6) {
+  // the other character holds their skill up, and keeps it
+  if (strangerVisible(t)) {
     const bob = Math.sin(t * 4) * 1.5;
-    let x = 104;
-    let y = GROUND - 46 + bob;
-    if (t >= 5.6) {
-      const p = ease(seg(t, 5.6, 6.6));
-      x = lerp(104, pet.x + 3, p);
-      y = lerp(GROUND - 46, pet.y - 10, p);
-    }
-    blit(ctx, s.gem, x, y);
+    blit(ctx, s.gem, strangerX(t) + 5, GROUND - CH - 12 + bob);
   }
-  burst(ctx, pet.x + 8, pet.y + 4, 6.6, t);
-  // gem 2: the new skill, pushed to the registry
-  if (t >= 10 && t < 14) {
-    const bob = Math.sin(t * 4) * 1.5;
-    let x = charX(t) + 3;
-    let y = GROUND - 52 + bob;
-    if (t >= 12.4) {
-      const p = seg(t, 12.4, 14);
-      x = lerp(charX(t) + 3, CHEST_X + 9, p);
-      y = lerp(GROUND - 52, GROUND - 16, p) - Math.sin(Math.PI * p) * 40;
-    }
-    blit(ctx, s.gem2, x, y);
+  // a copy of it flies into the chest
+  if (t >= COPY_A && t < COPY_B) {
+    const p = ease(seg(t, COPY_A, COPY_B));
+    const fromX = STRANGER_X + 5;
+    const fromY = GROUND - CH - 12;
+    blit(ctx, s.gem, lerp(fromX, CHEST_X + 9, p), lerp(fromY, GROUND - 14, p) - Math.sin(Math.PI * p) * 36);
   }
-  burst(ctx, CHEST_X + 14, GROUND - 10, 14, t, "#a78bfa");
-  // the sync brings both skills back from above
-  for (const [a, b, sprite, dx] of [[20.7, SYNC_A, s.gem, -30], [21, SYNC_B, s.gem2, 30]] as const) {
-    if (t >= a && t < b) {
-      const p = ease(seg(t, a, b));
-      blit(ctx, sprite, lerp(pet.x + dx, pet.x + 3, p), lerp(6, pet.y - 10, p));
-    }
+  burst(ctx, CHEST_X + 14, GROUND - 10, COPY_B, t);
+  // the chest hands the skill to the pet
+  if (t >= OPEN_A + 0.2 && t < LEARN) {
+    const p = ease(seg(t, OPEN_A + 0.2, LEARN));
+    blit(ctx, s.gem, lerp(CHEST_X + 9, pet.x + 3, p), lerp(GROUND - 14, pet.y - 10, p) - Math.sin(Math.PI * p) * 30);
+  }
+  burst(ctx, pet.x + 8, pet.y + 4, LEARN, t);
+  // the sync brings the skill back from above
+  if (t >= SYNC_A - 0.6 && t < SYNC_A) {
+    const p = ease(seg(t, SYNC_A - 0.6, SYNC_A));
+    blit(ctx, s.gem, lerp(pet.x - 30, pet.x + 3, p), lerp(6, pet.y - 10, p));
   }
   burst(ctx, pet.x + 8, pet.y + 4, SYNC_A, t);
-  burst(ctx, pet.x + 8, pet.y + 4, SYNC_B, t, "#a78bfa");
 }
 
 function drawPet(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
   if (!petVisible(t)) return;
   const { x, y } = petPos(t);
   const blink = (((t % 3.2) + 3.2) % 3.2) < 0.12;
-  const tone = Math.min(2, skillCount(t));
+  const tone = skillCount(t);
   blit(ctx, s[(blink ? "petBlink" : "pet") + tone], x, y);
-  // skills the pet knows, shown as tiny gems above its antenna
-  const n = skillCount(t);
-  for (let i = 0; i < n; i++) {
-    px(ctx, i === 0 ? "#4aa8ff" : "#a78bfa", x + 2 + i * 6, y - 8, 4, 4);
-  }
-  if (t >= 19.6 && t < SYNC_A) {
+  // the skill the pet knows, shown as a tiny gem above its antenna
+  if (tone) px(ctx, "#4aa8ff", x + 2, y - 8, 4, 4);
+  if (t >= FALL_A + 1.6 && t < SYNC_A) {
     px(ctx, "#a9b0a6", x + 7, y - 6, 2, 2);
     px(ctx, "#a9b0a6", x + 7, y - 12, 2, 4);
   }
+}
+
+function drawStranger(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
+  if (!strangerVisible(t)) return;
+  blit(ctx, strangerMoving(t) && Math.floor(t * 6) % 2 ? s.strangerB : s.strangerA, strangerX(t), GROUND - CH);
 }
 
 function drawChar(ctx: CanvasRenderingContext2D, t: number, s: Record<string, Sprite>) {
@@ -449,8 +543,8 @@ export function skyAt(raw: number, dark: boolean): string {
 
 // The "WORLD 2" card: fades in at the end of stage 3, holds while the world changes, then fades out.
 function cardAlpha(t: number): number {
-  if (t < 14.3 || t >= 16.5) return 0;
-  return t < 15.9 ? seg(t, 14.3, 14.9) : 1 - seg(t, 15.9, 16.5);
+  if (t < W2 - 0.7 || t >= W2 + 1.5) return 0;
+  return t < W2 + 0.9 ? seg(t, W2 - 0.7, W2 - 0.1) : 1 - seg(t, W2 + 0.9, W2 + 1.5);
 }
 
 // Real seconds into the loop -> scene seconds into the story (negative on the title screen).
@@ -467,7 +561,8 @@ export function drawScene(ctx: CanvasRenderingContext2D, raw: number, dark = tru
   drawWorld(ctx, t, dark);
   ctx.save();
   ctx.translate(SHIFT, 0);
-  drawProps(ctx, t, s);
+  drawProps(ctx, t, s, dark);
+  drawStranger(ctx, t, s);
   drawGems(ctx, t, s);
   drawPet(ctx, t, s);
   drawChar(ctx, t, s);
@@ -490,46 +585,49 @@ export function drawScene(ctx: CanvasRenderingContext2D, raw: number, dark = tru
 
 // ── Text overlays ────────────────────────────────────────────────────────────
 
-export type Who = "char" | "pet";
+export type Who = "char" | "pet" | "other";
 export type CliLine = { out: boolean; text: string };
 // One speech bubble: what the speaker says, then the terminal lines that follow in the same bubble.
 export type Bubble = { who: Who; quote: string | null; lines: CliLine[]; x: number; y: number };
 
 const QUOTES: { a: number; b: number; who: Who; text: string }[] = [
-  { a: 0.3, b: 3.0, who: "char", text: "New repo." },
-  { a: 3.4, b: 7.2, who: "char", text: "Great skill for my agent!" },
-  { a: 8.2, b: 10.6, who: "pet", text: "I learned a lot. Let's make walking-above-holes." },
-  { a: 17.1, b: 17.9, who: "char", text: "Hole!" },
-  { a: 19.8, b: 21, who: "char", text: "No skills." },
-  { a: 22.1, b: 23.2, who: "pet", text: "Watch this." },
+  { a: 0.3, b: 3.0, who: "char", text: "New repo. Registry first." },
+  { a: 5.4, b: 7.9, who: "char", text: "Someone has a great skill." },
+  { a: 8.1, b: 9.4, who: "other", text: "Take a look." },
+  { a: 9.5, b: 14.2, who: "char", text: "A copy for my registry, please." },
+  { a: 14.3, b: 15.8, who: "other", text: "Enjoy! Bye!" },
+  { a: 15.9, b: 16.9, who: "char", text: "Now, install it." },
+  { a: 18.3, b: 19.3, who: "pet", text: "Learned it!" },
+  { a: 22.1, b: 22.9, who: "char", text: "Hole!" },
+  { a: 24.8, b: 26, who: "char", text: "No skills." },
+  { a: 27.1, b: 28.2, who: "pet", text: "Watch this." },
 ];
 
 type Cmd = { at: number; text: string; out?: boolean; group: number };
 
 // Commands start about a second after the quote, so the speaker talks first and the terminal follows.
+// The import review is from a real run of the built CLI; the source name is shortened for the page.
 const CLI: Cmd[] = [
-  { group: 1, at: 1.1, text: "hikma init" },
-  { group: 1, at: 1.7, text: "Created AGENTS.md", out: true },
-  { group: 1, at: 2.0, text: "Wrote .hikma/config.json", out: true },
-  { group: 2, at: 4.3, text: "hikma skill install go-blue" },
-  { group: 2, at: 5.4, text: "-> .claude/skills/go-blue/ (1 files)", out: true },
-  { group: 3, at: 9.0, text: "hikma skill create walking-above-holes" },
-  { group: 3, at: 10.2, text: "Created .claude/skills/walking-above-holes/", out: true },
-  { group: 4, at: 10.9, text: "hikma skill push walking-above-holes" },
-  { group: 4, at: 12.3, text: "Pushed to myghaccount/myrepo", out: true },
-  { group: 5, at: 20.5, text: "hikma sync" },
-  { group: 5, at: 21.2, text: "restored .claude/skills/go-blue", out: true },
-  { group: 5, at: 21.5, text: "restored .claude/skills/walking-above-holes", out: true },
-  { group: 5, at: 21.8, text: "Done: 2 restored, 0 failed", out: true },
+  { group: 1, at: 1.1, text: "hikma init --registry myghaccount/myrepo" },
+  { group: 1, at: 2.7, text: "Wrote .hikma/config.json", out: true },
+  { group: 1, at: 3.4, text: "myghaccount/myrepo: commits to main", out: true },
+  { group: 2, at: 9.8, text: "hikma skill import someone/skills walking-above-holes" },
+  { group: 2, at: 11.5, text: "files: 2, 153 B   licence: MIT", out: true },
+  { group: 2, at: 12.0, text: "Import? y", out: true },
+  { group: 2, at: 12.9, text: "Pushed to myghaccount/myrepo", out: true },
+  { group: 3, at: 16.0, text: "hikma skill install walking-above-holes" },
+  { group: 3, at: 17.4, text: "-> .claude/skills/walking-above-holes/", out: true },
+  { group: 4, at: 25.3, text: "hikma sync" },
+  { group: 4, at: 26.2, text: "restored .claude/skills/walking-above-holes", out: true },
+  { group: 4, at: 26.5, text: "Done: 1 restored, 0 failed", out: true },
 ];
 
 // [group, start, end, who speaks]
 const GROUPS: [number, number, number, Who][] = [
-  [1, 0.4, 3.2, "char"],
-  [2, 3.4, 8.0, "char"],
-  [3, 8.2, 10.8, "pet"],
-  [4, 10.8, 14.2, "char"],
-  [5, 19.8, 22.0, "char"],
+  [1, 0.4, 5.0, "char"],
+  [2, 9.5, 14.2, "char"],
+  [3, 15.9, 18.2, "char"],
+  [4, 24.8, 27.2, "char"],
 ];
 
 function cliLines(t: number, group: number): CliLine[] {
@@ -539,7 +637,7 @@ function cliLines(t: number, group: number): CliLine[] {
     if (c.out) lines.push({ out: true, text: c.text });
     else lines.push({ out: false, text: c.text.slice(0, Math.floor((t - c.at) / 0.03)) });
   }
-  return lines.slice(-3);
+  return lines.slice(-4);
 }
 
 export function bubbleAt(raw: number): Bubble | null {
@@ -550,13 +648,14 @@ export function bubbleAt(raw: number): Bubble | null {
   if (!quote && !group) return null;
   const who: Who = group ? group[3] : quote!.who;
   const lines = group ? cliLines(t, group[0]) : [];
-  const p = who === "pet" ? petPos(t) : { x: charX(t), y: charY(t) };
+  const p = who === "pet" ? petPos(t) : who === "other" ? { x: strangerX(t), y: GROUND - CH } : { x: charX(t), y: charY(t) };
   const x = ((p.x + 8 + SHIFT) / VW) * 100;
   const y = ((p.y - (who === "pet" ? 14 : 6)) / H) * 100;
   return { who, quote: quote ? quote.text : null, lines, x, y };
 }
 
 export const TRANSCRIPT =
+  "A pixel-art loop. A developer and a small bot pet start a new repo with hikma init, and a chest appears: the registry, named myghaccount/myrepo. Another character in a beanie and jacket walks in holding a skill called walking-above-holes. The developer runs hikma skill import, a short review shows the files and the licence, and a copy of the skill flies into the chest while the other character keeps theirs and walks away. Then hikma skill install hands the skill to the bot, which turns blue. In World 2, a lava land on a new machine, the bot is dark again with no skills. They fall into a hole, respawn, and run hikma sync, which restores the skill, and the bot turns blue and jumps the hole.";
   "A pixel-art loop. A developer and a small bot pet start a new repo with hikma init, find a skill called go-blue and install it, which turns the bot blue, then create a new skill called walking-above-holes and push it to a registry. In World 2, a lava land on a new machine, the bot is dark again with no skills. They fall into a hole, respawn, and run hikma sync, which restores both skills, and the bot turns blue and then violet. Now they jump the hole.";
 
 // ── Stages ───────────────────────────────────────────────────────────────────
@@ -568,9 +667,9 @@ const at = (sceneStart: number) => (sceneStart + INTRO) * SLOW;
 
 export const STAGES: Stage[] = [
   { step: "1", label: "hikma init", start: 0 },
-  { step: "2", label: "skill install", start: at(2.8) },
-  { step: "3", label: "skill create + push", start: at(7.9) },
-  { step: "4", label: "hikma sync", start: at(14.3) },
+  { step: "2", label: "skill import", start: at(4.9) },
+  { step: "3", label: "skill install", start: at(15.5) },
+  { step: "4", label: "hikma sync", start: at(19.2) },
 ];
 
 export function stageAt(raw: number): number {
@@ -612,5 +711,5 @@ export function titleAt(raw: number): Title {
   return { alpha: story < INTRO ? 1 - seg(story, INTRO - 0.5, INTRO) : 0, main: "Hikma", sub: "press start" };
 }
 
-// A frame that reads well without motion: the pet tells its plan and the CLI shows create and push.
-export const STILL_T = at(12.6);
+// A frame that reads well without motion: the skill in flight from the other character to the chest, and the import review in the terminal.
+export const STILL_T = at(12.7);
